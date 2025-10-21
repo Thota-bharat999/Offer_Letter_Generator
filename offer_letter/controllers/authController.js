@@ -65,27 +65,25 @@ exports.registerAdmin = async (req, res) => {
 exports.loginOffer = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-console.log("🔍 Incoming email:", email);
+
+    console.log("🔍 Incoming email:", email);
+
     const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() }).select("+password");
-    console.log("🔍 Admin found:", admin ? admin.email : "none");
+
     if (!admin) {
+      console.log("❌ No admin found for:", email);
       return res.status(401).json({ message: "Admin HR not found" });
-       console.log("❌ No admin found for:", email);
     }
 
-    let isMatch = await bcrypt.compare(password, admin.password);
+    console.log("🔍 Admin found:", admin.email);
+
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      // Backward compatibility for double-hashed passwords
-      const singleHashed = await bcrypt.hash(password, 10);
-      isMatch = await bcrypt.compare(singleHashed, admin.password);
-    }
-    if (!isMatch) {
+      console.log("❌ Password does not match");
       return res.status(401).json({ message: "Invalid email or password" });
-       console.log("🔍 Password match result:", isMatch);
     }
 
     const token = jwt.sign(
@@ -96,7 +94,7 @@ console.log("🔍 Incoming email:", email);
     );
 
     res.status(200).json({
-      message: "Login successful - Welcome to Blogs Admin Panel",
+      message: "Login successful - Welcome to Offer Letter Generator",
       token,
       admin: {
         id: admin._id,
@@ -108,9 +106,10 @@ console.log("🔍 Incoming email:", email);
     });
   } catch (err) {
     console.error("❌ Login error:", err.message);
-    res.status(500).json({ message: "Server error", error: err.message });
+    return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 
 exports.forgotPassword = async (req, res) => {
