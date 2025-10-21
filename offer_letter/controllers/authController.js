@@ -65,47 +65,48 @@ exports.registerAdmin = async (req, res) => {
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 exports.loginOffer = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1️⃣ Validate input
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    // 2️⃣ Find admin (include password explicitly)
-    const admin = await HrAdmin.findOne({ email }).select("+password");
+    const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() }).select("+password");
     if (!admin) {
-      return res.status(404).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Admin HR not found" });
     }
 
-    // 3️⃣ Check password
-    const isMatch = await admin.matchPassword(password);
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // 4️⃣ Generate JWT
-    const token = generateToken(admin._id);
+    const token = jwt.sign(
+      { id: admin._id },
+      process.env.JWT_SECRET ||
+        "6d9c9a4f5e8a3d2b8f1e0c9a7b3e6f4a9d1b0c7f2a8e5d6c3b4f9e1a7c2d5f8",
+      { expiresIn: "1d" }
+    );
 
     res.status(200).json({
-      success: true,
-      message: "Login successful",
+      message: "Login successful - Welcome to Blogs Admin Panel",
       token,
       admin: {
         id: admin._id,
-        name: admin.name,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
         email: admin.email,
         role: admin.role,
       },
     });
-  } catch (error) {
-    console.error("❌ Login error:", error);
-    res.status(500).json({ message: "Server error" });
+  } catch (err) {
+    console.error("❌ Login error:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
+
 
 exports.forgotPassword = async (req, res) => {
   try {
