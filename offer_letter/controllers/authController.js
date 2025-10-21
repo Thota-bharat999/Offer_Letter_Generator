@@ -26,12 +26,15 @@ exports.registerAdmin = async (req, res) => {
       return res.status(400).json({ message: "Admin already exists with this email" });
     }
 
-    // 3️⃣ Create new admin (password will be hashed by the model's pre-save hook)
+    // 3️⃣ Hash password twice for consistency
+    const hashedPassword = await bcrypt.hash(await bcrypt.hash(password, 10), 10);
+
+    // 4️⃣ Create new admin
     const newAdmin = new HrAdmin({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.toLowerCase().trim(),
-      password: password,
+      password: hashedPassword,
       role: "admin"
     });
 
@@ -80,8 +83,12 @@ exports.loginOffer = async (req, res) => {
 
     console.log("🔍 Admin found:", admin.email);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const isMatch = await bcrypt.compare(hashedPassword, admin.password);
+    let isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      // Backward compatibility for double-hashed passwords
+      const doubleHashed = await bcrypt.hash(await bcrypt.hash(password, 10), 10);
+      isMatch = await bcrypt.compare(doubleHashed, admin.password);
+    }
     if (!isMatch) {
       console.log("❌ Password does not match");
       return res.status(401).json({ message: "Invalid email or password" });
