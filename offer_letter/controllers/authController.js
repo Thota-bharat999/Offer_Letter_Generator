@@ -77,7 +77,7 @@ console.log("🔍 Incoming email:", email);
        console.log("❌ No admin found for:", email);
     }
 
-    const isMatch = await admin.matchPassword(password);
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
        console.log("🔍 Password match result:", isMatch);

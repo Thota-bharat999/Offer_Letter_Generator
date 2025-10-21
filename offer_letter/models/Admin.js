@@ -39,17 +39,6 @@ const adminSchema = new mongoose.Schema(
 
 
 
-// 🔹 Compare entered password with hashed password
-adminSchema.methods.matchPassword = async function (enteredPassword) {
-  // Try direct compare for single-hashed passwords
-  if (await bcrypt.compare(enteredPassword, this.password)) {
-    return true;
-  }
-  // For backward compatibility with double-hashed passwords
-  const singleHashed = await bcrypt.hash(enteredPassword, 10);
-  return await bcrypt.compare(singleHashed, this.password);
-};
-
 // 🔹 Generate reset password token
 adminSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
