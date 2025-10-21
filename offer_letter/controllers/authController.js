@@ -80,7 +80,8 @@ exports.loginOffer = async (req, res) => {
 
     console.log("🔍 Admin found:", admin.email);
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const isMatch = await bcrypt.compare(hashedPassword, admin.password);
     if (!isMatch) {
       console.log("❌ Password does not match");
       return res.status(401).json({ message: "Invalid email or password" });
