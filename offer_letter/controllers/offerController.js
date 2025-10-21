@@ -356,45 +356,31 @@ exports.getAllOffers = async (req, res) => {
 //
 // ======================== GET OFFER BY ID ========================
 //
+
+
+// ✅ Fix your getOfferById method
 exports.getOfferById = async (req, res) => {
-    try {
-        // 🔥 Admin Safety Check (FIX)
-        if (!req.admin || !req.admin.id || !req.admin.role) {
-            return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
-        }
-        
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const offer = await OfferLetter.findById(id).populate(
-            "createdBy",
-            "name email role"
-        );
-
-        if (!offer) {
-            return res.status(404).json({ message: "Offer letter not found" });
-        }
-
-        // ✅ Access control
-        if (
-            req.admin.role !== "superAdmin" &&
-            offer.createdBy._id.toString() !== req.admin.id
-        ) {
-            return res.status(403).json({ message: "Access denied" });
-        }
-
-        res.status(200).json({
-            success: true,
-            data: offer,
-        });
-    } catch (error) {
-        console.error("❌ Error fetching offer by ID:", error);
-        // Handle potential invalid ID format error (CastError)
-        if (error.name === 'CastError' && error.path === '_id') {
-             return res.status(400).json({ success: false, message: "Invalid Offer ID format" });
-        }
-        res.status(500).json({ message: "Server error while fetching offer details" });
+    // Check for valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid offer ID" });
     }
+
+    const offer = await OfferLetter.findById(id).populate("createdBy", "firstName lastName email");
+
+    if (!offer) {
+      return res.status(404).json({ message: "Offer not found" });
+    }
+
+    res.status(200).json(offer);
+  } catch (err) {
+    console.error("❌ Error fetching offer by ID:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 };
+
 
 // offer Letter Download
 exports.downloadOfferLetter = async (req, res) => {
