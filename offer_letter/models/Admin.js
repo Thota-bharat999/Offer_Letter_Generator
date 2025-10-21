@@ -4,9 +4,14 @@ const crypto = require("crypto");
 
 const adminSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
-      required: [true, "Name is required"],
+      required: [true, "fistName is required"],
+      trim: true,
+    },
+    lastName: {
+      type: String,
+      required: [true, "lastName is required"],
       trim: true,
     },
     email: {
