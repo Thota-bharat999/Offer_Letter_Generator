@@ -72,15 +72,18 @@ exports.loginOffer = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-
+console.log("🔍 Incoming email:", email);
     const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() }).select("+password");
+    console.log("🔍 Admin found:", admin ? admin.email : "none");
     if (!admin) {
       return res.status(401).json({ message: "Admin HR not found" });
+       console.log("❌ No admin found for:", email);
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
+       console.log("🔍 Password match result:", isMatch);
     }
 
     const token = jwt.sign(
