@@ -26,8 +26,9 @@ exports.registerAdmin = async (req, res) => {
       return res.status(400).json({ message: "Admin already exists with this email" });
     }
 
-    // 3️⃣ Hash password twice for consistency
-    const hashedPassword = await bcrypt.hash(await bcrypt.hash(password, 10), 10);
+    // 3️⃣ Hash the password manually
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // 4️⃣ Create new admin
     const newAdmin = new HrAdmin({
@@ -40,7 +41,7 @@ exports.registerAdmin = async (req, res) => {
 
     await newAdmin.save();
 
-    // 5️⃣ Generate JWT Token
+    // 5️⃣ Generate JWT token
     const token = jwt.sign(
       { id: newAdmin._id },
       process.env.JWT_SECRET ||
@@ -48,7 +49,7 @@ exports.registerAdmin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // 6️⃣ Send response
+    // 6️⃣ Response
     return res.status(201).json({
       message: "Admin registered successfully",
       token,
@@ -57,43 +58,32 @@ exports.registerAdmin = async (req, res) => {
         firstName: newAdmin.firstName,
         lastName: newAdmin.lastName,
         email: newAdmin.email,
-        role: newAdmin.role
-      }
+        role: newAdmin.role,
+      },
     });
   } catch (err) {
     console.error("❌ Register error:", err.message);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-exports.loginOffer = async (req, res) => {
+
+exports.loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
 
-    console.log("🔍 Incoming email:", email);
-
-    const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() }).select("+password");
-
+    // 1️⃣ Find admin by email
+    const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
     if (!admin) {
-      console.log("❌ No admin found for:", email);
-      return res.status(401).json({ message: "Admin HR not found" });
+      return res.status(404).json({ message: "Admin not found" });
     }
 
-    console.log("🔍 Admin found:", admin.email);
-
-    let isMatch = await bcrypt.compare(password, admin.password);
+    // 2️⃣ Compare password using bcrypt
+    const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      // Backward compatibility for double-hashed passwords
-      const doubleHashed = await bcrypt.hash(await bcrypt.hash(password, 10), 10);
-      isMatch = await bcrypt.compare(doubleHashed, admin.password);
-    }
-    if (!isMatch) {
-      console.log("❌ Password does not match");
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: "Invalid password" });
     }
 
+    // 3️⃣ Generate JWT token
     const token = jwt.sign(
       { id: admin._id },
       process.env.JWT_SECRET ||
@@ -101,8 +91,9 @@ exports.loginOffer = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // 4️⃣ Response
     res.status(200).json({
-      message: "Login successful - Welcome to Offer Letter Generator",
+      message: "Login successful",
       token,
       admin: {
         id: admin._id,
@@ -114,10 +105,9 @@ exports.loginOffer = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Login error:", err.message);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 
 exports.forgotPassword = async (req, res) => {

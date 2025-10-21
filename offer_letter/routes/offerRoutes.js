@@ -1,17 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const multer=require("multer")
-const { registerAdmin, loginOffer,forgotPassword,resetPasswordWithOtp } = require("../controllers/authController");
+const { registerAdmin, loginAdmin,forgotPassword,resetPasswordWithOtp } = require("../controllers/authController");
 const {createOfferLetter,getAllOffers,getOfferById,updateOfferLetter,deleteOfferLetter,downloadOfferLetter,sendOfferLetterEmail}=require('../controllers/offerController');
 
-const{verifyToken}=require('../middleware/authMiddleware')
+const{verifyToken}=require('../middleware/authMiddleware');
 
 // ✅ NO spaces after '/login'
 router.get("/test", (req, res) => {
     res.status(200).send("Router is connected!");
 });
 router.post("/register", registerAdmin);
-router.post("/login", loginOffer);
+router.post("/login", loginAdmin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPasswordWithOtp);
 router.post("/create",verifyToken,createOfferLetter);
