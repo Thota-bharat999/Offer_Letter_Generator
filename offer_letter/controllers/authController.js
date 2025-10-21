@@ -10,35 +10,62 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 };
 
+// ✅ Register Admin Controller
+exports.registerAdmin = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password } = req.body;
 
-// Admin Register
-exports.registerAdmin=async(req,res)=>{
-    try{
-        const {name,email,password}=req.body;
-         if (!name || !email || !password) {
+    // 1️⃣ Validate inputs
+    if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-        const existing= await HrAdmin.findOne({email});
-        if(existing){
-            return res.status(400).json({message:"Email already exists"})
-        }
-        const admin=await HrAdmin.create({name,email,password});
-        const token =jwt.sign({id:admin._id},process.env.JWT_SECRET,{
-             expiresIn: "1h",
-        });
-        res.status(201).json({
-            message:"HR Created Successfully",
-             id: admin._id,
-            token
-       
-        })
 
-    } catch(err){
-    console.error("❌ Register Error:", err.message);
-    return res.status(500).json({ message: "Server error", error: err.message });
-
+    // 2️⃣ Check if admin already exists
+    const existingAdmin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
+    if (existingAdmin) {
+      return res.status(400).json({ message: "Admin already exists with this email" });
     }
-}
+
+    // 3️⃣ Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 4️⃣ Create new admin
+    const newAdmin = new HrAdmin({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      role: "admin"
+    });
+
+    await newAdmin.save();
+
+    // 5️⃣ Generate JWT Token
+    const token = jwt.sign(
+      { id: newAdmin._id },
+      process.env.JWT_SECRET ||
+        "6d9c9a4f5e8a3d2b8f1e0c9a7b3e6f4a9d1b0c7f2a8e5d6c3b4f9e1a7c2d5f8",
+      { expiresIn: "1d" }
+    );
+
+    // 6️⃣ Send response
+    return res.status(201).json({
+      message: "Admin registered successfully",
+      token,
+      admin: {
+        id: newAdmin._id,
+        firstName: newAdmin.firstName,
+        lastName: newAdmin.lastName,
+        email: newAdmin.email,
+        role: newAdmin.role
+      }
+    });
+  } catch (err) {
+    console.error("❌ Register error:", err.message);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 exports.loginOffer = async (req, res) => {
   try {
     const { email, password } = req.body;
