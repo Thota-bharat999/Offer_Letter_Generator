@@ -39,17 +39,15 @@ const adminSchema = new mongoose.Schema(
 
 
 
-// 🔹 Hash password before saving
-adminSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
 // 🔹 Compare entered password with hashed password
 adminSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  // Try direct compare for single-hashed passwords
+  if (await bcrypt.compare(enteredPassword, this.password)) {
+    return true;
+  }
+  // For backward compatibility with double-hashed passwords
+  const singleHashed = await bcrypt.hash(enteredPassword, 10);
+  return await bcrypt.compare(singleHashed, this.password);
 };
 
 // 🔹 Generate reset password token
