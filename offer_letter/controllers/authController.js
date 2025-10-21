@@ -77,7 +77,12 @@ console.log("🔍 Incoming email:", email);
        console.log("❌ No admin found for:", email);
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    let isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      // Backward compatibility for double-hashed passwords
+      const singleHashed = await bcrypt.hash(password, 10);
+      isMatch = await bcrypt.compare(singleHashed, admin.password);
+    }
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
        console.log("🔍 Password match result:", isMatch);
