@@ -26,15 +26,12 @@ exports.registerAdmin = async (req, res) => {
       return res.status(400).json({ message: "Admin already exists with this email" });
     }
 
-    // 3️⃣ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 4️⃣ Create new admin
+    // 3️⃣ Create new admin (password will be hashed by the model's pre-save hook)
     const newAdmin = new HrAdmin({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.toLowerCase().trim(),
-      password: hashedPassword,
+      password: password,
       role: "admin"
     });
 
@@ -80,7 +77,7 @@ console.log("🔍 Incoming email:", email);
        console.log("❌ No admin found for:", email);
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await admin.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
        console.log("🔍 Password match result:", isMatch);
