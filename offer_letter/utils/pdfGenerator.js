@@ -87,7 +87,9 @@ const generateOfferPDF = async (offerData) => {
     // 4️⃣ Launch Puppeteer
     const chromePath =
       process.env.PUPPETEER_EXECUTABLE_PATH ||
-      "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome";
+      (process.env.NODE_ENV === "production"
+        ? "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome"
+        : puppeteer.executablePath());
 
     const browser = await puppeteer.launch({
       headless: true,
