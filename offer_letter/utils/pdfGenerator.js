@@ -1,6 +1,6 @@
 const path = require("path");
 const ejs = require("ejs");
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-core");
 const fs = require("fs");
 
 const generateOfferPDF = async (offerData) => {
