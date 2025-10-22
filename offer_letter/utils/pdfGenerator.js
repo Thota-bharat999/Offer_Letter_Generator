@@ -103,9 +103,16 @@ const generateOfferPDF = async (offerData) => {
     const finalHtml = html.replace("</style>", cssParts.join("\n") + "\n</style>");
 
     // 7️⃣ Launch Puppeteer safely (Render-compatible)
+    const isWindows = process.platform === 'win32';
     const browser = await puppeteer.launch({
       headless: true,
-      args: [
+      args: isWindows ? [
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-software-rasterizer",
+        "--single-process",
+        "--no-zygote",
+      ] : [
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
