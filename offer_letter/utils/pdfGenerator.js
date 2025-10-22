@@ -20,7 +20,7 @@ const generateOfferPDF = async (offerData) => {
     if (!foundLogo) {
       console.warn("⚠️ Logo not found. Looked for:", logoCandidates);
     } else {
-      console.log("��️ Using logo:", foundLogo);
+      console.log("️ Using logo:", foundLogo);
       try {
         const lower = foundLogo.toLowerCase();
         const mime = lower.endsWith(".png") ? "image/png" : (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) ? "image/jpeg" : "application/octet-stream";
@@ -118,9 +118,8 @@ if (foundSignature) {
       : withCss;
 
     // 4️⃣ Launch Puppeteer (headless Chrome)
-    const browser = await puppeteer.launch({
+    let launchOptions = {
       headless: true,
-      executablePath: "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -129,7 +128,11 @@ if (foundSignature) {
         "--disable-software-rasterizer",
         "--remote-debugging-port=9222"
       ],
-    });
+    };
+    if (process.platform !== 'win32') {
+      launchOptions.executablePath = "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome";
+    }
+    const browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();
 
