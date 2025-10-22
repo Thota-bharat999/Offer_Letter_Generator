@@ -120,7 +120,6 @@ if (foundSignature) {
     // 4️⃣ Launch Puppeteer (headless Chrome)
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
