@@ -120,7 +120,14 @@ if (foundSignature) {
     // 4️⃣ Launch Puppeteer (headless Chrome)
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--disable-software-rasterizer",
+        "--remote-debugging-port=9222"
+      ],
     });
 
     const page = await browser.newPage();
