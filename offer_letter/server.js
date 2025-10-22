@@ -9,7 +9,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const offerRoutes=require('./routes/offerRoutes');
 const companyRoutes=require('./routes/companyRoutes')
-app.use(cors())
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",            // local frontend (dev)
+      "https://offer-letter-generator-2-w4y1.onrender.com"  // ✅ your deployed React domain (when live)
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 app.use('/assets', express.static(__dirname + '/offer_letter/assets'));
 
 app.use('/api/offer', offerRoutes)
@@ -20,5 +29,7 @@ mongoose.connect(process.env.MONGO_URI, {
   serverSelectionTimeoutMS: 30000,
 }).then(()=> console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
+
+app.get("/", (req, res) => res.send("Offer Letter Generator API is running..."));
   const PORT=process.env.PORT || 3000;
   app.listen(PORT,()=>console.log(`Server Running on ${PORT}`))
