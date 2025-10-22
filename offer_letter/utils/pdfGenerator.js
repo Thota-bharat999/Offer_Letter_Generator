@@ -148,7 +148,7 @@ if (foundSignature) {
 
     // 7️⃣ Safe file name for candidate
     const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
-    const pdfPath = `uploads/OfferLetter_${safeName}.pdf`;
+    const pdfPath = path.join(__dirname, `../uploads/OfferLetter_${safeName}.pdf`);
 
     // 8️⃣ Generate PDF (edge-to-edge; inner spacing controlled by the template)
     await page.pdf({
