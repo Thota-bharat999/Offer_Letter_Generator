@@ -117,7 +117,7 @@ const generateOfferPDF = async (offerData) => {
       executablePath:
         process.env.PUPPETEER_EXECUTABLE_PATH ||
         (process.env.NODE_ENV === "production"
-          ? "/opt/render/.cache/puppeteer/chrome/linux-141.0.7390.54/chrome-linux64/chrome"
+          ? "/opt/render/.cache/@puppeteer/browsers/chrome/linux-141.0.7390.54/chrome-linux64/chrome"
           : puppeteer.executablePath()), // local fallback
     });
 
