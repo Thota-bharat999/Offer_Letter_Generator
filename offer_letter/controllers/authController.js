@@ -109,7 +109,6 @@ exports.loginAdmin = async (req, res) => {
   }
 };
 
-
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -124,14 +123,16 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
-    // Generate OTP
+    // ✅ Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
-    admin.resetOtp = hashedOtp;
-    admin.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+
+    // ✅ Save OTP using the same field names used in resetPasswordWithOtp
+    admin.otpCode = hashedOtp;
+    admin.otpExpire = Date.now() + 10 * 60 * 1000; // 10 mins
     await admin.save();
 
-    // ✅ Compose email
+    // ✅ Email content
     const subject = "Password Reset OTP - Offer Letter Generator";
     const html = `
       <div style="font-family:Arial, sans-serif; padding:10px;">
@@ -146,7 +147,6 @@ exports.forgotPassword = async (req, res) => {
     `;
     const text = `Hello ${admin.firstName},\nYour OTP for password reset is: ${otp}\nIt expires in 10 minutes.`;
 
-    // ✅ Send the email
     await sendEmail({
       to: admin.email,
       subject,
@@ -161,56 +161,55 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// ✅ Reset Password
+
+// Reset Password
+
+
 exports.resetPasswordWithOtp = async (req, res) => {
   try {
-    const { email, otp, newPassword, confirmPassword } = req.body;
+    const { otp, newPassword, confirmPassword } = req.body;
 
     // ✅ 1. Validate inputs
-    if (!email || !otp || !newPassword || !confirmPassword) {
+    if (!otp || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // ✅ 2. Check passwords match
+    // ✅ 2. Confirm passwords match
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // ✅ 3. Find admin by email
-    const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
-    if (!admin) {
-      return res.status(404).json({ message: "Admin not found" });
-    }
-
-    // ✅ 4. Hash OTP (since it was stored as hashed value in DB)
+    // ✅ 3. Hash entered OTP to compare with DB
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    // ✅ 5. Check if OTP matches and is not expired
-    if (admin.resetOtp !== hashedOtp || admin.resetOtpExpires < Date.now()) {
+    // ✅ 4. Find admin by OTP and expiry
+    const admin = await HrAdmin.findOne({
+      otpCode: hashedOtp,
+      otpExpire: { $gt: Date.now() }, // only valid OTPs
+    }).select("+password");
+
+    if (!admin) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    // ✅ 6. Hash new password
+    // ✅ 5. Hash and save new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // ✅ 7. Update admin password and clear OTP fields
     admin.password = hashedPassword;
-    admin.resetOtp = undefined;
-    admin.resetOtpExpires = undefined;
+    admin.otpCode = undefined;
+    admin.otpExpire = undefined;
 
     await admin.save();
 
-    // ✅ 7. Send success response
-    return res.status(200).json({
+    // ✅ 6. Respond success
+    res.status(200).json({
       success: true,
       message: "Password reset successfully",
     });
   } catch (error) {
     console.error("❌ Reset password error:", error);
-    return res.status(500).json({
-      message: "Server error during password reset",
-      error: error.message,
-    });
+    res.status(500).json({ message: "Server error during password reset" });
   }
 };
+
