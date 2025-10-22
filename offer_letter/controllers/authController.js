@@ -126,7 +126,8 @@ exports.forgotPassword = async (req, res) => {
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    admin.resetOtp = otp;
+    const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
+    admin.resetOtp = hashedOtp;
     admin.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
     await admin.save();
 
@@ -163,10 +164,10 @@ exports.forgotPassword = async (req, res) => {
 // ✅ Reset Password
 exports.resetPasswordWithOtp = async (req, res) => {
   try {
-    const { otp, newPassword, confirmPassword } = req.body;
+    const { email, otp, newPassword, confirmPassword } = req.body;
 
     // ✅ 1. Validate inputs
-    if (!otp || !newPassword || !confirmPassword) {
+    if (!email || !otp || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -175,27 +176,28 @@ exports.resetPasswordWithOtp = async (req, res) => {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // ✅ 3. Hash OTP (since it was stored as hashed value in DB)
+    // ✅ 3. Find admin by email
+    const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // ✅ 4. Hash OTP (since it was stored as hashed value in DB)
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    // ✅ 4. Find user by OTP and make sure it's not expired
-    const admin = await HrAdmin.findOne({
-      otpCode: hashedOtp,
-      otpExpire: { $gt: Date.now() }, // OTP still valid
-    }).select("+password");
-
-    if (!admin) {
+    // ✅ 5. Check if OTP matches and is not expired
+    if (admin.resetOtp !== hashedOtp || admin.resetOtpExpires < Date.now()) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    // ✅ 5. Hash new password
+    // ✅ 6. Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // ✅ 6. Update admin password and clear OTP fields
+    // ✅ 7. Update admin password and clear OTP fields
     admin.password = hashedPassword;
-    admin.otpCode = undefined;
-    admin.otpExpire = undefined;
+    admin.resetOtp = undefined;
+    admin.resetOtpExpires = undefined;
 
     await admin.save();
 
