@@ -113,42 +113,50 @@ exports.loginAdmin = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    console.log("📧 Forgot password request:", email);
+
     if (!email) {
-      return res.status(400).json({ message: "Please provide your email" });
+      return res.status(400).json({ message: "Email is required" });
     }
 
-    const admin = await HrAdmin.findOne({ email });
+    const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
     if (!admin) {
       return res.status(404).json({ message: "Admin not found" });
     }
 
-    // ✅ Generate 6-digit OTP
+    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    admin.resetOtp = otp;
+    admin.resetOtpExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+    await admin.save();
 
-    // ✅ Hash and save OTP
-    admin.otpCode = crypto.createHash("sha256").update(otp).digest("hex");
-    admin.otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-    await admin.save({ validateBeforeSave: false });
-
-    // ✅ Email content
-    const message = `
-      <h3>Hi ${admin.name || "HR Admin"},</h3>
-      <p>You requested a password reset.</p>
-      <p>Your OTP code is:</p>
-      <h2 style="color:#007bff">${otp}</h2>
-      <p>This OTP will expire in <strong>10 minutes</strong>.</p>
+    // ✅ Compose email
+    const subject = "Password Reset OTP - Offer Letter Generator";
+    const html = `
+      <div style="font-family:Arial, sans-serif; padding:10px;">
+        <h3>Hello ${admin.firstName},</h3>
+        <p>You requested to reset your password. Use the OTP below to proceed:</p>
+        <h2 style="color:#1e6aa8;">${otp}</h2>
+        <p>This OTP is valid for <strong>10 minutes</strong>.</p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+        <br/>
+        <p>Best regards,<br/>Offer Letter Generator Team</p>
+      </div>
     `;
+    const text = `Hello ${admin.firstName},\nYour OTP for password reset is: ${otp}\nIt expires in 10 minutes.`;
 
+    // ✅ Send the email
     await sendEmail({
       to: admin.email,
-      subject: "Your Password Reset OTP",
-      html: message,
+      subject,
+      html,
+      text,
     });
 
-    res.status(200).json({ success: true, message: "OTP sent to email successfully" });
+    return res.status(200).json({ message: "OTP sent successfully" });
   } catch (error) {
     console.error("❌ Forgot password error:", error);
-    res.status(500).json({ message: "Server error during forgot password" });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
