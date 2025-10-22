@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@puppeteer/browsers": "^2.4.0",
     "@sendgrid/mail": "^8.1.6",
     "aws-sdk": "^2.1692.0",
     "bcryptjs": "^3.0.2",
@@ -27,7 +28,7 @@
     "multer": "^2.0.2",
     "nodemailer": "^7.0.6",
     "path": "^0.12.7",
-    "@puppeteer/browsers": "^2.4.0",
+    "puppeteer": "^24.26.0",
     "puppeteer-core": "^24.23.0"
   },
   "devDependencies": {
