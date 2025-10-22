@@ -1,52 +1,43 @@
-const nodemailer = require("nodemailer");
+// utils/emailService.js
+const sgMail = require("@sendgrid/mail");
 const fs = require("fs");
+
+sgMail.setApiKey(process.env.OfferDocumentation); // ✅ same SendGrid key you already use
 
 const sendEmail = async (options) => {
   try {
-    // ✅ Configure SendGrid (SMTP)
-    const transporter = nodemailer.createTransport({
-      host: "smtp.sendgrid.net", // ✅ Always use SendGrid SMTP host
-      port: 587,
-      secure: false,
-      auth: {
-        user: "apikey", // ✅ SendGrid always uses 'apikey' as the user
-        pass: process.env.OfferDocumentation, // ✅ store your actual SendGrid API Key in .env
-      },
-    });
-
-    // ✅ Build base email
-    const mailOptions = {
-      from: process.env.SUPPORT_EMAIL || `"HR Department" <no-reply@youroffersystem.com>`,
+    // ✅ Prepare base email
+    const msg = {
       to: options.to,
+      from: process.env.SUPPORT_EMAIL || "manithotabharat@gmail.com", // must be a verified sender in SendGrid
       subject: options.subject,
       html: options.html,
       text: options.text || "",
       attachments: [],
     };
 
-    // ✅ Handle attachment (if provided)
+    // ✅ Handle attachments (if provided)
     if (options.attachments && options.attachments.length > 0) {
-      mailOptions.attachments = options.attachments.map((file) => {
+      msg.attachments = options.attachments.map((file) => {
         const pdfBuffer = fs.readFileSync(file.path);
         return {
+          content: pdfBuffer.toString("base64"),
           filename: file.filename,
-          content: pdfBuffer.toString("base64"), // ✅ Base64 encode
-          contentType: file.contentType || "application/pdf",
-          encoding: "base64",
+          type: file.contentType || "application/pdf",
           disposition: "attachment",
         };
       });
     }
 
-    // ✅ Send email
-    const info = await transporter.sendMail(mailOptions);
+    // ✅ Send email via SendGrid API
+    await sgMail.send(msg);
     console.log(`📧 Email sent successfully to: ${options.to}`);
-    console.log(`📎 Attachments: ${mailOptions.attachments.length}`);
-    return info;
+    console.log(`📎 Attachments: ${msg.attachments.length}`);
+    return true;
 
   } catch (error) {
-    console.error("❌ Error sending email:", error);
-    throw error;
+    console.error("❌ Error sending email via SendGrid:", error.response?.body || error.message);
+    throw new Error("Failed to send email");
   }
 };
 
