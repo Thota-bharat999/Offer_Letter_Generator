@@ -122,21 +122,6 @@ exports.createOfferLetter = async (req, res) => {
     // ✅ Salary breakdown
     const salaryBreakdown = generateSalaryBreakdown(totalCTC);
 
-    // ✅ Create offer letter document
-    const offerLetter = new OfferLetter({
-      candidateName: candidateName.trim(),
-      candidateAddress: candidateAddress.trim(),
-      position: position.trim(),
-      joiningDate,
-      ctcAmount: Math.round(totalCTC),
-      ctcInWords: ctcInWords.trim(),
-      salaryBreakdown,
-      probationPeriodMonths: probationPeriodMonths || 6,
-      createdBy,
-    });
-
-    await offerLetter.save();
-
     // ✅ Resolve local logo path (absolute path)
     const logoAbsolutePath = path.join(
       __dirname,
@@ -146,15 +131,33 @@ exports.createOfferLetter = async (req, res) => {
     // Convert to file:// URL (important for PDF rendering)
     const logoUrl = `file://${logoAbsolutePath.replace(/\\/g, "/")}`;
 
+    // ✅ Create offer letter data object
+    const offerData = {
+      candidateName: candidateName.trim(),
+      candidateAddress: candidateAddress.trim(),
+      position: position.trim(),
+      joiningDate,
+      ctcAmount: Math.round(totalCTC),
+      ctcInWords: ctcInWords.trim(),
+      salaryBreakdown,
+      probationPeriodMonths: probationPeriodMonths || 6,
+      createdBy,
+    };
+
     // ✅ Pass logo to EJS PDF generator
     const pdfPath = await generateOfferPDF({
-      ...offerLetter.toObject(),
+      ...offerData,
       companyName: "Amazon IT Solutions",
       companyAddress: "Hyderabad, Telangana, India",
       companyLogo: logoUrl, // 👈 Added dynamic logo
     });
 
-    offerLetter.pdfPath = pdfPath;
+    // ✅ Create offer letter document with pdfPath
+    const offerLetter = new OfferLetter({
+      ...offerData,
+      pdfPath,
+    });
+
     await offerLetter.save();
 
     res.status(201).json({
