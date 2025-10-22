@@ -165,47 +165,50 @@ exports.resetPasswordWithOtp = async (req, res) => {
   try {
     const { otp, newPassword, confirmPassword } = req.body;
 
-    // ✅ Check required fields
+    // ✅ 1. Validate inputs
     if (!otp || !newPassword || !confirmPassword) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // ✅ Confirm passwords match
+    // ✅ 2. Check passwords match
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
     }
 
-    // ✅ Hash the entered OTP to match stored one
+    // ✅ 3. Hash OTP (since it was stored as hashed value in DB)
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    // ✅ Find admin by OTP
+    // ✅ 4. Find user by OTP and make sure it's not expired
     const admin = await HrAdmin.findOne({
       otpCode: hashedOtp,
-      otpExpire: { $gt: Date.now() }, // valid OTP only
+      otpExpire: { $gt: Date.now() }, // OTP still valid
     }).select("+password");
 
     if (!admin) {
       return res.status(400).json({ message: "Invalid or expired OTP" });
     }
 
-    // ✅ Hash new password before saving
-    const bcrypt = require("bcryptjs");
+    // ✅ 5. Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // ✅ Update password and clear OTP
+    // ✅ 6. Update admin password and clear OTP fields
     admin.password = hashedPassword;
     admin.otpCode = undefined;
     admin.otpExpire = undefined;
 
     await admin.save();
 
-    res.status(200).json({
+    // ✅ 7. Send success response
+    return res.status(200).json({
       success: true,
       message: "Password reset successfully",
     });
   } catch (error) {
     console.error("❌ Reset password error:", error);
-    res.status(500).json({ message: "Server error during password reset" });
+    return res.status(500).json({
+      message: "Server error during password reset",
+      error: error.message,
+    });
   }
 };
