@@ -11,12 +11,9 @@ const offerRoutes=require('./routes/offerRoutes');
 const companyRoutes=require('./routes/companyRoutes')
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",            // local frontend (dev)
-      "https://offer-letter-generator-2-w4y1.onrender.com"  // ✅ your deployed React domain (when live)
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+    origin: "*", // or specify: ["http://localhost:3000"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use('/assets', express.static(__dirname + '/offer_letter/assets'));
