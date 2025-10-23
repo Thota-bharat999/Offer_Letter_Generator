@@ -7,21 +7,14 @@ const generateOfferPDF = async (offerData) => {
   try {
     console.log("🟩 [1] Starting PDF generation...");
 
-    // ✅ Validate data
     if (!offerData || typeof offerData !== "object") {
       throw new Error("Invalid offer data provided to generateOfferPDF()");
     }
 
-    // ✅ Template path
     const templatePath = path.join(__dirname, "../templates/offer.ejs");
-    console.log("🟩 [2] Template path:", templatePath);
-
-    // ✅ Asset folder
     const assetsDir = path.resolve(__dirname, "../assets");
-    console.log("🟩 [3] Assets directory:", assetsDir);
 
     // === EMBED LOGO ===
-    console.log("🟩 [4] Checking logo...");
     const logoCandidates = [
       path.join(assetsDir, "image.png"),
       path.join(assetsDir, "Amazon-Logo1.png"),
@@ -35,15 +28,11 @@ const generateOfferPDF = async (offerData) => {
         : foundLogo.endsWith(".jpg") || foundLogo.endsWith(".jpeg")
         ? "image/jpeg"
         : "application/octet-stream";
-      const base64 = fs.readFileSync(foundLogo).toString("base64");
-      logoPath = `data:${mime};base64,${base64}`;
+      logoPath = `data:${mime};base64,${fs.readFileSync(foundLogo).toString("base64")}`;
       console.log("✅ Logo embedded:", foundLogo);
-    } else {
-      console.warn("⚠️ Logo not found in:", logoCandidates);
-    }
+    } else console.warn("⚠️ Logo not found in:", logoCandidates);
 
     // === EMBED LETTERHEAD ===
-    console.log("🟩 [5] Checking letterhead...");
     const letterheadCandidates = [
       path.join(assetsDir, "letterhead.png"),
       path.join(assetsDir, "letterhead.jpg"),
@@ -57,15 +46,11 @@ const generateOfferPDF = async (offerData) => {
         : foundLetterhead.endsWith(".jpg") || foundLetterhead.endsWith(".jpeg")
         ? "image/jpeg"
         : "application/octet-stream";
-      const base64 = fs.readFileSync(foundLetterhead).toString("base64");
-      letterheadPath = `data:${mime};base64,${base64}`;
+      letterheadPath = `data:${mime};base64,${fs.readFileSync(foundLetterhead).toString("base64")}`;
       console.log("✅ Letterhead embedded:", foundLetterhead);
-    } else {
-      console.warn("⚠️ Letterhead not found in:", letterheadCandidates);
-    }
+    } else console.warn("⚠️ Letterhead not found in:", letterheadCandidates);
 
     // === EMBED SIGNATURE ===
-    console.log("🟩 [6] Checking signature...");
     const signatureCandidates = [
       path.join(assetsDir, "signature.png"),
       path.join(assetsDir, "sign.png"),
@@ -79,15 +64,11 @@ const generateOfferPDF = async (offerData) => {
         : foundSignature.endsWith(".jpg") || foundSignature.endsWith(".jpeg")
         ? "image/jpeg"
         : "application/octet-stream";
-      const base64 = fs.readFileSync(foundSignature).toString("base64");
-      signaturePath = `data:${mime};base64,${base64}`;
+      signaturePath = `data:${mime};base64,${fs.readFileSync(foundSignature).toString("base64")}`;
       console.log("✅ Signature embedded:", foundSignature);
-    } else {
-      console.warn("⚠️ Signature not found in:", signatureCandidates);
-    }
+    } else console.warn("⚠️ Signature not found in:", signatureCandidates);
 
     // === RENDER EJS ===
-    console.log("🟩 [7] Rendering EJS template...");
     const html = await ejs.renderFile(templatePath, {
       candidateName: offerData.candidateName || "Candidate",
       candidateAddress: offerData.candidateAddress || "Address Not Provided",
@@ -108,47 +89,43 @@ const generateOfferPDF = async (offerData) => {
 
     console.log("✅ [8] EJS rendered successfully");
 
-    // === EMBED LETTERHEAD AS IMG ===
-    // === EMBED LETTERHEAD AS BACKGROUND (Fix duplicate page issue) ===
-let modifiedHtml = html;
-if (letterheadPath) {
-  // Insert a single background div at top of <body> (not inside container)
-  modifiedHtml = modifiedHtml.replace(
-    "<body>",
-    `<body>
-      <div style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 210mm;
-        height: 297mm;
-        background-image: url('${letterheadPath}');
-        background-repeat: no-repeat;
-        background-size: 100% auto;
-        background-position: top center;
-        z-index: -1;
-      "></div>`
-  );
-}
+    // === ADD LETTERHEAD BACKGROUND ===
+    let modifiedHtml = html;
+    if (letterheadPath) {
+      modifiedHtml = modifiedHtml.replace(
+        "<body>",
+        `<body>
+          <div style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 210mm;
+            height: 297mm;
+            background-image: url('${letterheadPath}');
+            background-repeat: no-repeat;
+            background-size: 100% auto;
+            background-position: top center;
+            z-index: -1;
+          "></div>`
+      );
+    }
 
-
-    // === STYLE INJECTION ===
-    const cssParts = ['  .title-row { margin: -3mm 0 4mm !important; }'];
+    // === ADD CUSTOM CSS ===
+    const cssParts = ['.title-row { margin: -3mm 0 4mm !important; }'];
     if (letterheadPath) {
       cssParts.push(
-        '  .header { min-height: 12mm !important; }',
-        '  .header .logo { display: none !important; }',
-        '  .container { padding-top: 36mm !important; }',
-        '  .watermark { display: none !important; }'
+        ".header { min-height: 12mm !important; }",
+        ".header .logo { display: none !important; }",
+        ".container { padding-top: 36mm !important; }",
+        ".watermark { display: none !important; }"
       );
     }
     const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
-    console.log("✅ [9] CSS adjustments applied, letterheadPath:", letterheadPath);
 
-    // === PUPPETEER LAUNCH ===
+    // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
     const browser = await puppeteer.launch({
-      headless: "new",
+      headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -161,8 +138,11 @@ if (letterheadPath) {
     console.log("✅ [11] Puppeteer launched successfully");
 
     const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(0); // ✅ disable timeout
+    await page.setDefaultTimeout(0); // ✅ disable timeout globally
+
     console.log("🟩 [12] Setting HTML content...");
-    await page.setContent(finalHtml, { waitUntil: "networkidle0" });
+    await page.setContent(finalHtml, { waitUntil: "networkidle0", timeout: 0 });
     await page.evaluateHandle("document.fonts.ready");
     console.log("✅ [13] Page fully loaded with fonts");
 
@@ -173,7 +153,6 @@ if (letterheadPath) {
     const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
     const pdfPath = path.join(uploadsDir, `OfferLetter_${safeName}.pdf`);
 
-    // === PDF GENERATION ===
     console.log("🟩 [14] Generating PDF...");
     await page.pdf({
       path: pdfPath,
@@ -181,6 +160,7 @@ if (letterheadPath) {
       printBackground: true,
       preferCSSPageSize: true,
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
+      timeout: 0, // ✅ ensure no timeout in pdf generation
     });
 
     console.log("✅ [15] PDF generated successfully:", pdfPath);
