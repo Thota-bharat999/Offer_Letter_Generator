@@ -475,3 +475,27 @@ exports.sendOfferLetterEmail=async(req,res)=>{
 
     }
 }
+
+exports.generatePDF = async (req, res) => {
+  try {
+    console.log("📩 Incoming PDF Generation Request:", req.body);
+
+    const offerData = req.body;
+    const pdfPath = await generateOfferPDF(offerData);
+
+    console.log("✅ PDF generated at:", pdfPath);
+
+    return res.status(200).json({
+      success: true,
+      message: "Offer Letter PDF generated successfully",
+      pdfPath,
+    });
+  } catch (error) {
+    console.error("❌ PDF Generation Failed:", error);
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+};
