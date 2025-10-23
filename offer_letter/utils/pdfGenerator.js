@@ -132,7 +132,7 @@ if (foundSignature) {
       ],
     };
     if (process.platform !== 'win32') {
-      launchOptions.executablePath = "/opt/render/.cache/@puppeteer/browsers/chrome/linux-141.0.7390.122/chrome-linux64/chrome";
+      launchOptions.executablePath = "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome";
     }
     const browser = await puppeteer.launch(launchOptions);
 
