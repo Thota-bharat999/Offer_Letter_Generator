@@ -141,8 +141,7 @@ if (foundSignature) {
       await page.setContent(finalHtml, { waitUntil: "domcontentloaded", timeout: 300000 });
       await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
       // Wait a bit more for images to load
-      await page.waitForTimeout(2000);
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       // 6️⃣ Ensure uploads directory exists
       const uploadsDir = path.resolve(__dirname, "../uploads");
       fs.mkdirSync(uploadsDir, { recursive: true });
