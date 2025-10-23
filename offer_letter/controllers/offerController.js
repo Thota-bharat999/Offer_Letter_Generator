@@ -160,11 +160,13 @@ exports.createOfferLetter = async (req, res) => {
       pdfFile: offerLetter.pdfPath,
     });
   } catch (error) {
-    console.error("❌ Error creating offer letter:", error);
-    res
-      .status(500)
-      .json({ message: "Server error while creating offer letter" });
-  }
+  console.error("❌ Error creating offer letter:", error);
+  res.status(500).json({
+    message: "Server error while creating offer letter",
+    error: error.message,
+    stack: error.stack,
+  });
+}
 };
 
 
