@@ -16,7 +16,7 @@ router.post("/login", loginAdmin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPasswordWithOtp);
 router.post("/create",verifyToken,createOfferLetter);
-router.post('/geneate-pdf',verifyToken,generatePDF)
+router.post('/generate-pdf',verifyToken,generatePDF)
 router.get("/all",verifyToken,getAllOffers)
 router.get('/:id',verifyToken,getOfferById);
 router.put('/:id',verifyToken,updateOfferLetter)
