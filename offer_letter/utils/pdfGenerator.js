@@ -116,11 +116,12 @@ const generateOfferPDF = async (offerData) => {
         '  .header { min-height: 12mm !important; }',
         '  .header .logo { display: none !important; }',
         '  .container { padding-top: 36mm !important; }',
-        '  .watermark { display: none !important; }'
+        '  .watermark { display: none !important; }',
+        '  body { background-image: url("' + letterheadPath + '"); background-repeat: no-repeat; background-position: top center; background-size: 100% auto; }'
       );
     }
     const finalHtml = html.replace("</style>", cssParts.join("\n") + "\n</style>");
-    console.log("✅ [9] CSS adjustments applied");
+    console.log("✅ [9] CSS adjustments applied, letterheadPath:", letterheadPath);
 
     // === PUPPETEER LAUNCH ===
     console.log("🟩 [10] Launching Puppeteer...");
