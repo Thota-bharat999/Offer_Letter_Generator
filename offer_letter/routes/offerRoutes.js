@@ -19,6 +19,7 @@ router.get("/all",verifyToken,getAllOffers)
 router.get('/:id',verifyToken,getOfferById);
 router.put('/:id',verifyToken,updateOfferLetter)
 router.delete('/:id',verifyToken,deleteOfferLetter);
+
 router.get("/download/:id", verifyToken, downloadOfferLetter);
 router.post("/send-email",verifyToken,sendOfferLetterEmail)
 
