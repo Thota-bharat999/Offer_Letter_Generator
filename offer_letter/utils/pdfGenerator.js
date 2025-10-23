@@ -133,35 +133,40 @@ if (foundSignature) {
     };
 
     const browser = await puppeteer.launch(launchOptions);
+    let page;
+    try {
+      page = await browser.newPage();
 
-    const page = await browser.newPage();
+      // 5️⃣ Load rendered HTML content
+      await page.setContent(finalHtml, { waitUntil: "domcontentloaded", timeout: 180000 });
+      await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
+      // Ensure fonts/images are fully loaded before printing for precise layout
+      try { await page.evaluateHandle('document.fonts.ready'); } catch (e) {}
+      // Wait a bit more for images to load
+      await page.waitForTimeout(2000);
 
-    // 5️⃣ Load rendered HTML content
-    await page.setContent(finalHtml, { waitUntil: "domcontentloaded", timeout: 180000 });
-    await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
-    // Ensure fonts/images are fully loaded before printing for precise layout
-    try { await page.evaluateHandle('document.fonts.ready'); } catch (e) {}
-    // Wait a bit more for images to load
-    await page.waitForTimeout(2000);
+      // 6️⃣ Ensure uploads directory exists
+      const uploadsDir = path.resolve(__dirname, "../uploads");
+      fs.mkdirSync(uploadsDir, { recursive: true });
 
-    // 6️⃣ Ensure uploads directory exists
-    const uploadsDir = path.resolve(__dirname, "../uploads");
-    fs.mkdirSync(uploadsDir, { recursive: true });
+      // 7️⃣ Safe file name for candidate
+      const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
+      const pdfPath = path.join(__dirname, `../uploads/OfferLetter_${safeName}.pdf`);
 
-    // 7️⃣ Safe file name for candidate
-    const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
-    const pdfPath = path.join(__dirname, `../uploads/OfferLetter_${safeName}.pdf`);
+      // 8️⃣ Generate PDF (edge-to-edge; inner spacing controlled by the template)
+      await page.pdf({
+        path: pdfPath,
+        format: "A4",
+        printBackground: true,
+        preferCSSPageSize: true,
+        margin: { top: "0", bottom: "0", left: "0", right: "0" },
+      });
 
-    // 8️⃣ Generate PDF (edge-to-edge; inner spacing controlled by the template)
-    await page.pdf({
-      path: pdfPath,
-      format: "A4",
-      printBackground: true,
-      preferCSSPageSize: true,
-      margin: { top: "0", bottom: "0", left: "0", right: "0" },
-    });
-
-    await browser.close();
+      return pdfPath;
+    } finally {
+      if (page) await page.close();
+      await browser.close();
+    }
     console.log(`✅ Offer Letter PDF generated successfully: ${pdfPath}`);
 
     return pdfPath;
