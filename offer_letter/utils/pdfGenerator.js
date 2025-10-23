@@ -131,15 +131,13 @@ if (foundSignature) {
         "--disable-features=VizDisplayCompositor"
       ],
     };
-    if (process.platform !== 'win32') {
-      launchOptions.executablePath = "/opt/render/project/src/offer_letter/chrome/linux-141.0.7390.122/chrome-linux64/chrome";
-    }
+
     const browser = await puppeteer.launch(launchOptions);
 
     const page = await browser.newPage();
 
     // 5️⃣ Load rendered HTML content
-    await page.setContent(finalHtml, { waitUntil: "networkidle0", timeout: 60000 });
+    await page.setContent(finalHtml, { waitUntil: "networkidle0", timeout: 120000 });
     await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
     // Ensure fonts/images are fully loaded before printing for precise layout
     try { await page.evaluateHandle('document.fonts.ready'); } catch (e) {}
