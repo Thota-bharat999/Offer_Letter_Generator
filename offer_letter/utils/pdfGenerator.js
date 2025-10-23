@@ -112,12 +112,12 @@ const generateOfferPDF = async (offerData) => {
     const cssParts = ['  .title-row { margin: -3mm 0 4mm !important; }'];
     if (letterheadPath) {
       cssParts.push(
-        `  .page-bg { position: fixed; left: 0; top: 0; width: 210mm; height: 297mm; background-image: url('${letterheadPath}'); background-repeat: no-repeat; background-position: top center; background-size: 100% auto; z-index: -1; pointer-events: none; }`,
         '  .header { min-height: 12mm !important; }',
         '  .header .logo { display: none !important; }',
         '  .container { padding-top: 36mm !important; }',
         '  .watermark { display: none !important; }',
-        '  body { background-image: url("' + letterheadPath + '"); background-repeat: no-repeat; background-position: top center; background-size: 100% auto; }'
+        '  body > div.container:first-child { background-image: url("' + letterheadPath + '"); background-repeat: no-repeat; background-position: top center; background-size: 100% auto; }',
+        '  .annexure-section { background-image: none !important; }'
       );
     }
     const finalHtml = html.replace("</style>", cssParts.join("\n") + "\n</style>");
