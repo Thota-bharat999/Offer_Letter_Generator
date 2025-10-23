@@ -3,8 +3,10 @@ const router = express.Router();
 const multer=require("multer")
 const { registerAdmin, loginAdmin,forgotPassword,resetPasswordWithOtp } = require("../controllers/authController");
 const {createOfferLetter,getAllOffers,getOfferById,updateOfferLetter,deleteOfferLetter,downloadOfferLetter,sendOfferLetterEmail}=require('../controllers/offerController');
+const generateOfferPDF=require('../utils/pdfGenerator');
 
 const{verifyToken}=require('../middleware/authMiddleware');
+
 
 // ✅ NO spaces after '/login'
 router.get("/test", (req, res) => {
@@ -15,6 +17,7 @@ router.post("/login", loginAdmin);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPasswordWithOtp);
 router.post("/create",verifyToken,createOfferLetter);
+router.post('/geneate-pdf',verifyToken,generateOfferPDF)
 router.get("/all",verifyToken,getAllOffers)
 router.get('/:id',verifyToken,getOfferById);
 router.put('/:id',verifyToken,updateOfferLetter)
