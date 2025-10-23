@@ -138,10 +138,8 @@ if (foundSignature) {
       page = await browser.newPage();
 
       // 5️⃣ Load rendered HTML content
-      await page.setContent(finalHtml, { waitUntil: "domcontentloaded", timeout: 180000 });
+      await page.setContent(finalHtml, { waitUntil: "load", timeout: 180000 });
       await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
-      // Ensure fonts/images are fully loaded before printing for precise layout
-      try { await page.evaluateHandle('document.fonts.ready'); } catch (e) {}
       // Wait a bit more for images to load
       await page.waitForTimeout(2000);
 
@@ -162,14 +160,12 @@ if (foundSignature) {
         margin: { top: "0", bottom: "0", left: "0", right: "0" },
       });
 
+      console.log(`✅ Offer Letter PDF generated successfully: ${pdfPath}`);
       return pdfPath;
     } finally {
       if (page) await page.close();
       await browser.close();
     }
-    console.log(`✅ Offer Letter PDF generated successfully: ${pdfPath}`);
-
-    return pdfPath;
   } catch (error) {
     console.error("❌ Error generating offer PDF:", error);
     throw error;
