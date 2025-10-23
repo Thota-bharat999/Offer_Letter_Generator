@@ -109,10 +109,28 @@ const generateOfferPDF = async (offerData) => {
     console.log("✅ [8] EJS rendered successfully");
 
     // === EMBED LETTERHEAD AS IMG ===
-    let modifiedHtml = html;
-    if (letterheadPath) {
-      modifiedHtml = modifiedHtml.replace('<div class="container">', '<div class="container" style="position: relative;"><img src="' + letterheadPath + '" style="position: absolute; top: 0; left: 0; width: 100%; height: auto; z-index: -1;" /></div>');
-    }
+    // === EMBED LETTERHEAD AS BACKGROUND (Fix duplicate page issue) ===
+let modifiedHtml = html;
+if (letterheadPath) {
+  // Insert a single background div at top of <body> (not inside container)
+  modifiedHtml = modifiedHtml.replace(
+    "<body>",
+    `<body>
+      <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 210mm;
+        height: 297mm;
+        background-image: url('${letterheadPath}');
+        background-repeat: no-repeat;
+        background-size: 100% auto;
+        background-position: top center;
+        z-index: -1;
+      "></div>`
+  );
+}
+
 
     // === STYLE INJECTION ===
     const cssParts = ['  .title-row { margin: -3mm 0 4mm !important; }'];
