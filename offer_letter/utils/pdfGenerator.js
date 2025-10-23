@@ -108,6 +108,12 @@ const generateOfferPDF = async (offerData) => {
 
     console.log("✅ [8] EJS rendered successfully");
 
+    // === EMBED LETTERHEAD AS IMG ===
+    let modifiedHtml = html;
+    if (letterheadPath) {
+      modifiedHtml = modifiedHtml.replace('<div class="container">', '<div class="container" style="position: relative;"><img src="' + letterheadPath + '" style="position: absolute; top: 0; left: 0; width: 100%; height: auto; z-index: -1;" /></div>');
+    }
+
     // === STYLE INJECTION ===
     const cssParts = ['  .title-row { margin: -3mm 0 4mm !important; }'];
     if (letterheadPath) {
@@ -115,12 +121,10 @@ const generateOfferPDF = async (offerData) => {
         '  .header { min-height: 12mm !important; }',
         '  .header .logo { display: none !important; }',
         '  .container { padding-top: 36mm !important; }',
-        '  .watermark { display: none !important; }',
-        '  body > div.container:first-child { background-image: url("' + letterheadPath + '"); background-repeat: no-repeat; background-position: top center; background-size: 100% auto; }',
-        '  .annexure-section { background-image: none !important; }'
+        '  .watermark { display: none !important; }'
       );
     }
-    const finalHtml = html.replace("</style>", cssParts.join("\n") + "\n</style>");
+    const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
     console.log("✅ [9] CSS adjustments applied, letterheadPath:", letterheadPath);
 
     // === PUPPETEER LAUNCH ===
