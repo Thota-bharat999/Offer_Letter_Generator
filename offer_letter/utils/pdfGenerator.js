@@ -27,10 +27,10 @@ const generateOfferPDF = async (offerData) => {
         const base64 = fs.readFileSync(foundLogo).toString("base64");
         logoPath = `data:${mime};base64,${base64}`; // embed to avoid file:// issues
       } catch (e) {
-        console.warn("⚠️ Failed to embed logo, falling back to file URL:", e.message);
-        logoPath = `file:///${foundLogo.replace(/\\/g, "/")}`;
+        console.warn("⚠️ Failed to embed logo, skipping logo:", e.message);
+        logoPath = "";
       }
-    } 
+    }
     
     // 2b️⃣ Letterhead background image (embed as base64)
     const letterheadCandidates = [
@@ -49,8 +49,8 @@ const generateOfferPDF = async (offerData) => {
     const base64Lh = fs.readFileSync(foundLetterhead).toString("base64");
     letterheadPath = `data:${mimeLh};base64,${base64Lh}`;
     } catch (e) {
-    console.warn("⚠️ Failed to embed letterhead, falling back to file URL:", e.message);
-    letterheadPath = `file:///${foundLetterhead.replace(/\\/g, "/")}`;
+    console.warn("⚠️ Failed to embed letterhead, skipping letterhead:", e.message);
+    letterheadPath = "";
     }
     }
     // 🔹 Signature image
@@ -64,13 +64,13 @@ let signaturePath = "";
 if (foundSignature) {
   try {
     const lowerS = foundSignature.toLowerCase();
-    const mimeS = lowerS.endsWith(".png") ? "image/png" : 
+    const mimeS = lowerS.endsWith(".png") ? "image/png" :
                  (lowerS.endsWith(".jpg") || lowerS.endsWith(".jpeg")) ? "image/jpeg" : "application/octet-stream";
     const base64S = fs.readFileSync(foundSignature).toString("base64");
     signaturePath = `data:${mimeS};base64,${base64S}`;
   } catch (e) {
-    console.warn("⚠️ Failed to embed signature:", e.message);
-    signaturePath = `file:///${foundSignature.replace(/\\/g, "/")}`;
+    console.warn("⚠️ Failed to embed signature, skipping signature:", e.message);
+    signaturePath = "";
   }
 }
 
@@ -126,7 +126,9 @@ if (foundSignature) {
         "--disable-dev-shm-usage",
         "--disable-gpu",
         "--disable-software-rasterizer",
-        "--remote-debugging-port=9222"
+        "--remote-debugging-port=9222",
+        "--disable-web-security",
+        "--disable-features=VizDisplayCompositor"
       ],
     };
     if (process.platform !== 'win32') {
@@ -138,9 +140,11 @@ if (foundSignature) {
 
     // 5️⃣ Load rendered HTML content
     await page.setContent(finalHtml, { waitUntil: "networkidle0", timeout: 60000 });
-     await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
+    await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
     // Ensure fonts/images are fully loaded before printing for precise layout
     try { await page.evaluateHandle('document.fonts.ready'); } catch (e) {}
+    // Wait a bit more for images to load
+    await page.waitForTimeout(2000);
 
     // 6️⃣ Ensure uploads directory exists
     const uploadsDir = path.resolve(__dirname, "../uploads");

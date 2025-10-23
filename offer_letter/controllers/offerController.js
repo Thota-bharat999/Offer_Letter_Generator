@@ -122,14 +122,7 @@ exports.createOfferLetter = async (req, res) => {
     // ✅ Salary breakdown
     const salaryBreakdown = generateSalaryBreakdown(totalCTC);
 
-    // ✅ Resolve local logo path (absolute path)
-    const logoAbsolutePath = path.join(
-      __dirname,
-      "../assets/Amazon-Logo1.png"
-    );
-
-    // Convert to file:// URL (important for PDF rendering)
-    const logoUrl = `file://${logoAbsolutePath.replace(/\\/g, "/")}`;
+    // Logo is now handled inside pdfGenerator
 
     // ✅ Create offer letter data object
     const offerData = {
@@ -149,7 +142,6 @@ exports.createOfferLetter = async (req, res) => {
       ...offerData,
       companyName: "Amazon IT Solutions",
       companyAddress: "Hyderabad, Telangana, India",
-      companyLogo: logoUrl, // 👈 Added dynamic logo
     });
 
     // ✅ Create offer letter document with pdfPath
