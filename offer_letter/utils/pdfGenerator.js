@@ -137,7 +137,7 @@ if (foundSignature) {
     const page = await browser.newPage();
 
     // 5️⃣ Load rendered HTML content
-    await page.setContent(finalHtml, { waitUntil: "load", timeout: 120000 });
+    await page.setContent(finalHtml, { waitUntil: "domcontentloaded", timeout: 180000 });
     await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
     // Ensure fonts/images are fully loaded before printing for precise layout
     try { await page.evaluateHandle('document.fonts.ready'); } catch (e) {}
