@@ -200,7 +200,7 @@
         <% } %>
       </div>
       <div class="to">
-        <p class="name"><%= candidateName %></p>
+        <p class="name"><%= candidateName %>,</p>
         <%
           const address = candidateAddress || '';
           const words = address.split(/\s+/).filter(Boolean);
@@ -289,19 +289,19 @@
         Kindly acknowledge this mail on/before
         <strong><%= new Date(dateIssued).toLocaleDateString('en-GB').replace(/\//g,'-') %></strong> as an
         acceptance of this offer. Wishing you a great career and growth options with Amazon IT
-        Solutions!
+        Solutions.!
       </p>
 
       <div class="signature">
   <p style="margin-bottom: 4px;"><strong>Yours Sincerely,</strong></p>
-  <p class="for" style="margin-bottom: 4px;"><strong>For <%= companyName %></strong></p>
+  <p class="for" style="margin-bottom: 2px;"><strong>For <%= companyName %></strong></p>
   <% if (signaturePath) { %>
     <div style="margin: -6px 0 3px 12px; display: inline-block;">
       <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:80px; height:auto; opacity:0.95;" />
     </div>
   <% } %>
   <p class="signer">Chakravarthy Devarkonda</p>
-  <p style="margin-top: -8px;">Manager – Human Resources</p>
+  <p style="margin-top: -8px;">Manager – Human Resources.</p>
 </div>
     </div>
 
