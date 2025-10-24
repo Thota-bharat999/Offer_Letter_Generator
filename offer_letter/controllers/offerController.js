@@ -56,15 +56,24 @@ const generateSalaryBreakdown = (ctcAmount) => {
     );
   }
 
-  // Step 3️⃣ Compute final totals (FIXED for monthly consistency)
+  // Step 3️⃣ Compute final totals
   const fixedAnnual = salaryBreakdown.reduce((sum, c) => sum + c.annualAmount, 0);
   const fixedMonthly = salaryBreakdown.reduce((sum, c) => sum + c.monthlyAmount, 0);
 
-  // Step 4️⃣ Add "Fixed CTC" row at the end
+  // Step 4️⃣ Calculate target monthly for Fixed CTC
+  const targetMonthly = Math.round(fixedAnnual / 12);
+
+  // Step 5️⃣ Adjust the last component's monthly to match target
+  const diff = targetMonthly - fixedMonthly;
+  if (diff !== 0) {
+    salaryBreakdown[salaryBreakdown.length - 1].monthlyAmount += diff;
+  }
+
+  // Step 6️⃣ Add "Fixed CTC" row at the end
   salaryBreakdown.push({
     component: "Fixed CTC",
     annualAmount: fixedAnnual,
-    monthlyAmount: fixedMonthly, // This is the exact sum of components
+    monthlyAmount: targetMonthly,
   });
 
   return salaryBreakdown;
