@@ -300,10 +300,12 @@
         <p><strong>Yours Sincerely,</strong></p>
         <p class="for" style="margin-bottom: 20px;" ><strong>For <%= companyName %></strong></p>
         <% if (signaturePath) { %>
-          <div style="margin: -16px 0 3px 10px; display: inline-block;">
-            <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:100px; height:auto;" />
-          </div>
-        <% } %>
+  <div style="margin: -16px 0 3px 10px; display: inline-block;">
+    <img src="<%= signaturePath %>" alt="Authorized Signature"
+         style="width:85px; height:auto; opacity:0.95;" />  <!-- 🔹 reduced size -->
+  </div>
+<% } %>
+
         <p class="signer">Chakravarthy Devarkonda</p>
         <p style="margin-top: -16px;">Manager – Human Resources</p>
       </div>
