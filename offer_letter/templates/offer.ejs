@@ -26,7 +26,6 @@
       .container {
         position: relative;
         z-index: 1;
-        /* min-height: 260mm; */
         padding: 2mm 18mm 34mm 18mm;
         page-break-inside: auto;
       }
@@ -50,7 +49,7 @@
 
       .to { margin: 0; margin-top: -4mm; }
       .to p { margin: 0; line-height: 1.4; font-family: Calibri }
-      .to .name { font-weight: 500; margin-bottom: 1mm; font-family: Calibri }
+      .to .name { font-weight: 500; margin-bottom: 0.5mm; font-family: Calibri } /* 🔹 reduced gap */
       .to .addr { white-space: normal; font-family: Calibri !important; }
 
       .title-row {
@@ -60,9 +59,11 @@
         align-items: center;
         margin: 2mm 0 3mm;
       }
+
       .title-date-wrap {
         margin-top:4mm;
       }
+
       .title {
         grid-column: 2 / 3;
         text-align: center;
@@ -71,10 +72,12 @@
         font-size: 12pt;
         font-family: cambria,serif;
       }
+
       .date {
         text-align: right;
         font-family: Cambria, serif !important;
-        margin-top: 2mm;
+        margin-top: 0.5mm; /* 🔹 tightened */
+        display: block;    /* 🔹 makes "Date:" move to next line */
         font-size: 10.5pt;
         font-weight: 700;
       }
@@ -100,10 +103,8 @@
         text-decoration: underline;
       }
 
-      /* === IMPROVED SECOND PAGE STYLES === */
       .page-break { page-break-before: always; }
 
-      /* Refined list spacing to match original */
       .numbered {
         margin: 10px 0 14px 10px;
         padding-left: 28px;
@@ -116,7 +117,6 @@
         padding-left: 4px;
       }
 
-      /* Tightened paragraph spacing for Annexures */
       .annexure-section p {
         font-size: 12.5px;
         margin: 4px 0 8px 0;
@@ -125,7 +125,6 @@
         font-family: Cambria, serif !important;
       }
 
-      /* Table unchanged but centered and margin tuned */
       table {
         width: calc(100% - 120px);
         border-collapse: collapse;
@@ -152,7 +151,6 @@
       th:nth-child(2), td:nth-child(2),
       th:nth-child(3), td:nth-child(3) { text-align: right; }
 
-      /* Footer note anchored near bottom */
       .footer-note {
         font-family: Cambria, serif !important;
         font-size: 10pt;
@@ -185,20 +183,19 @@
   </head>
 
   <body>
-    <!-- Watermark -->
     <div class="watermark">
       <% if (logoPath) { %>
         <img src="<%= logoPath %>" alt="Watermark" />
       <% } %>
     </div>
 
-    <!-- PAGE 1 (unchanged) -->
     <div class="container">
       <div class="header">
         <% if (logoPath) { %>
           <img class="logo" src="<%= logoPath %>" alt="Company Logo" />
         <% } %>
       </div>
+
       <div class="to">
         <p class="name"><%= candidateName %></p>
         <% 
@@ -236,9 +233,9 @@
 
       <div class="title-row">
         <div></div>
-        <div class="title">Offer Letter</div><br/>
+        <div class="title">Offer Letter</div>
         <div class="date">
-          <strong>Date:</strong>
+          <strong>Date:</strong><br /> <!-- 🔹 moved to next line -->
           <%= new Date(dateIssued).toLocaleDateString('en-GB').replace(/\//g,'-') %>
         </div>
       </div>
@@ -309,7 +306,6 @@
       </div>
     </div>
 
-    <!-- PAGE 2 (improved layout only) -->
     <div class="page-break" style="page-break-before: always;"></div>
     <div class="container annexure-section">
       <div class="header">
@@ -341,7 +337,6 @@
 
       <h3 class="anexure">ANNEXURE II</h3>
 
-      <!-- Table unchanged -->
       <table>
         <colgroup>
           <col style="width: 65%;" />
