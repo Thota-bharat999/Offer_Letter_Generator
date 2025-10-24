@@ -326,10 +326,7 @@ exports.getAllOffers = async (req, res) => {
             return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
         }
 
-        const filter =
-            req.admin.role === "superAdmin"
-                ? {}
-                : { createdBy: req.admin.id };
+        const filter = {};
 
         const offers = await OfferLetter.find(filter)
             .populate("createdBy", "name email role")
