@@ -74,6 +74,7 @@ const generateOfferPDF = async (offerData) => {
       candidateAddress: offerData.candidateAddress || "Address Not Provided",
       position: offerData.position || "Position Not Specified",
       joiningDate: offerData.joiningDate || new Date(),
+      joiningTime: offerData.joiningTime || "10:30 AM",
       ctcAmount: offerData.ctcAmount || 0,
       ctcInWords: offerData.ctcInWords || "",
       salaryBreakdown: offerData.salaryBreakdown || [],
