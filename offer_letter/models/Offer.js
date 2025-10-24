@@ -46,6 +46,7 @@ const OfferLetterSchema = new mongoose.Schema(
     },
     joiningTime: {
       type: String,
+      required:[true,"Joining time is required"],
       default: "10:30 AM",
     },
     ctcAmount: {
