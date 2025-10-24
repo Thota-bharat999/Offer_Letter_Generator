@@ -79,11 +79,11 @@
         font-weight: 700;
       }
 
-      p { margin: 0 0 2.5mm 0; text-align: justify; line-height: 1.4; font-size: 14px; }
+      p { margin: 0 0 2.5mm 0; text-align: justify; line-height: 1.35; font-size: 14px; }
 
       .signature { margin-top: 3mm; }
       .signature .for { font-weight: 700; font-family: cambria; margin-top: -6px; }
-      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-3px; }
+      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-8px; }
 
       h3 {
         margin: 0 0 3mm 0;
@@ -300,12 +300,12 @@
   <p><strong>Yours Sincerely,</strong></p>
   <p class="for"><strong>For <%= companyName %></strong></p>
   <% if (signaturePath) { %>
-    <div style="margin: -16px 0 3px 10px; display: inline-block;">
+    <div style="margin: -6px 0 3px 12px; display: inline-block;">
       <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:85px; height:auto; opacity:0.95;" />
     </div>
   <% } %>
   <p class="signer">Chakravarthy Devarkonda</p>
-  <p style="margin-top: -16px;">Manager – Human Resources</p>
+  <p style="margin-top: -14px;">Manager – Human Resources</p>
 </div>
     </div>
 
