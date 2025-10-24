@@ -64,9 +64,9 @@ const generateSalaryBreakdown = (ctcAmount) => {
   const targetMonthly = Math.round(fixedAnnual / 12);
 
   // Step 5️⃣ Adjust the last component's monthly to match target
-  const diff = targetMonthly - fixedMonthly;
-  if (diff !== 0) {
-    salaryBreakdown[salaryBreakdown.length - 1].monthlyAmount += diff;
+  const monthlyDiff = targetMonthly - fixedMonthly;
+  if (monthlyDiff !== 0) {
+    salaryBreakdown[salaryBreakdown.length - 1].monthlyAmount += monthlyDiff;
   }
 
   // Step 6️⃣ Add "Fixed CTC" row at the end
