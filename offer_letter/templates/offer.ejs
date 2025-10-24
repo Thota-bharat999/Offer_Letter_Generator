@@ -83,7 +83,7 @@
 
       .signature { margin-top: 2mm; }
       .signature .for { font-weight: 700; font-family: cambria; margin-top: -6px; }
-      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-6px; }
+      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-8px; }
 
       h3 {
         margin: 0 0 3mm 0;
@@ -201,35 +201,31 @@
       </div>
       <div class="to">
         <p class="name"><%= candidateName %></p>
-        <% 
-          const parts = (candidateAddress || '').split(',').map(s => s.trim()).filter(Boolean);
-          const minLines = 3;
-          const maxLines = 4;
+        <%
+          const address = candidateAddress || '';
+          const words = address.split(/\s+/).filter(Boolean);
           let lines = [];
+          let currentLine = '';
 
-          if (parts.length === 0) {
-            lines = [];
-          } else if (parts.length >= minLines && parts.length <= maxLines) {
-            lines = parts;
-          } else if (parts.length > maxLines) {
-            lines = parts.slice(0, maxLines - 1);
-            lines.push(parts.slice(maxLines - 1).join(', '));
-          } else {
-            lines = parts.slice();
-            const last = lines.pop() || '';
-            const words = last.split(/\s+/).filter(Boolean);
-            const needed = minLines - parts.length;
-            const chunkSize = Math.max(1, Math.ceil(words.length / needed));
-            for (let i = 0; i < words.length; i += chunkSize) {
-              lines.push(words.slice(i, i + chunkSize).join(' '));
-              if (lines.length >= minLines) break;
+          for (let word of words) {
+            if (currentLine.length + word.length + (currentLine ? 1 : 0) <= 25) {
+              currentLine += (currentLine ? ' ' : '') + word;
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = word;
             }
           }
+          if (currentLine) lines.push(currentLine);
+
+          // Ensure exactly 4 lines
+          while (lines.length < 4) {
+            lines.push('');
+          }
+          lines = lines.slice(0, 4);
         %>
         <p class="addr">
-          <% lines.forEach(function(line, i){ %>
-            <%= line %><% if (i < lines.length - 1) { %>,<br/>
-            <% } else { %><br/><% } %>
+          <% lines.forEach(function(line){ %>
+            <%= line %><br/>
           <% }) %>
         </p>
       </div>
