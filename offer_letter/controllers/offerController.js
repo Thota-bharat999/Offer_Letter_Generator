@@ -332,10 +332,13 @@ exports.getAllOffers = async (req, res) => {
             .populate("createdBy", "name email role")
             .sort({ createdAt: -1 });
 
+        const totalCount = await OfferLetter.countDocuments(filter);
+
         res.status(200).json({
             success: true,
             message: offers.length === 0 ? "No offer letters found" : "Offers retrieved successfully",
             count: offers.length,
+            totalCount: totalCount,
             data: offers,
         });
     } catch (error) {
@@ -365,7 +368,8 @@ exports.getOfferById = async (req, res) => {
       return res.status(404).json({ message: "Offer not found" });
     }
 
-    res.status(200).json(offer);
+    const totalCount = await OfferLetter.countDocuments({});
+    res.status(200).json({ success: true, data: offer, count: totalCount });
   } catch (err) {
     console.error("❌ Error fetching offer by ID:", err);
     res.status(500).json({ message: "Server error", error: err.message });
