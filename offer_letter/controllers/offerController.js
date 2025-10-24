@@ -337,6 +337,7 @@ exports.getAllOffers = async (req, res) => {
 
         res.status(200).json({
             success: true,
+            message: offers.length === 0 ? "No offer letters found" : "Offers retrieved successfully",
             count: offers.length,
             data: offers,
         });
