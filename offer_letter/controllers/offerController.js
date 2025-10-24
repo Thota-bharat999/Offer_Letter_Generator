@@ -335,10 +335,6 @@ exports.getAllOffers = async (req, res) => {
             .populate("createdBy", "name email role")
             .sort({ createdAt: -1 });
 
-        if (!offers.length) {
-            return res.status(404).json({ message: "No offer letters found" });
-        }
-
         res.status(200).json({
             success: true,
             count: offers.length,
