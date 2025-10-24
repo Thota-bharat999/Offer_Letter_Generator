@@ -213,9 +213,7 @@ exports.updateOfferLetter = async (req, res) => {
 
         // Define the query filter based on the user's role
         const filter = {
-            _id: id,
-            // Non-superAdmins can only update offers they created
-            ...(adminRole !== "superAdmin" && { createdBy: adminId })
+            _id: id
         };
         
         const updatedOffer = await OfferLetter.findOneAndUpdate(filter, updates, {
