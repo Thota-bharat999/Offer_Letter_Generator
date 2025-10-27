@@ -1,6 +1,7 @@
 const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
+const { getInstalledBrowsers } = require("@puppeteer/browsers");
 const fs = require("fs");
 
 const generateOfferPDF = async (offerData) => {
@@ -125,9 +126,14 @@ const generateOfferPDF = async (offerData) => {
 
     // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
+    const installedBrowsers = await getInstalledBrowsers();
+    const chromeBrowser = installedBrowsers.find(b => b.browser === 'chrome');
+    if (!chromeBrowser) {
+      throw new Error('Chrome browser not installed via @puppeteer/browsers');
+    }
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath: puppeteer.executablePath('chrome'),
+      executablePath: chromeBrowser.executablePath,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
