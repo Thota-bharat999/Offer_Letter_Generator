@@ -9,6 +9,10 @@
     "dev": "nodemon server.js",
     "postinstall": "npx @puppeteer/browsers install chrome@stable"
   },
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
