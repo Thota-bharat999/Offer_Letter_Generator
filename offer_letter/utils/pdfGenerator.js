@@ -127,7 +127,7 @@ const generateOfferPDF = async (offerData) => {
     console.log("🟩 [10] Launching Puppeteer...");
     const browser = await puppeteer.launch({
       headless: true,
-      channel: 'chromium',
+      executablePath: '/usr/bin/google-chrome',
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
