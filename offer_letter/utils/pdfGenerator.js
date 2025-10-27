@@ -1,6 +1,6 @@
 const path = require("path");
 const ejs = require("ejs");
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
 const { getInstalledBrowsers } = require("@puppeteer/browsers");
 const fs = require("fs");
 
@@ -126,18 +126,18 @@ const generateOfferPDF = async (offerData) => {
 
     // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
-    const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: '/usr/bin/chromium',
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-zygote",
-        "--single-process",
-      ],
-    });
+   const browser = await puppeteer.launch({
+  headless: true,
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--no-zygote",
+    "--single-process",
+  ],
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+});
 
     console.log("✅ [11] Puppeteer launched successfully");
 
