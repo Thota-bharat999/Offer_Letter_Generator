@@ -1,6 +1,7 @@
 const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer-core");
+const { getInstalledBrowsers } = require("@puppeteer/browsers");
 const fs = require("fs");
 
 const generateOfferPDF = async (offerData) => {
