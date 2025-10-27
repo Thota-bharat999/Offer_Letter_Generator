@@ -136,8 +136,13 @@ const generateOfferPDF = async (offerData) => {
     "--no-zygote",
     "--single-process",
   ],
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath(),
+  executablePath:
+    process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)
+      ? process.env.PUPPETEER_EXECUTABLE_PATH
+      : puppeteer.executablePath(), // ✅ fallback for Railway
 });
+
+
 
     console.log("✅ [11] Puppeteer launched successfully");
 
