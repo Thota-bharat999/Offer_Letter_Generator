@@ -126,17 +126,18 @@ const generateOfferPDF = async (offerData) => {
     // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
     const browser = await puppeteer.launch({
-      headless: true,
-      executablePath: '/usr/bin/google-chrome',
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-zygote",
-        "--single-process",
-      ],
-    });
+  headless: true,
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    "--no-zygote",
+    "--single-process",
+  ],
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath()),
+});
+
     console.log("✅ [11] Puppeteer launched successfully");
 
     const page = await browser.newPage();
