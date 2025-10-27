@@ -1,4 +1,5 @@
 const path = require("path");
+const os = require("os");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
 const { getInstalledBrowsers } = require("@puppeteer/browsers");
@@ -126,7 +127,8 @@ const generateOfferPDF = async (offerData) => {
 
     // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
-    const installedBrowsers = await getInstalledBrowsers();
+    const cacheDir = path.join(os.homedir(), '.cache', 'puppeteer');
+    const installedBrowsers = await getInstalledBrowsers({ cacheDir });
     const chromeBrowser = installedBrowsers.find(b => b.browser === 'chrome');
     if (!chromeBrowser) {
       throw new Error('Chrome browser not installed via @puppeteer/browsers');
