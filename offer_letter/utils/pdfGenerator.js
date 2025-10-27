@@ -126,7 +126,7 @@ const generateOfferPDF = async (offerData) => {
 
     // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
-   const browser = await puppeteer.launch({
+  const browser = await puppeteer.launch({
   headless: true,
   args: [
     "--no-sandbox",
@@ -136,11 +136,9 @@ const generateOfferPDF = async (offerData) => {
     "--no-zygote",
     "--single-process",
   ],
-  executablePath:
-    process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)
-      ? process.env.PUPPETEER_EXECUTABLE_PATH
-      : puppeteer.executablePath(), // ✅ fallback for Railway
+  executablePath: puppeteer.executablePath(), // ✅ uses internal Chromium
 });
+
 
 
 
