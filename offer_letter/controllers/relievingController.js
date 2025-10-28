@@ -1,10 +1,11 @@
 const fs=require('fs');
 const path=require("path");
 const RelievingLetter=require('../models/RelievingLetter');
+const generateRelievingPDFUtil = require("../utils/relievingPdfGenerator")
 const sendEmail=require('../services/emailService')
 
 const mongoose=require('mongoose');
-const generateRelievingPDFUtil = require('../utils/relievingPdfGenerator');
+
 
 exports.createRelivingLetter=async(req,res)=>{
     try{
@@ -98,6 +99,9 @@ try{
 exports.updateRelievingLetter=async(req,res)=>{
     try{
         const {id}=req.params;
+        if(!id){
+            return res.status(400).json({message:"Relieving letter ID is required"});
+        }
         const{employeeName,designation,employeeId,joiningDate,relievingDate}=req.body;
         const updates={
             ...(employeeName &&{employeeName}),
@@ -156,34 +160,41 @@ exports.deleteRelievingLetter=async(req,res) => {
 }
 
 // Generate Relieving PDF
-
 exports.generateRelievingPDF = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    console.log("📩 Incoming Relieving PDF Generation Request:", req.params, req.body);
 
-        if (!id) {
-            return res.status(400).json({ message: "Relieving letter ID is required" });
-        }
-
-        const letter = await RelievingLetter.findById(id);
-        if (!letter) {
-            return res.status(404).json({ message: "Relieving letter not found" });
-        }
-
-        const pdfPath = await generateRelievingPDFUtil(letter);
-
-        res.status(200).json({
-            message: "Relieving PDF generated successfully",
-            pdfPath: pdfPath,
-        });
-    } catch (error) {
-        console.error("❌ Error generating relieving PDF:", error);
-        res.status(500).json({
-            message: "Server error while generating relieving PDF",
-            error: error.message,
-        });
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Relieving letter ID is required" });
     }
+
+    // ✅ Fetch letter details
+    const letter = await RelievingLetter.findById(id);
+    if (!letter) {
+      return res.status(404).json({ message: "Relieving letter not found" });
+    }
+
+    // ✅ Generate the PDF (using your utility)
+    const pdfPath = await generateRelievingPDFUtil(letter);
+    console.log("✅ Relieving Letter PDF generated successfully at:", pdfPath);
+
+    // ✅ Response
+    return res.status(200).json({
+      success: true,
+      message: "Relieving PDF generated successfully",
+      pdfPath,
+    });
+  } catch (error) {
+    console.error("❌ Error generating relieving PDF:", error);
+    return res.status(500).json({
+      message: "Server error while generating relieving PDF",
+      error: error.message,
+      stack: error.stack,
+    });
+  }
 };
+
 
 
 exports.downloadRelievingLetter = async (req, res) => {
