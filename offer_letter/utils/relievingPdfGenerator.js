@@ -113,7 +113,7 @@ const generateRelievingPDF = async (data) => {
     await page.setContent(finalHtml, { waitUntil: "networkidle0" });
     await page.evaluateHandle("document.fonts.ready");
 
-    const uploadsDir = path.resolve(__dirname, "../uploads");
+    const uploadsDir = path.resolve(__dirname, "../generated_pdfs");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
     const safeName = (data.employeeName || "Employee").replace(/\s+/g, "_");
