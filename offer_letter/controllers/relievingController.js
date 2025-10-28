@@ -231,8 +231,8 @@ exports.sendRelievingEmail = async (req, res) => {
     }
 
     // ✅ Fix path resolution
-    // Always resolve to generated_pdfs directory using the filename
-    const absolutePath = path.resolve(__dirname, "../generated_pdfs", path.basename(pdfPath));
+    // Always resolve to generated directory using the filename
+    const absolutePath = path.resolve(__dirname, "../generated", path.basename(pdfPath));
 
     console.log("📄 Resolved PDF path:", absolutePath);
 
