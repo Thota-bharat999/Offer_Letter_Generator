@@ -223,59 +223,71 @@ exports.downloadRelievingLetter = async (req, res) => {
 
 exports.sendRelievingEmail = async (req, res) => {
   try {
-    const { email, pdfPath } = req.body;
+    const { relievingId, email } = req.body;
 
-    // ✅ Validate input
-    if (!email || !pdfPath) {
-      return res.status(400).json({ message: "Email and pdfPath are required" });
+    // ✅ Validate required fields
+    if (!relievingId || !email) {
+      return res.status(400).json({ message: "Relieving ID and email are required" });
     }
 
-    // ✅ Fix path resolution
-    // Always resolve to generated directory using the filename
-    const absolutePath = path.resolve(__dirname, "../generated", path.basename(pdfPath));
-
-    console.log("📄 Resolved PDF path:", absolutePath);
-
-    if (!fs.existsSync(absolutePath)) {
-      return res.status(404).json({ message: "PDF file not found on server" });
+    // ✅ Fetch relieving letter from DB
+    const letter = await RelievingLetter.findById(relievingId);
+    if (!letter) {
+      return res.status(404).json({ message: "Relieving letter not found" });
     }
+
+    // ✅ Construct PDF path
+    const pdfPath = path.join(
+      __dirname,
+      `../generated_pdfs/Relieving_${letter.employeeName.replace(/\s+/g, "_")}.pdf`
+    );
+
+    // ✅ Check if PDF already exists — if not, generate it
+    if (!fs.existsSync(pdfPath)) {
+      console.log("📄 PDF not found — generating now...");
+      await generateRelievingPDF(letter);
+    }
+
+    console.log("✅ PDF Path:", pdfPath);
+    console.log("✅ File Exists:", fs.existsSync(pdfPath));
 
     // ✅ Compose email
-    const subject = "Your Relieving and Experience Letter - Amazon IT Solutions";
-    const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <p>Dear Employee,</p>
-        <p>
-          Please find attached your <strong>Relieving and Experience Letter</strong> from 
-          <strong>Amazon IT Solutions</strong>.
-        </p>
-        <p>We wish you success in your future endeavors!</p>
-        <br/>
-        <p>Best regards,<br/><strong>HR Department</strong><br/>Amazon IT Solutions</p>
-      </div>
+    const subject = `Relieving and Experience Letter - ${letter.employeeName} | Amazon IT Solutions`;
+    const htmlBody = `
+      <p>Dear ${letter.employeeName},</p>
+      <p>
+        Please find attached your <strong>Relieving and Experience Letter</strong> from 
+        <strong>Amazon IT Solutions</strong>.
+      </p>
+      <p>We wish you the very best for your future endeavors!</p>
+      <br />
+      <p>Best regards,<br><strong>HR Department</strong><br>Amazon IT Solutions</p>
     `;
 
-    // ✅ Send email via SendGrid (emailService.js handles transporter)
+    // ✅ Send email with attachment
     await sendEmail({
       to: email,
       subject,
-      html,
+      html: htmlBody,
+      text: `Dear ${letter.employeeName}, please find attached your relieving and experience letter.`,
       attachments: [
         {
-          filename: path.basename(absolutePath),
-          path: absolutePath,
+          filename: `Relieving_${letter.employeeName}.pdf`,
+          path: pdfPath,
           contentType: "application/pdf",
         },
       ],
     });
 
-    console.log(`📧 Email sent successfully to: ${email}`);
-    res.status(200).json({ message: "Email sent successfully" });
-  } catch (error) {
-    console.error("❌ Error sending relieving email:", error);
+    res.status(200).json({
+      success: true,
+      message: `Relieving letter sent successfully to ${email}`,
+    });
+  } catch (err) {
+    console.error("❌ Error sending relieving letter email:", err);
     res.status(500).json({
-      message: "Server error while sending email",
-      error: error.message,
+      message: "Server error while sending relieving letter email",
+      error: err.message,
     });
   }
 };
