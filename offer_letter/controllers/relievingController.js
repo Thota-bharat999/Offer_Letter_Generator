@@ -9,7 +9,7 @@ exports.createRelivingLetter=async(req,res)=>{
         if(!employeeName || !designation || !employeeId || !joiningDate || !relievingDate){
             return res.status(400).json({message:"All fields are required"});
         }
-        const newRelivingLetter=new RelivingLetter({
+        const newRelievingLetter=new RelievingLetter({
             employeeName,
             designation,
             employeeId,
@@ -17,12 +17,12 @@ exports.createRelivingLetter=async(req,res)=>{
             relievingDate,
 
         });
-        await newRelivingLetter.save();
+        await newRelievingLetter.save();
         res.status(201).json({
             message: "Relieving letter created successfully",
       data: {
-        _id: newLetter._id,
-        employeeName: newRelivingLetter.employeeName
+        _id: newRelievingLetter._id,
+        employeeName: newRelievingLetter.employeeName
       }
         });
 
