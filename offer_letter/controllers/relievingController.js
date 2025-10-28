@@ -244,7 +244,7 @@ exports.sendRelievingEmail = async (req, res) => {
     }
 
     // ✅ Resolve PDF absolute path
-    const absolutePath = path.resolve(__dirname, `..${pdfPath}`);
+    const absolutePath = path.resolve(__dirname, `../generated_pdfs${pdfPath}`);
     if (!fs.existsSync(absolutePath)) {
       return res.status(404).json({ message: "PDF file not found on server" });
     }
