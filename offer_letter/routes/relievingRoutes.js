@@ -9,7 +9,7 @@ router.get('/all',verifyToken,getAllRelievingLetters);
 router.get('/:id',verifyToken,getRelievingLetterById);
 router.put('/:id',verifyToken,updateRelievingLetter);
 router.delete('/:id',verifyToken,deleteRelievingLetter);
-router.post('/generate-pdf',verifyToken,generateRelievingPDF);
+router.post('/generate-pdf/:id',verifyToken,generateRelievingPDF);
 router.get('/download/:id',verifyToken,downloadRelievingLetter);
 router.post("/send-email", verifyToken,sendRelievingEmail)
 module.exports=router;
