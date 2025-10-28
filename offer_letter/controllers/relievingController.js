@@ -98,7 +98,7 @@ try{
 exports.updateRelievingLetter=async(req,res)=>{
     try{
         const {id}=req.params;
-        const{employeeName,designation,employeeId,joiningDate,relievingDate}=req.bdoy;
+        const{employeeName,designation,employeeId,joiningDate,relievingDate}=req.body;
         const updates={
             ...(employeeName &&{employeeName}),
             ...(designation &&{designation}),
