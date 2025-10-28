@@ -37,6 +37,9 @@ const sendEmail = async (options) => {
 
   } catch (error) {
     console.error("❌ Error sending email via SendGrid:", error.response?.body || error.message);
+    if (error.response?.body?.errors?.some(e => e.message === 'Maximum credits exceeded')) {
+      throw new Error("SendGrid credits exceeded. Please check your SendGrid account.");
+    }
     throw new Error("Failed to send email");
   }
 };
