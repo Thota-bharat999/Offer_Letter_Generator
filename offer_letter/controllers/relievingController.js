@@ -245,7 +245,7 @@ exports.sendRelievingEmail = async (req, res) => {
     // ✅ Check if PDF already exists — if not, generate it
     if (!fs.existsSync(pdfPath)) {
       console.log("📄 PDF not found — generating now...");
-      await generateRelievingPDF(letter);
+      await generateRelievingPDFUtil(letter);
     }
 
     console.log("✅ PDF Path:", pdfPath);
