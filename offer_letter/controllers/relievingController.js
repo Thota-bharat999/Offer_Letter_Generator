@@ -116,7 +116,7 @@ exports.updateRelievingLetter=async(req,res)=>{
         }
         res.status(200).json({
             message: "Relieving letter updated successfully",
-            data: updatedLetter,
+            data: updateLetter,
         });
 
     }catch(error){
