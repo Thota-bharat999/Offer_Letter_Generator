@@ -208,7 +208,7 @@ exports.downloadRelievingLetter = async (req, res) => {
     }
 
     //Resolve stored PDF path (example field: pdfPath)
-    const pdfPath = path.resolve(__dirname, "../uploads", `Relieving_${letter.employeeName.replace(/\s+/g, "_")}.pdf`);
+    const pdfPath = path.resolve(__dirname, "../generated_pdfs", `Relieving_${letter.employeeName.replace(/\s+/g, "_")}.pdf`);
 
     // Check if file exists
     if (!fs.existsSync(pdfPath)) {
