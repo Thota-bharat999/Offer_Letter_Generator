@@ -51,6 +51,24 @@ const generateRelievingPDF = async (data) => {
       console.log("✅ Letterhead embedded:", foundLetterhead);
     } else console.warn("⚠️ Letterhead not found in:", letterheadCandidates);
 
+    // === EMBED SIGNATURE ===
+    const signatureCandidates = [
+      path.join(assetsDir, "signature.png"),
+      path.join(assetsDir, "sign.png"),
+      path.join(assetsDir, "signature.jpg"),
+    ];
+    const foundSignature = signatureCandidates.find((p) => fs.existsSync(p));
+    let signaturePath = "";
+    if (foundSignature) {
+      const mime = foundSignature.endsWith(".png")
+        ? "image/png"
+        : foundSignature.endsWith(".jpg") || foundSignature.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "application/octet-stream";
+      signaturePath = `data:${mime};base64,${fs.readFileSync(foundSignature).toString("base64")}`;
+      console.log("✅ Signature embedded:", foundSignature);
+    } else console.warn("⚠️ Signature not found in:", signatureCandidates);
+
     // === RENDER EJS ===
     console.log("🟩 [2] Rendering EJS template...");
     const html = await ejs.renderFile(templatePath, {
@@ -64,6 +82,7 @@ const generateRelievingPDF = async (data) => {
       hrDesignation: data.hrDesignation || "Manager – Human Resources",
       logoPath,
       letterheadPath,
+      signaturePath, // ✅ Injected into EJS
     });
 
     console.log("✅ [3] EJS rendered successfully");

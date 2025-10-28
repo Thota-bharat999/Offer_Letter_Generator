@@ -162,35 +162,22 @@ exports.deleteRelievingLetter=async(req,res) => {
 // Generate Relieving PDF
 exports.generateRelievingPDF = async (req, res) => {
   try {
-    console.log("📩 Incoming Relieving PDF Generation Request:", req.params, req.body);
-
     const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ message: "Relieving letter ID is required" });
-    }
-
-    // ✅ Fetch letter details
     const letter = await RelievingLetter.findById(id);
     if (!letter) {
       return res.status(404).json({ message: "Relieving letter not found" });
     }
 
-    // ✅ Generate the PDF (using your utility)
     const pdfPath = await generateRelievingPDFUtil(letter);
-    console.log("✅ Relieving Letter PDF generated successfully at:", pdfPath);
 
-    // ✅ Response
-    return res.status(200).json({
-      success: true,
+    res.status(200).json({
       message: "Relieving PDF generated successfully",
       pdfPath,
     });
   } catch (error) {
-    console.error("❌ Error generating relieving PDF:", error);
-    return res.status(500).json({
+    res.status(500).json({
       message: "Server error while generating relieving PDF",
       error: error.message,
-      stack: error.stack,
     });
   }
 };
@@ -243,43 +230,48 @@ exports.sendRelievingEmail = async (req, res) => {
       return res.status(400).json({ message: "Email and pdfPath are required" });
     }
 
-    // ✅ Resolve PDF absolute path
-    const absolutePath = path.resolve(__dirname, `../generated_pdfs${pdfPath}`);
+    // ✅ Fix path resolution
+    // If pdfPath already includes '/uploads/', we normalize properly
+    const absolutePath = pdfPath.startsWith("/")
+      ? path.join(__dirname, "..", pdfPath)
+      : path.join(__dirname, "../uploads", pdfPath);
+
+    console.log("📄 Resolved PDF path:", absolutePath);
+
     if (!fs.existsSync(absolutePath)) {
       return res.status(404).json({ message: "PDF file not found on server" });
     }
 
-    // ✅ Compose email content
+    // ✅ Compose email
     const subject = "Your Relieving and Experience Letter - Amazon IT Solutions";
     const html = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
         <p>Dear Employee,</p>
         <p>
           Please find attached your <strong>Relieving and Experience Letter</strong> from 
           <strong>Amazon IT Solutions</strong>.
         </p>
-        <p>
-          We wish you success in your future endeavors!
-        </p>
+        <p>We wish you success in your future endeavors!</p>
         <br/>
         <p>Best regards,<br/><strong>HR Department</strong><br/>Amazon IT Solutions</p>
       </div>
     `;
 
-    // ✅ Send email via SendGrid
+    // ✅ Send email via SendGrid (emailService.js handles transporter)
     await sendEmail({
       to: email,
       subject,
       html,
       attachments: [
         {
-          filename: path.basename(pdfPath),
+          filename: path.basename(absolutePath),
           path: absolutePath,
           contentType: "application/pdf",
         },
       ],
     });
 
+    console.log(`📧 Email sent successfully to: ${email}`);
     res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("❌ Error sending relieving email:", error);
