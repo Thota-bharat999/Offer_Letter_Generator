@@ -231,10 +231,8 @@ exports.sendRelievingEmail = async (req, res) => {
     }
 
     // ✅ Fix path resolution
-    // If pdfPath already includes '/uploads/', we normalize properly
-    const absolutePath = pdfPath.startsWith("/")
-      ? path.join(__dirname, "..", pdfPath)
-      : path.join(__dirname, "../uploads", pdfPath);
+    // Always resolve to generated_pdfs directory using the filename
+    const absolutePath = path.resolve(__dirname, "../generated_pdfs", path.basename(pdfPath));
 
     console.log("📄 Resolved PDF path:", absolutePath);
 
