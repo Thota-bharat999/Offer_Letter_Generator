@@ -2,7 +2,7 @@
 const sgMail = require("@sendgrid/mail");
 const fs = require("fs");
 
-sgMail.setApiKey(process.env.OfferDocumentation); // ✅ same SendGrid key you already use
+sgMail.setApiKey(process.env.SENDGRID_API_KEY); // ✅ same SendGrid key you already use
 
 const sendEmail = async (options) => {
   try {
