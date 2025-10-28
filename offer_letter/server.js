@@ -10,6 +10,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const offerRoutes=require('./routes/offerRoutes');
 const companyRoutes=require('./routes/companyRoutes')
+const relievingRoutes=require('./routes/relievingRoutes')
 
 
 app.use(
@@ -25,7 +26,8 @@ app.use(
 app.use('/assets', express.static(__dirname + '/offer_letter/assets'));
 
 app.use('/api/offer', offerRoutes)
-app.use('/api/offer/company',companyRoutes)
+app.use('/api/offer/company',companyRoutes);
+app.use('/api/relieving',relievingRoutes);
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
