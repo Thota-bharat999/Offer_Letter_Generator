@@ -101,8 +101,9 @@ const generateRelievingPDF = async (data) => {
             height: 297mm;
             background-image: url('${letterheadPath}');
             background-repeat: no-repeat;
-            background-size: 100% auto;
-            background-position: top center;
+            background-size: 100% 100%;
+            background-position: top left;
+
             z-index: -1;
           "></div>`
       );
