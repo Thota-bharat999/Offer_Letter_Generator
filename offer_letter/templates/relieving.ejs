@@ -17,7 +17,7 @@
     .page {
       position: relative;
       width: 210mm;
-      height: 297mm; /* A4 */
+      height: 297mm; /* A4 size */
       margin: 0 auto;
       background-image: url('<%= letterheadPath %>');
       background-repeat: no-repeat;
@@ -27,10 +27,10 @@
 
     .content {
       position: absolute;
-      top: 105mm; /* adjust to align with header */
-      left: 30mm; /* match printed letter margin */
+      top: 105mm; /* adjust based on your letterhead header height */
+      left: 30mm;
       right: 25mm;
-      bottom: 35mm; /* leaves space for footer */
+      bottom: 35mm; /* space for footer lines */
     }
 
     .date {
@@ -42,7 +42,7 @@
       text-align: center;
       font-weight: bold;
       text-decoration: underline;
-      margin: 15px 0 20px 0;
+      margin: 15px 0 28px 0; /* increased gap below heading */
     }
 
     .paragraph {
