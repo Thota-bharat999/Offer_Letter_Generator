@@ -82,12 +82,12 @@ const generateRelievingPDF = async (data) => {
       hrDesignation: data.hrDesignation || "Manager – Human Resources",
       logoPath,
       letterheadPath,
-      signaturePath, // ✅ Injected into EJS
+      signaturePath,
     });
 
     console.log("✅ [3] EJS rendered successfully");
 
-    // === ADD LETTERHEAD BACKGROUND ===
+    // === APPLY LETTERHEAD BACKGROUND ===
     let modifiedHtml = html;
     if (letterheadPath) {
       modifiedHtml = modifiedHtml.replace(
@@ -108,9 +108,14 @@ const generateRelievingPDF = async (data) => {
       );
     }
 
-    // === CSS TWEAKS ===
-    const cssParts = ['.title { margin-top: 10mm !important; }'];
-    const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
+    // === ADJUST MARGINS & FONT ===
+    const cssTweaks = [
+      "body { padding-top: 45mm !important; padding-left: 25mm !important; padding-right: 25mm !important; padding-bottom: 25mm !important; font-family: 'Cambria', serif !important; font-size: 12pt !important; }",
+      ".title { margin-top: 10mm !important; font-weight: bold; }",
+      ".signature-block { page-break-inside: avoid !important; }",
+      ".note { position: fixed; bottom: 15mm; left: 25mm; right: 25mm; }"
+    ];
+    const finalHtml = modifiedHtml.replace("</style>", cssTweaks.join("\n") + "\n</style>");
 
     // === LAUNCH PUPPETEER ===
     console.log("[4] Launching Puppeteer...");
@@ -132,29 +137,31 @@ const generateRelievingPDF = async (data) => {
     await page.setContent(finalHtml, { waitUntil: "networkidle0" });
     await page.evaluateHandle("document.fonts.ready");
 
+    // === OUTPUT DIR ===
     const uploadsDir = path.resolve(__dirname, "../generated_pdfs");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
     const safeName = (data.employeeName || "Employee").replace(/\s+/g, "_");
     const pdfPath = path.join(uploadsDir, `Relieving_${safeName}.pdf`);
 
+    // === GENERATE PDF ===
     console.log("🟩 [6] Generating PDF...");
     await page.pdf({
       path: pdfPath,
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
-      margin: { top: "0", bottom: "0", left: "0", right: "0" },
+      margin: { top: "0mm", bottom: "0mm", left: "0mm", right: "0mm" },
     });
 
-    console.log("[7] PDF generated successfully:", pdfPath);
+    console.log("✅ [7] PDF generated successfully:", pdfPath);
 
     await browser.close();
-    console.log("[8] Browser closed");
+    console.log("✅ [8] Browser closed");
 
     return pdfPath;
   } catch (error) {
-    console.error("Error generating relieving PDF:", error);
+    console.error("❌ Error generating relieving PDF:", error);
     throw error;
   }
 };
