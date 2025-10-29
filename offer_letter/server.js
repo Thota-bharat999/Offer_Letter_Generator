@@ -5,24 +5,21 @@ const mongoose=require("mongoose")
 const app=express();
 const bodyParser=require("body-parser");
 
-app.use(express.json()); 
+
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 const offerRoutes=require('./routes/offerRoutes');
 const companyRoutes=require('./routes/companyRoutes')
 const relievingRoutes=require('./routes/relievingRoutes')
 
-
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001", // your local devn
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+    origin: "*",
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   })
 );
+app.use(express.json()); 
 app.use('/assets', express.static(__dirname + '/offer_letter/assets'));
 
 app.use('/api/offer', offerRoutes)
