@@ -5,7 +5,7 @@ const fs = require("fs");
 
 const generateRelievingPDF = async (data) => {
   try {
-    console.log("[1] Starting Relieving PDF generation...");
+    console.log("🟩 [1] Starting Relieving PDF generation...");
 
     if (!data || typeof data !== "object") {
       throw new Error("Invalid data provided to generateRelievingPDF()");
@@ -87,7 +87,7 @@ const generateRelievingPDF = async (data) => {
 
     console.log("✅ [3] EJS rendered successfully");
 
-    // === APPLY LETTERHEAD BACKGROUND ===
+    // === ADD LETTERHEAD BACKGROUND ===
     let modifiedHtml = html;
     if (letterheadPath) {
       modifiedHtml = modifiedHtml.replace(
@@ -108,14 +108,13 @@ const generateRelievingPDF = async (data) => {
       );
     }
 
-    // === ADJUST MARGINS & FONT ===
-    const cssTweaks = [
-      "body { padding-top: 45mm !important; padding-left: 25mm !important; padding-right: 25mm !important; padding-bottom: 25mm !important; font-family: 'Cambria', serif !important; font-size: 12pt !important; }",
-      ".title { margin-top: 10mm !important; font-weight: bold; }",
-      ".signature-block { page-break-inside: avoid !important; }",
-      ".note { position: fixed; bottom: 15mm; left: 25mm; right: 25mm; }"
+    // === CSS FIX: Adjust page padding to match letterhead ===
+    const cssParts = [
+      ".container { padding-top: 45mm !important; padding-left: 25mm !important; padding-right: 25mm !important; padding-bottom: 25mm !important; }",
+      ".note { margin-top: 35pt !important; }",
+      ".title { margin-top: 5mm !important; }",
     ];
-    const finalHtml = modifiedHtml.replace("</style>", cssTweaks.join("\n") + "\n</style>");
+    const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
 
     // === LAUNCH PUPPETEER ===
     console.log("[4] Launching Puppeteer...");
@@ -144,14 +143,19 @@ const generateRelievingPDF = async (data) => {
     const safeName = (data.employeeName || "Employee").replace(/\s+/g, "_");
     const pdfPath = path.join(uploadsDir, `Relieving_${safeName}.pdf`);
 
-    // === GENERATE PDF ===
+    // === GENERATE PDF with Correct Margins ===
     console.log("🟩 [6] Generating PDF...");
     await page.pdf({
       path: pdfPath,
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
-      margin: { top: "0mm", bottom: "0mm", left: "0mm", right: "0mm" },
+      margin: {
+        top: "15mm",    // ✅ top clear from header
+        bottom: "15mm", // ✅ enough space for Note
+        left: "10mm",   // ✅ align to left like original
+        right: "10mm",
+      },
     });
 
     console.log("✅ [7] PDF generated successfully:", pdfPath);
