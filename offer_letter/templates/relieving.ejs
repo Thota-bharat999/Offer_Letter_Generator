@@ -6,9 +6,9 @@
   <title>Relieving and Experience Letter</title>
   <style>
     body {
-      font-family: 'Calibri', Arial, sans-serif;
+      font-family: 'Calibri',Arial, serif;
       font-size: 12pt;
-      line-height: 1.85;
+      line-height:1.9;
       color: #000;
       margin: 0;
       padding: 0;
@@ -17,31 +17,31 @@
     .container {
       width: 210mm;
       margin: 0 auto;
-      padding: 120px 80px 90px 80px; /* top, right, bottom, left */
+      padding: 40mm 25mm 30mm 25mm; /* left-aligned content + good top space */
     }
 
     .date {
       text-align: left;
-      margin: 0 0 10px 0;
+      margin: 0 0 10pt 0;
       font-size: 11pt;
     }
 
     .title {
-      text-align: center;
+      text-align: center; /* ✅ align left like original */
       font-weight: bold;
       font-size: 16px;
       text-decoration: underline;
-      margin: 15px 0 25px 0;
+      margin: 10pt 0 18pt 0;
     }
 
     .paragraph {
-      margin: 0 0 12px 0;
+      margin: 0 0 10pt 0;
       text-align: justify;
     }
 
     .sincere-line {
-      margin-top: 25px;
-      margin-bottom: 2px;
+      margin-top: 20pt;
+      margin-bottom: 0;
       text-align: left;
     }
 
@@ -52,40 +52,38 @@
     }
 
     .signature {
-      margin-top: 10px;
+      margin-top: 10pt;
       text-align: left;
     }
 
     .note {
       font-size: 10pt;
-      margin-top: 40px;
+      margin-top: 30pt;
       text-align: left;
-      color: #000;
+      position: relative;
+      bottom: 0;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Date -->
     <p class="date">
       <%= new Date(relieving_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
     </p>
 
-    <!-- Title -->
     <p class="title">Relieving and Experience Letter</p>
 
-    <!-- Employee Info -->
     <p class="paragraph"><strong>Employee Name:</strong> <%= employee_name %></p>
     <% if (employee_id) { %>
       <p class="paragraph"><strong>Employee ID:</strong> <%= employee_id %></p>
     <% } %>
 
-    <!-- Body -->
     <p class="paragraph">This is with regard to your resignation,</p>
 
     <p class="paragraph">
-      Dated <%= new Date(resignation_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
-      from the position of <strong><%= designation %></strong> — We would like to inform you that you have been relieved of your duties at the end of business hours of
+      Dated
+      <%= new Date(resignation_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
+      from the position of <strong><%= designation %></strong> - We would like to inform you that you have been relieved of your duties at the end of business hours of
       <%= new Date(relieving_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>.
     </p>
 
@@ -98,12 +96,11 @@
 
     <p class="paragraph">We wish you good luck for future endeavours.</p>
 
-    <!-- Signature Section -->
     <p class="sincere-line">Yours sincerely,</p>
     <p class="for-company-line">For Amazon IT Solutions</p>
 
     <% if (signaturePath) { %>
-      <div style="margin: 8px 0 2px 0;">
+      <div style="margin: 2mm 0 0 0;">
         <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:85px; height:auto; opacity:0.95;" />
       </div>
     <% } %>
@@ -111,8 +108,9 @@
     <p class="signature"><%= hrName %></p>
     <p class="paragraph" style="font-weight: bold;"><%= hrDesignation %></p>
 
-    <!-- Footer Note -->
-    <p class="note">Note: This is a computer-generated document. No Signature is required*</p>
+    <p class="note">
+      Note: This is a computer-generated document. No Signature is required*
+    </p>
   </div>
 </body>
 </html>
