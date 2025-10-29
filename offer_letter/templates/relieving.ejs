@@ -5,68 +5,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Relieving and Experience Letter</title>
   <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
     body {
-      font-family: 'Calibri',Arial, serif;
+      font-family: 'Calibri', Arial, sans-serif;
       font-size: 12pt;
-      line-height:1.9;
+      line-height: 1.6;
       color: #000;
       margin: 0;
       padding: 0;
+      background: url("/assets/letterhead.jpeg") no-repeat center top;
+      background-size: cover; /* ✅ fit to full A4 page */
     }
 
-    .container {
+    .content {
+      position: relative;
       width: 210mm;
+      height: 297mm;
       margin: 0 auto;
-      padding: 40mm 25mm 30mm 25mm; /* left-aligned content + good top space */
+      padding: 60mm 25mm 40mm 25mm; /* ✅ adjust to match printed letterhead margins */
+      box-sizing: border-box;
     }
 
     .date {
       text-align: left;
-      margin: 0 0 10pt 0;
+      margin-bottom: 12pt;
       font-size: 11pt;
     }
 
     .title {
-      text-align: center; /* ✅ align left like original */
+      text-align: center;
       font-weight: bold;
-      font-size: 16px;
       text-decoration: underline;
-      margin: 10pt 0 18pt 0;
+      font-size: 14pt;
+      margin: 0 0 16pt 0;
     }
 
     .paragraph {
-      margin: 0 0 10pt 0;
+      margin: 0 0 12pt 0;
       text-align: justify;
     }
 
-    .sincere-line {
-      margin-top: 20pt;
-      margin-bottom: 0;
-      text-align: left;
-    }
-
-    .for-company-line {
-      margin-top: 0;
-      margin-bottom: 0;
-      text-align: left;
-    }
-
+    .sincere-line,
+    .for-company-line,
     .signature {
-      margin-top: 10pt;
       text-align: left;
+      margin: 10pt 0 0 0;
+    }
+
+    .signature img {
+      width: 90px;
+      height: auto;
+      opacity: 0.95;
+      margin-top: 5mm;
     }
 
     .note {
       font-size: 10pt;
-      margin-top: 30pt;
+      margin-top: 25pt;
       text-align: left;
-      position: relative;
-      bottom: 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="content">
     <p class="date">
       <%= new Date(relieving_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
     </p>
@@ -83,7 +88,7 @@
     <p class="paragraph">
       Dated
       <%= new Date(resignation_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
-      from the position of <strong><%= designation %></strong> - We would like to inform you that you have been relieved of your duties at the end of business hours of
+      from the position of <strong><%= designation %></strong> — We would like to inform you that you have been relieved of your duties at the end of business hours of
       <%= new Date(relieving_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>.
     </p>
 
@@ -100,8 +105,8 @@
     <p class="for-company-line">For Amazon IT Solutions</p>
 
     <% if (signaturePath) { %>
-      <div style="margin: 2mm 0 0 0;">
-        <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:85px; height:auto; opacity:0.95;" />
+      <div class="signature">
+        <img src="<%= signaturePath %>" alt="Authorized Signature" />
       </div>
     <% } %>
 
