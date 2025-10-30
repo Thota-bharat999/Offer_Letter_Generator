@@ -11,6 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const offerRoutes=require('./routes/offerRoutes');
 const companyRoutes=require('./routes/companyRoutes')
 const relievingRoutes=require('./routes/relievingRoutes')
+const appointmentRoutes=require('./routes/appointmentRoutes')
 
 app.use(
   cors({
@@ -25,6 +26,7 @@ app.use('/assets', express.static(__dirname + '/offer_letter/assets'));
 app.use('/api/offer', offerRoutes)
 app.use('/api/offer/company',companyRoutes);
 app.use('/api/relieving',relievingRoutes);
+app.use('/api/appointment',appointmentRoutes)
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
