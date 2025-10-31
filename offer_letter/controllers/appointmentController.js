@@ -125,3 +125,64 @@ exports.createAppointmentLetter=async(req,res)=>{
 
     }
 }
+
+exports.updateAppointmentLetter=async(req,res)=>{
+  try{
+    if(!req.admin || !req.admin.id){
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Admin credentials missing.",
+      });
+    }
+    const {id}=req.params;
+    const updates=req.body;
+    const appointment=await AppointmentLetter.findById(id);
+    if(!appointment){
+      return res.status(404).json({
+        success: false,
+        message: "Appointment letter not found.",
+      })
+    }
+    if(updates.ctcAnnual){
+      const newCTC=Number(updates.ctcAnnual);
+      if (isNaN(newCTC) || newCTC <= 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid CTC amount." });
+      }
+      appointment.ctcAnnual = newCTC;
+      appointment.salaryBreakdown = generateSalaryBreakdown(newCTC);
+    }
+    if(updates.designation) appointment.designation=updates.designation.trim();
+    Object.keys(updates).forEach((key)=>{
+       if (["designation", "ctcAnnual"].includes(key)) return;
+      if (updates[key] !== undefined) appointment[key] = updates[key];
+    });
+    await appointment.save();
+    return res.status(200).json({
+      success: true,
+      message: "Appointment letter updated successfully",
+      data: {
+        _id: appointment._id,
+        employeeName: appointment.employeeName,
+        designation: appointment.designation,
+        ctcAnnual: appointment.ctcAnnual,
+        address:appointment.address,
+        joiningDate:appointment.joiningDate,
+        appointmentDate:appointment.appointmentDate,
+        ctcWords:appointment.ctcWords,
+        ctcAnnual:appointment.ctcAnnual,
+        hrName:appointment.hrName,
+        hrDesignation:appointment.hrDesignation,
+      },
+    });
+  }catch(error){
+    console.error("❌ Error updating appointment letter:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating appointment letter",
+      error: error.message,
+    });
+
+  }
+}
