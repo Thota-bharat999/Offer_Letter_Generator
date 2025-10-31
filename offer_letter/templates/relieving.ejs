@@ -12,8 +12,8 @@
 
     body {
       font-family: 'Calibri', Arial, sans-serif;
-      font-size: 12px; /* ✅ Matches original */
-      line-height: 1.75; /* ✅ Tighter line spacing like original */
+      font-size: 12px;
+      line-height: 1.75;
       color: #000;
       margin: 0;
       padding: 0;
@@ -25,7 +25,7 @@
       position: relative;
       width: 75%;
       margin: 0 auto;
-      top: 165px; /* Same vertical offset */
+      top: 165px;
       font-size: 12.5px;
       line-height: 1.8;
     }
@@ -35,19 +35,23 @@
       margin-bottom: 16px;
     }
 
-  .title {
-  text-align: center;
-  font-weight: bold;
-  text-decoration: underline;
-  font-size: 13.5px;
-  margin-top: 0;
-  margin-bottom: 35px; /* ⬅️ Increased from 20px to 35px to create visible gap */
-}
-
+    .title {
+      text-align: center;
+      font-weight: bold;
+      text-decoration: underline;
+      font-size: 13.5px;
+      margin-top: 0;
+      margin-bottom: 35px; /* Gap after heading */
+    }
 
     .paragraph {
-      margin: 0 0 9pt 0; /* ✅ Reduced spacing between paragraphs */
+      margin: 0 0 9pt 0;
       text-align: justify;
+    }
+
+    /* ✅ Adds nice spacing after Employee details */
+    .employee-section {
+      margin-bottom: 20px;
     }
 
     .closing {
@@ -56,7 +60,7 @@
     }
 
     .signature-block {
-      margin-top: 3pt; /* ✅ Tighter gap between 'For Amazon' and stamp */
+      margin-top: 3pt;
       text-align: left;
       line-height: 1.2;
     }
@@ -69,13 +73,13 @@
     }
 
     .hr-details {
-      margin-top: 1pt; /* ✅ Stamp and HR name closer */
+      margin-top: 1pt;
       line-height: 1.2;
     }
 
     .note {
       font-size: 10pt;
-      margin-top: 20pt; /* ✅ Slightly smaller gap from HR info */
+      margin-top: 20pt;
       text-align: left;
     }
   </style>
@@ -87,12 +91,14 @@
     </p>
 
     <p class="title">Relieving and Experience Letter</p>
-    <div style="height: 10px;"></div>
 
-    <p class="paragraph"><strong>Employee Name:</strong> <%= employee_name %></p>
-    <% if (employee_id) { %>
-      <p class="paragraph"><strong>Employee ID:</strong> <%= employee_id %></p>
-    <% } %>
+    <!-- ✅ Employee Info with custom spacing -->
+    <div class="employee-section">
+      <p class="paragraph"><strong>Employee Name:</strong> <%= employee_name %></p>
+      <% if (employee_id) { %>
+        <p class="paragraph"><strong>Employee ID:</strong> <%= employee_id %></p>
+      <% } %>
+    </div>
 
     <p class="paragraph">This is with regard to your resignation,</p>
 
