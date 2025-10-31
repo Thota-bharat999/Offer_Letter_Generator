@@ -41,7 +41,12 @@
       text-decoration: underline;
       font-size: 13.5px;
       margin-top: 0;
-      margin-bottom: 35px; /* Gap after heading */
+      margin-bottom: 0; /* handled manually below */
+    }
+
+    /* ✅ Reliable spacer visible in Puppeteer PDF */
+    .gap-after-title {
+      height: 25px; /* adjust as needed (20–35px typical) */
     }
 
     .paragraph {
@@ -49,7 +54,7 @@
       text-align: justify;
     }
 
-    /* ✅ Adds nice spacing after Employee details */
+    /* ✅ Adds gap after employee info before paragraph text */
     .employee-section {
       margin-bottom: 20px;
     }
@@ -92,7 +97,10 @@
 
     <p class="title">Relieving and Experience Letter</p>
 
-    <!-- ✅ Employee Info with custom spacing -->
+    <!-- ✅ Spacer to create visible gap after heading -->
+    <div class="gap-after-title"></div>
+
+    <!-- ✅ Employee Info -->
     <div class="employee-section">
       <p class="paragraph"><strong>Employee Name:</strong> <%= employee_name %></p>
       <% if (employee_id) { %>
