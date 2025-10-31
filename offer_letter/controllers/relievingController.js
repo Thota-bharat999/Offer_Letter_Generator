@@ -14,6 +14,13 @@ exports.createRelivingLetter=async(req,res)=>{
         if(!employeeName || !designation || !employeeId || !joiningDate || !relievingDate){
             return res.status(400).json({message:"All fields are required"});
         }
+
+        // Check if employeeId already exists
+        const existingLetter = await RelievingLetter.findOne({ employeeId });
+        if (existingLetter) {
+            return res.status(400).json({ message: "This employee ID already exists. Try for new." });
+        }
+
         const newRelievingLetter=new RelievingLetter({
             employeeName,
             designation,
