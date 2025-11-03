@@ -70,24 +70,25 @@ const generateAppointmentPDF = async (appointmentData) => {
 
     // === RENDER EJS ===
     const html = await ejs.renderFile(templatePath, {
-      employeeName: appointmentData.employeeName || "Employee",
-      designation: appointmentData.designation || "Designation Not Provided",
-      address: appointmentData.address || "Address Not Provided",
-      joiningDate: appointmentData.joiningDate || new Date(),
-      appointmentDate: appointmentData.appointmentDate || new Date(),
-      ctcAnnual: appointmentData.ctcAnnual || 0,
-      ctcWords: appointmentData.ctcWords || "",
-      salaryBreakdown: appointmentData.salaryBreakdown || [],
-      hrName: appointmentData.hrName || "HR Manager",
-      hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
-      companyName: appointmentData.companyName || "Amazon IT Solutions",
-      companyAddress:
-        appointmentData.companyAddress ||
-        "Amazon IT Solutions Pvt. Ltd.\nPlot No. 23, Hi-Tech City Road,\nHyderabad, Telangana – 500081",
+      appointment: {
+        issueDate: appointmentData.appointmentDate || new Date(),
+        employeeName: appointmentData.employeeName || "Employee",
+        address: appointmentData.address || "Address Not Provided",
+        position: appointmentData.designation || "Designation Not Provided",
+        joiningDate: appointmentData.joiningDate || new Date(),
+        ctc: appointmentData.ctcAnnual || 0,
+        ctcWords: appointmentData.ctcWords || "",
+        salaryComponents: (appointmentData.salaryBreakdown || []).map(item => ({
+          label: item.component,
+          perAnnum: item.annualAmount,
+          perMonth: item.monthlyAmount,
+        })),
+        hrName: appointmentData.hrName || "HR Manager",
+        hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
+      },
       logoPath,
       letterheadPath,
       signaturePath,
-      dateIssued: appointmentData.appointmentDate || new Date(),
     });
 
     console.log("✅ [8] Appointment EJS rendered successfully");
