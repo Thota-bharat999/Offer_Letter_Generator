@@ -1,4 +1,7 @@
-const AppointmentLetter=require('../models/appointmentModel')
+const AppointmentLetter=require('../models/appointmentModel');
+const generateAppointmentPDF = require("../utils/appointmentPdfGenerator");
+const fs=require('fs');
+const path=require('path')
 const mongoose=require('mongoose');
 const {
   BASIC_WAGE_PERCENT,
@@ -98,22 +101,22 @@ exports.createAppointmentLetter=async(req,res)=>{
       salaryBreakdown,
       createdBy,
     }
-    // const pdfPath = await generateAppointmentPDF({
-    //   ...appointmentData,
-    //   companyName: "Amazon IT Solutions",
-    //   companyAddress: "Hyderabad, Telangana, India",
-    // });
+    const pdfPath = await generateAppointmentPDF({
+      ...appointmentData,
+      companyName: "Amazon IT Solutions",
+      companyAddress: "Hyderabad, Telangana, India",
+    });
 
     const appointmentLetter=new AppointmentLetter({
         ...appointmentData,
-        // pdfPath,
+        pdfPath,
     });
     await appointmentLetter.save();
     return res.status(201).json({
         success:true,
          message: "Appointment letter created successfully with salary breakdown and PDF.",
           data: appointmentLetter,
-        //    pdfFile: appointmentLetter.pdfPath,
+        pdfFile: appointmentLetter.pdfPath,
     })
     }catch(error){
         console.error("❌ Error creating appointment letter:", error);
@@ -313,3 +316,160 @@ exports.getAppointmentLetterById = async (req, res) => {
     });
   }
 };
+
+exports.generateAppointmentPDF = async (req, res) => {
+  try {
+    // 🔐 HR Admin authorization check
+    if (!req.admin || !req.admin.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Admin credentials missing.",
+      });
+    }
+
+    const {
+      employeeName,
+      designation,
+      address,
+      joiningDate,
+      appointmentDate,
+      ctcAnnual,
+      ctcWords,
+      salaryBreakdown,
+      hrName,
+      hrDesignation,
+    } = req.body;
+
+    // ✅ Validate required fields
+    if (
+      !employeeName ||
+      !designation ||
+      !joiningDate ||
+      !appointmentDate ||
+      !ctcAnnual ||
+      !ctcWords ||
+      !hrName ||
+      !hrDesignation
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be provided.",
+      });
+    }
+
+    // ✅ Prepare data object for EJS template
+    const appointmentData = {
+      employeeName: employeeName.trim(),
+      designation: designation.trim(),
+      address: address || "Address Not Provided",
+      joiningDate,
+      appointmentDate,
+      ctcAnnual,
+      ctcWords,
+      salaryBreakdown: salaryBreakdown || [],
+      hrName: hrName.trim(),
+      hrDesignation: hrDesignation.trim(),
+      companyName: "Amazon IT Solutions",
+      companyAddress:
+        "Amazon IT Solutions Pvt. Ltd.\nPlot No. 23, Hi-Tech City Road,\nHyderabad, Telangana – 500081",
+    };
+
+    // ✅ Generate PDF via Puppeteer & EJS
+    const pdfPath = await generateAppointmentPDF(appointmentData);
+
+    // ✅ Save to DB (optional: create or update appointment)
+    const appointment = await AppointmentLetter.create({
+      ...appointmentData,
+      pdfPath,
+      createdBy: req.admin.id,
+    });
+
+    // ✅ Success response
+    return res.status(201).json({
+      success: true,
+      message: "Appointment PDF generated and saved successfully",
+      pdfPath,
+      data: {
+        _id: appointment._id,
+        employeeName: appointment.employeeName,
+        designation: appointment.designation,
+        pdfPath: appointment.pdfPath,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error generating appointment PDF:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while generating appointment PDF",
+      error: error.message,
+    });
+  }
+};
+
+// get Download Link for Appointment Letter PDF
+exports.downloadAppointmentPDF = async (req, res) => {
+  try {
+    // 🔐 Verify HR admin access
+    if (!req.admin || !req.admin.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Admin credentials missing.",
+      });
+    }
+
+    const { id } = req.params;
+
+    // ✅ Find appointment by ID
+    const appointment = await AppointmentLetter.findById(id);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment letter not found.",
+      });
+    }
+
+    if (!appointment.pdfPath) {
+      return res.status(400).json({
+        success: false,
+        message: "No PDF file associated with this appointment letter.",
+      });
+    }
+
+    const pdfPath = path.resolve(appointment.pdfPath);
+
+    // ✅ Check file existence
+    if (!fs.existsSync(pdfPath)) {
+      return res.status(404).json({
+        success: false,
+        message: "PDF file not found on the server.",
+      });
+    }
+
+    // ✅ Send PDF as download
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${path.basename(pdfPath)}"`
+    );
+
+    const fileStream = fs.createReadStream(pdfPath);
+    fileStream.pipe(res);
+
+    fileStream.on("error", (err) => {
+      console.error("❌ Error streaming PDF file:", err);
+      res.status(500).json({
+        success: false,
+        message: "Error downloading appointment PDF",
+      });
+    });
+  } catch (error) {
+    console.error("❌ Error downloading appointment letter:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while downloading appointment PDF",
+      error: error.message,
+    });
+  }
+};
+
