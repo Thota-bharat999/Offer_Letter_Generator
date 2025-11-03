@@ -55,18 +55,18 @@
       margin-bottom: 12px;
     }
 
-  .to {
-      margin-bottom:2px;
-      
-    }
-
-    .to .name {
-      font-weight: bold;
-    }
-
-    .to .addr {
-      white-space: pre-line;
-    }
+   .to {
+    margin-bottom: 25px; /* Adds gap after address */
+    line-height: 1.5;
+  }
+  .to .name {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .to .addr {
+    white-space: normal;
+    margin-top: 0;
+  }
 
     .section {
       margin-bottom: 12px;
@@ -165,34 +165,41 @@
 
       <p class="title">Letter of Appointment</p>
       <div class="to">
-      <p><strong>To,</strong></p>
-      <p class="name"><%= appointment.employeeName || "" %>,</p>
-      <%
-        const address = appointment.address || '';
-        const words = address.split(/\s+/).filter(Boolean);
-        let lines = [];
-        let currentLine = '';
+  <p><strong>To,</strong></p>
+  <p class="name"><%= appointment.employeeName || "" %>,</p>
+  <%
+    // Split address naturally into 3 lines (not word-by-word)
+    const address = appointment.address || '';
+    const parts = address
+      .split(/[,;\n]+/)
+      .map(p => p.trim())
+      .filter(Boolean);
 
-        for (let word of words) {
-          if (currentLine.length + word.length + (currentLine ? 1 : 0) <= 25) {
-            currentLine += (currentLine ? ' ' : '') + word;
-          } else {
-            if (currentLine) lines.push(currentLine);
-            currentLine = word;
-          }
-        }
-        if (currentLine) lines.push(currentLine);
+    // Join logically into 3 well-balanced lines
+    let formatted = [];
+    if (parts.length <= 3) {
+      formatted = parts;
+    } else if (parts.length === 4) {
+      formatted = [
+        parts.slice(0, 2).join(', '),
+        parts[2],
+        parts[3]
+      ];
+    } else {
+      formatted = [
+        parts.slice(0, 2).join(', '),
+        parts.slice(2, 4).join(', '),
+        parts.slice(4).join(', ')
+      ];
+    }
+  %>
 
-        // Ensure exactly 3 lines
-        while (lines.length < 3) lines.push('');
-        lines = lines.slice(0, 3);
-      %>
-      <p class="addr">
-        <% lines.forEach(function(line){ %>
-          <%= line %><br/>
-        <% }) %>
-      </p>
-    </div>
+  <p class="addr">
+    <% formatted.forEach(function(line, index){ %>
+      <%= line %><% if (index < formatted.length - 1) { %>,<% } %><br/>
+    <% }) %>
+  </p>
+</div>
 
 
       <p>Dear <strong><%= appointment.employeeName || "" %></strong>,</p>
