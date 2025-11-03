@@ -57,6 +57,8 @@ exports.getAllRelievingLetters=async(req,res)=>{
         const result=letters.map((letter)=>({
             _id:letter._id,
             employeeName:letter.employeeName,
+            employeeId:letter.employeeId,
+            designation:letter.designation,
         }));
         res.status(200).json(result);
 

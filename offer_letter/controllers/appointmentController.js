@@ -186,3 +186,130 @@ exports.updateAppointmentLetter=async(req,res)=>{
 
   }
 }
+// Delete Appointement Letter
+exports.deleteAppointmentLetter=async(req,res)=>{
+  try{
+    if(!req.admin || !req.admin.id){
+      return res.status(401).json({
+        success:false,
+        messsage:"Unauthorized: Admin credientials missing.",
+      });
+    }
+    const {id}=req.params;
+    const appointment=await AppointmentLetter.findById(id);
+    if(!appointment){
+      return res.status(404).json({
+        success:false,
+        message:"Appointment Letter not Found.",
+      })
+    }
+    if(appointment.pdfPath && fs.existsSync(appointment.pdfPath)){
+      fs.unlinkSync(appointment.pdfPath);
+    }
+    await AppointmentLetter.findByIdAndDelete(id);
+    return res.status(200).json({
+      success:true,
+      message:"Appointement Letter Deleted Successfully."
+    });
+
+  }catch(error){ 
+    console.log("Error Deleting Appointment Letter:",error);
+    return res.status(500).json({
+      success:false,
+      message:"Server Error While deleting Appointement Letter.",
+      error:error.messsage,
+    });
+
+  }
+};
+// getAll Appointment Lettters
+exports.getAllAppointmentLetters=async(req,res)=>{
+  try{
+    if(!req.admin || !req.admin.id){
+      return res.status(401).json({
+        success:false,
+        message:"Unauthorized: Admin Credientials missing.",
+      });
+    }
+    const appointmentLetters=await AppointmentLetter.find().sort({created:-1});
+    const result=appointmentLetters.map((letter)=>({
+      _id:letter._id,
+      employeeName:letter.employeeName,
+      designation:letter.designation,
+
+    }));
+    if(result.length==0){
+      return res.status(404).json({
+        success:false,
+        message:"No Appointment Letters Found.",
+        data:[],
+      });
+    }
+return res.status(200).json({
+  success:true,
+  message:"Appointement Letters fetched Successfully.",
+  data:result,
+})
+  }catch(error){
+    console.error("❌ Error fetching appointment letters:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching appointment letters",
+      error: error.message,
+    });
+
+  }
+}
+
+// Get Appointement letter By Id 
+exports.getAppointmentLetterById = async (req, res) => {
+  try {
+    //Verify HR admin access
+    if (!req.admin || !req.admin.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: Admin credentials missing.",
+      });
+    }
+
+    const { id } = req.params;
+
+    // Fetch appointment letter by ID
+    const letter = await AppointmentLetter.findById(id);
+
+    if (!letter) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment letter not found.",
+      });
+    }
+
+    // Format specific response
+    const result = {
+      _id: letter._id,
+      employeeName: letter.employeeName,
+      designation: letter.designation,
+      joiningDate: letter.joiningDate,
+      address: letter.address,
+      hrName: letter.hrName,
+      hrDesignation: letter.hrDesignation,
+      ctcAnnual: letter.ctcAnnual,
+      ctcWords: letter.ctcWords,
+      salaryBreakdown: letter.salaryBreakdown,
+    };
+
+    // ✅ Success response
+    return res.status(200).json({
+      success: true,
+      message: "Appointment letter fetched successfully",
+      data: result,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching appointment letter by ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching appointment letter",
+      error: error.message,
+    });
+  }
+};
