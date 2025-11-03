@@ -127,6 +127,7 @@ const generateAppointmentPDF = async (appointmentData) => {
       ctcWords: appointmentData.ctcWords || "",
       hrName: appointmentData.hrName || "HR Manager",
       hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
+      salaryBreakdown: appointmentData.salaryBreakdown || [],
       logoPath,
       letterheadPath,
       signaturePath,
