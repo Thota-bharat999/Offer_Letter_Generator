@@ -123,6 +123,8 @@ const generateAppointmentPDF = async (appointmentData) => {
       address: appointmentData.address || "Address Not Provided",
       designation: appointmentData.designation || "Designation Not Provided",
       joiningDate: appointmentData.joiningDate || new Date(),
+      ctcAnnual: appointmentData.ctcAnnual || 0,
+      ctcWords: appointmentData.ctcWords || "",
       logoPath,
       letterheadPath,
       signaturePath,
