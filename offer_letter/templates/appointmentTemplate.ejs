@@ -56,7 +56,7 @@
     }
 
   .to {
-      margin-bottom: 35px;
+      margin-bottom: 2dvh;
       line-height: 1.4;
     }
 
@@ -184,11 +184,11 @@
         }
         if (currentLine) lines.push(currentLine);
 
-        // Ensure exactly 4 lines
-        while (lines.length < 4) lines.push('');
-        lines = lines.slice(0, 4);
+        // Ensure exactly 3 lines
+        while (lines.length < 3) lines.push('');
+        lines = lines.slice(0, 3);
       %>
-      <p class="addr" style="margin-top: 5px; line-height: 1.5">
+      <p class="addr">
         <% lines.forEach(function(line){ %>
           <%= line %><br/>
         <% }) %>
