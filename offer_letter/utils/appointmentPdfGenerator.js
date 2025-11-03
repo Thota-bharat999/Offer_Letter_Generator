@@ -118,6 +118,7 @@ const generateAppointmentPDF = async (appointmentData) => {
         hrName: appointmentData.hrName || "HR Manager",
         hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
       },
+      appointmentDate: appointmentData.appointmentDate || new Date(),
       logoPath,
       letterheadPath,
       signaturePath,
