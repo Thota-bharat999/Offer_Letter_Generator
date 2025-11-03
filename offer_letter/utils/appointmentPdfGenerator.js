@@ -11,7 +11,7 @@ const generateAppointmentPDF = async (appointmentData) => {
       throw new Error("Invalid appointment data provided to generateAppointmentPDF()");
     }
 
-    const templatePath = path.join(__dirname, "../templates/appointmentPdfGenerator.ejs");
+    const templatePath = path.join(__dirname, "../templates/appointmentTemplate.ejs");
     const assetsDir = path.resolve(__dirname, "../assets");
 
     // === EMBED LOGO ===
