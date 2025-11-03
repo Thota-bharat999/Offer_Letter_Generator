@@ -68,63 +68,64 @@ const generateAppointmentPDF = async (appointmentData) => {
       console.log("✅ Signature embedded:", foundSignature);
     } else console.warn("⚠️ Signature not found in:", signatureCandidates);
 
-    // === RENDER EJS ===
+    // === EMBED STAMP ===
+    const stampCandidates = [
+      path.join(assetsDir, "stamp.png"),
+      path.join(assetsDir, "seal.png"),
+      path.join(assetsDir, "company-stamp.png"),
+    ];
+    const foundStamp = stampCandidates.find((p) => fs.existsSync(p));
+    let stampPath = "";
+    if (foundStamp) {
+      const mime = foundStamp.endsWith(".png")
+        ? "image/png"
+        : foundStamp.endsWith(".jpg") || foundStamp.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "application/octet-stream";
+      stampPath = `data:${mime};base64,${fs.readFileSync(foundStamp).toString("base64")}`;
+      console.log("✅ Stamp embedded:", foundStamp);
+    } else console.warn("⚠️ Stamp not found in:", stampCandidates);
+
+    // === EMBED FOOTER ===
+    const footerCandidates = [
+      path.join(assetsDir, "footer.png"),
+      path.join(assetsDir, "bottom.png"),
+      path.join(assetsDir, "footer-strip.png"),
+    ];
+    const foundFooter = footerCandidates.find((p) => fs.existsSync(p));
+    let footerPath = "";
+    if (foundFooter) {
+      const mime = foundFooter.endsWith(".png")
+        ? "image/png"
+        : foundFooter.endsWith(".jpg") || foundFooter.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "application/octet-stream";
+      footerPath = `data:${mime};base64,${fs.readFileSync(foundFooter).toString("base64")}`;
+      console.log("✅ Footer embedded:", foundFooter);
+    } else console.warn("⚠️ Footer not found in:", footerCandidates);
+
+    // === RENDER EJS TEMPLATE ===
     const html = await ejs.renderFile(templatePath, {
       appointment: {
         issueDate: appointmentData.appointmentDate || new Date(),
         employeeName: appointmentData.employeeName || "Employee",
         address: appointmentData.address || "Address Not Provided",
-        position: appointmentData.designation || "Designation Not Provided",
+        designation: appointmentData.designation || "Designation Not Provided",
         joiningDate: appointmentData.joiningDate || new Date(),
-        ctc: appointmentData.ctcAnnual || 0,
+        ctcAnnual: appointmentData.ctcAnnual || 0,
         ctcWords: appointmentData.ctcWords || "",
-        salaryComponents: (appointmentData.salaryBreakdown || []).map(item => ({
-          label: item.component,
-          perAnnum: item.annualAmount,
-          perMonth: item.monthlyAmount,
-        })),
+        salaryBreakdown: appointmentData.salaryBreakdown || [],
         hrName: appointmentData.hrName || "HR Manager",
         hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
       },
       logoPath,
       letterheadPath,
       signaturePath,
+      stampPath,
+      footerPath,
     });
 
     console.log("✅ [8] Appointment EJS rendered successfully");
-
-    // === ADD LETTERHEAD BACKGROUND ===
-    let modifiedHtml = html;
-    if (letterheadPath) {
-      modifiedHtml = modifiedHtml.replace(
-        "<body>",
-        `<body>
-          <div style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 210mm;
-            height: 297mm;
-            background-image: url('${letterheadPath}');
-            background-repeat: no-repeat;
-            background-size: 100% auto;
-            background-position: top center;
-            z-index: -1;
-          "></div>`
-      );
-    }
-
-    // === ADD CUSTOM CSS ===
-    const cssParts = ['.title-row { margin: -3mm 0 4mm !important; }'];
-    if (letterheadPath) {
-      cssParts.push(
-        ".header { min-height: 12mm !important; }",
-        ".header .logo { display: none !important; }",
-        ".container { padding-top: 36mm !important; }",
-        ".watermark { display: none !important; }"
-      );
-    }
-    const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
 
     // === LAUNCH PUPPETEER ===
     console.log("🟩 [10] Launching Puppeteer...");
@@ -148,7 +149,7 @@ const generateAppointmentPDF = async (appointmentData) => {
     await page.setDefaultTimeout(0);
 
     console.log("🟩 [12] Setting HTML content...");
-    await page.setContent(finalHtml, { waitUntil: "networkidle0", timeout: 0 });
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 0 });
     await page.evaluateHandle("document.fonts.ready");
     console.log("✅ [13] Page fully loaded with fonts");
 

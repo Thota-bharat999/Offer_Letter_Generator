@@ -1,231 +1,287 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Letter of Appointment</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appointment Letter</title>
+
   <style>
-    /* A4 print-like styling */
-    @page { size: A4; margin: 10mm; }
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
     body {
-      font-family: "Arial", sans-serif;
+      font-family: 'Calibri', Arial, sans-serif;
       font-size: 12px;
+      line-height: 1.7;
       color: #000;
       margin: 0;
       padding: 0;
-      line-height: 1.35;
-    }
-    .container {
-      padding: 25px 35px;
     }
 
-    /* header */
+    .page {
+      width: 210mm;
+      height: 297mm;
+      padding: 40mm 25mm 25mm 25mm;
+      position: relative;
+      page-break-after: always;
+    }
+
     .letterhead {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom: 8px;
-      padding-bottom:6px;
-      border-bottom: 3px solid #e5e7eb;
-    }
-    .brand {
-      display:flex;
-      align-items:center;
-      gap: 12px;
-    }
-    .brand .logo {
-      width: 180px;
-      font-weight:700;
-      color:#0b63a4;
-      font-size:22px;
-    }
-
-    .meta { font-size:12px; text-align:left; }
-
-    .title {
-      margin-top: 18px;
-      text-align: left;
-      font-weight: bold;
-      text-decoration: underline;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .address-block { margin: 6px 0 12px 0; white-space: pre-line; }
-
-    .section { margin-bottom: 10px; }
-
-    .bold { font-weight: 700; }
-    .underline { text-decoration: underline; }
-
-    ol { margin-left: 18px; margin-bottom: 10px; }
-    ul { margin-left: 18px; }
-
-    .annexure {
-      margin-top: 18px;
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      margin-bottom: 18px;
-    }
-
-    .annexure th, .annexure td {
-      border:1px solid #222;
-      padding:6px 8px;
-      text-align: left;
-    }
-
-    .signature {
-      margin-top: 28px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 210mm;
+      height: auto;
     }
 
     .footer {
-      margin-top: 26px;
-      border-top: 3px solid #e5e7eb;
-      padding-top:8px;
-      font-size:11px;
-      color:#333;
-      text-align:center;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 210mm;
+      height: auto;
     }
 
-    /* For print style accuracy */
-    .page-break { page-break-after: always; }
+    .content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      text-decoration: underline;
+      font-size: 15px;
+      margin-bottom: 15px;
+    }
+
+    .date {
+      text-align: left;
+      margin-bottom: 15px;
+    }
+
+    p {
+      text-align: justify;
+      margin-bottom: 10px;
+    }
+
+    .sub {
+      font-weight: bold;
+      margin-top: 15px;
+      margin-bottom: 10px;
+    }
+
+    ol {
+      padding-left: 18px;
+      text-align: justify;
+    }
+
+    .signature-block {
+      margin-top: 20px;
+      line-height: 1.3;
+    }
+
+    .signature-block img {
+      width: 120px;
+      height: auto;
+      margin-bottom: 2px;
+    }
+
+    .stamp {
+      width: 100px;
+      position: absolute;
+      right: 70px;
+      bottom: 60px;
+      opacity: 0.85;
+    }
+
+    .salary-table {
+      border-collapse: collapse;
+      width: 80%;
+      margin: 25px auto;
+    }
+
+    .salary-table th,
+    .salary-table td {
+      border: 1px solid #000;
+      text-align: center;
+      padding: 6px;
+      font-size: 12px;
+    }
+
+    .salary-table th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+
+    .annexure-title {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 40px;
+    }
+
+    .note {
+      font-size: 11px;
+      margin-top: 20px;
+      text-align: left;
+      width: 85%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .note ul {
+      padding-left: 18px;
+    }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <div class="letterhead">
-      <div class="brand">
-        <div class="logo"><span style="color:#e0213b;font-weight:800;">W</span> AMAZON IT SOLUTIONS</div>
+  <!-- PAGE 1 -->
+  <div class="page">
+    <% if (letterheadPath) { %>
+      <img src="<%= letterheadPath %>" class="letterhead" alt="Letterhead" />
+    <% } %>
+
+    <div class="content">
+      <p class="date"><%= new Date(appointmentDate).toLocaleDateString('en-GB').replace(/\//g, '-') %></p>
+
+      <p class="title">Letter of Appointment</p>
+
+      <p>To,<br/>
+        <%= employeeName %>,<br/>
+        <%= address %>.
+      </p>
+
+      <p>Dear <%= employeeName.split(" ")[0] %>,</p>
+
+      <p class="sub">Sub: Your Career with AMAZON IT SOLUTIONS.</p>
+
+      <p>We are immensely pleased to appoint you as a <strong><%= designation %></strong>, and have you as part of Amazon IT Solutions family. We believe your potential skills will be a valuable contribution to our company.</p>
+
+      <p><strong>Effective Date of Appointment:</strong> Your date of joining at “Amazon IT Solutions” is <%= new Date(joiningDate).toLocaleDateString('en-GB').replace(/\//g, '-') %> and the following are the terms and conditions:</p>
+
+      <ol start="1">
+        <li><strong>Job Assignment:</strong> You will be required to perform duties as laid down in the Job Description for your position.</li>
+        <li><strong>Leave Entitlement:</strong> You will be entitled to leaves as per Amazon IT Solutions policy mentioned in Rules and Regulations formulated in the Employee Handbook of Amazon IT Solutions from time to time.</li>
+        <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level and will be entitled to total compensation of INR <%= ctcAnnual.toLocaleString('en-IN') %> (<%= ctcWords %>) per annum. Compensation will be governed by company rules. Note: The breakup of the fixed salary is as per the annexure sheet.</li>
+        <li><strong>Statutory Deductions:</strong> Deductions, if any, will be made from your salary as per prevailing laws.</li>
+        <li><strong>Code of Conduct:</strong> You are expected to ensure compliance with company policies and ethics.</li>
+      </ol>
+    </div>
+
+    <% if (footerPath) { %>
+      <img src="<%= footerPath %>" class="footer" alt="Footer" />
+    <% } %>
+  </div>
+
+  <!-- PAGE 2 -->
+  <div class="page">
+    <% if (letterheadPath) { %>
+      <img src="<%= letterheadPath %>" class="letterhead" alt="Letterhead" />
+    <% } %>
+    <div class="content">
+      <ol start="6">
+        <li><strong>Posting & Transfer:</strong> Your initial posting will be at Hyderabad. However, your services are liable to be transferred...</li>
+        <li><strong>Probation:</strong> You will be on probation for a period of six months...</li>
+        <li><strong>Full-time Employment:</strong> Your position is a full-time employment...</li>
+        <li><strong>Confidentiality:</strong> You shall not, during or after employment, share company information...</li>
+        <li><strong>Intellectual Property:</strong> Any invention or idea developed during employment shall belong to the company...</li>
+        <li><strong>Past Records:</strong> Any misrepresentation of facts may lead to termination...</li>
+      </ol>
+    </div>
+
+    <% if (footerPath) { %>
+      <img src="<%= footerPath %>" class="footer" alt="Footer" />
+    <% } %>
+  </div>
+
+  <!-- PAGE 3 -->
+  <div class="page">
+    <% if (letterheadPath) { %>
+      <img src="<%= letterheadPath %>" class="letterhead" alt="Letterhead" />
+    <% } %>
+    <div class="content">
+      <ol start="12">
+        <li><strong>Termination of Employment:</strong> Services can be terminated by giving notice or salary in lieu...</li>
+        <li><strong>General Conditions:</strong> You shall be bound by all applicable rules and regulations of the company.</li>
+        <li><strong>Absence from Duty:</strong> Absence without reason for more than three days will be treated as abandonment...</li>
+        <li><strong>Confidentiality:</strong> You must not disclose company secrets at any point...</li>
+        <li><strong>Acceptance:</strong> If you accept the terms, please sign and return a copy of this letter...</li>
+      </ol>
+
+      <div class="signature-block">
+        <p>For Amazon IT Solutions</p>
+        <% if (signaturePath) { %>
+          <img src="<%= signaturePath %>" alt="Signature" />
+        <% } %>
+        <p><%= hrName %></p>
+        <p><strong><%= hrDesignation %></strong></p>
       </div>
-      <div class="meta">
-        <div><%= appointment.issueDate || "" %></div>
-      </div>
+
+      <% if (stampPath) { %>
+        <img src="<%= stampPath %>" class="stamp" alt="Company Stamp" />
+      <% } %>
     </div>
 
-    <div class="title">Letter of Appointment</div>
+    <% if (footerPath) { %>
+      <img src="<%= footerPath %>" class="footer" alt="Footer" />
+    <% } %>
+  </div>
 
-    <div class="address-block">
-      <strong>To,</strong><br/>
-      <%= appointment.employeeName || "" %><br/>
-      <%= appointment.address || "" %>
-    </div>
+  <!-- PAGE 4: Annexure -->
+  <div class="page">
+    <% if (letterheadPath) { %>
+      <img src="<%= letterheadPath %>" class="letterhead" alt="Letterhead" />
+    <% } %>
+    <div class="content">
+      <p style="text-align:center; font-size:13px;">
+        Note: This is a computer-generated document. No Signature is required.
+      </p>
 
-    <p>Dear <strong><%= appointment.employeeName || "" %></strong>,</p>
+      <p style="text-align:center; margin-top:15px;">
+        This is to certify that I, <strong><%= employeeName %></strong>, have read and understood all the above-mentioned terms and conditions and accept them.
+      </p>
 
-    <p class="section"><strong>Sub: Your Career with AMAZON IT SOLUTIONS.</strong></p>
+      <p style="margin-top:30px; text-align:center;">
+        Date: ____________ &nbsp;&nbsp; Place: ____________ &nbsp;&nbsp; Signature: ____________
+      </p>
 
-    <p class="section">We are immensely pleased appointing you as a <strong><%= appointment.position || "" %></strong>, and have you as a part of Amazon IT Solutions Family. We believe your potential skills will be a valuable contribution to our company.</p>
+      <p class="annexure-title">Annexure - I</p>
 
-    <p class="section"><strong>Effective Date of Appointment:</strong> Your Date of Joining at "Amazon IT Solutions" is <strong><%= appointment.joiningDate || "" %></strong> and following are the terms and conditions:</p>
-
-    <ol>
-      <li><strong>Job Assignment:</strong> In your assignment you will be required to perform duties as laid down in the Job Description for your position.</li>
-
-      <li><strong>Leave Entitlement:</strong> You will be entitled to leaves as per Amazon IT Solutions policy mentioned in Rules and Regulations formulated in the Employee Handbook of Amazon IT solutions from time to time.</li>
-
-      <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctc ? Number(appointment.ctc).toLocaleString() : "" %> (<%= appointment.ctcWords || "" %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
-
-      <li><strong>Statutory Deductions:</strong> Deductions, if any, will be made from your salary as per the prevailing law of the country. However, for your income tax you shall be personally responsible for filing returns etc. The company will provide you the tax deductions certificate, if applicable at the end of each financial year.</li>
-
-      <li><strong>Code of Conduct:</strong> The Code of Business conduct and Ethics helps to ensure compliance with legal requirements and our standards as approved by the Board from time to time formulated in Employee Hand Book of Amazon IT solutions. All employees shall be expected to read and understand this Code of Business conduct and Ethics, uphold these standards in day-to-day activities, comply with all applicable policies and procedures and adhere to these standards.</li>
-    </ol>
-
-    <ol start="6">
-      <li><strong>Posting & Transfer:</strong> Your initial posting will be at Hyderabad. However, your services are liable to be transferred, at the sole discretion of Management, as the company may determine, to any department/section, location, associate, sister concern or subsidiary, at any place in India or abroad, whether existing today or which may come up in future. In such a case, you will be governed by the terms and conditions of the service applicable at the new placement location.</li>
-
-      <li><strong>Probation:</strong> You will be on probation for a period of six months. The period of probation can be extended at the discretion of the Management and you will continue to be on probation till an order of confirmation has been issued.</li>
-
-      <li><strong>Full time employment:</strong> Your position is a full-time employment with the Company and you shall devote yourself exclusively to the business and interests of the company. You will not take up any other work for remuneration (part time or otherwise) or work in an advisory capacity, or be interested directly or indirectly (except as shareholder / debenture holder), in any other trade or business during your employment with the company, without written permission from the Management of the Company. You will also not seek membership of any local or public bodies without first obtaining specific permission from the Management.</li>
-
-      <li><strong>Confidentiality:</strong> You will not, at any time, during the employment or after, without the consent of the Management disclose or divulge or make public, except on legal obligations, any information regarding the Company's affairs or administration or research carried out, whether the same is confided to you or becomes known to you in the course of your service or otherwise.</li>
-
-      <li><strong>Intellectual Property:</strong> If you conceive any new or advanced method of improving designs/processes/formulae/systems, etc. in relation to the business/ operations of the Company, such developments will be fully communicated to the company and will be, and remain, the sole right/property of the Company.</li>
-    </ol>
-
-    <ol start="11">
-      <li><strong>Responsibilities & Duties:</strong> Your work in the organization will be subject to the rules and regulations of the organization as laid down in relation to conduct, discipline and other matters. You will always be alive to responsibilities and duties attached to your office and conduct yourself accordingly. You must effectively perform to ensure results. An onsite opportunity may be provided to you either in US/UK geography based on project requirement, specific skills, expansion, for a period of 6-12 months of time.</li>
-
-      <li><strong>Past Records:</strong> If any declaration given or information furnished by you, to the company proves to be false, or if you are found to have willfully suppressed any material information, in such cases, you will be liable to removal from services without any notice.</li>
-
-      <li><strong>Termination of employment:</strong>
-        <ol>
-          <li>During the probationary period and any extension thereof, services can be terminated by either party by giving Ninety Days (90 days) notice in writing or gross salary in lieu thereof, only by the employer and this does not apply for the employee.</li>
-          <li>Upon termination of employment, you will immediately hand over to the Company all correspondence, specifications, formulae, books, documents, market data, cost data, drawings, artifacts or records belonging to the Company or relating to its business and shall not retain or make copies of these items.</li>
-        </ol>
-      </li>
-
-      <li><strong>General Conditions:</strong>
-        <ol>
-          <li>You will not engage in any unlawful or any subversive activity while in the service of "amazon IT solutions".</li>
-          <li>Amazon IT Solutions will expect you to work in section/department/process/project in which you are placed with a high standard of initiative, efficiency and economy.</li>
-          <li>You shall not, under any circumstances either directly or indirectly, receive or accept for own benefit any commission, rebate, discount, gift or profit of any nature from any person, company or firm having business transaction with amazon IT solutions.</li>
-        </ol>
-      </li>
-
-      <li><strong>Non-Disclosure:</strong> You will not disclose by word of mouth or otherwise, particulars or details of business plans / trade. We are immensely pleased to appoint you secret /finance [know how and or any confidential information of business coming to your knowledge by virtue of your being in the employment of amazon IT solutions].</li>
-
-      <li><strong>Acceptance:</strong> If you accept the above terms and conditions of the service, please signify your acceptance by signing up the photocopy of this Appointment letter thereof otherwise this letter of appointment will be deemed to have been withdrawn and canceled.</li>
-    </ol>
-
-    <div class="signature">
-      <div>For Amazon IT Solutions,</div>
-      <div style="margin-top:12px;"><strong><%= appointment.hrName || "" %></strong><br/><%= appointment.hrDesignation || "" %></div>
-    </div>
-
-    <div class="footer">
-      The Skyview -10, COWORKS 1st & 2nd Floor, Sy no 83/1 Raidurgam,<br/>
-      Hitech City Main Road Madhapur, Hyderabad-500081 (Opposite IKEA)<br/>
-      www.amazonitsolutions.in | info@amazonitsolutions.in
-    </div>
-
-    <div class="page-break"></div>
-
-    <!-- PAGE 2: Annexure (Salary Computation) -->
-    <div style="padding-top: 20px;">
-      <div class="title">Annexure-I</div>
-      <div style="text-align:center; font-weight:700; margin-bottom:10px;">SALARY COMPUTATION</div>
-
-      <table class="annexure">
+      <table class="salary-table">
         <thead>
           <tr>
             <th>Components</th>
             <th>Per annum</th>
-            <th>Per Month</th>
+            <th>Per month</th>
           </tr>
         </thead>
         <tbody>
-          <% (appointment.salaryComponents || []).forEach(function(row) { %>
+          <% salaryBreakdown.forEach((item) => { %>
             <tr>
-              <td><%= row.label %></td>
-              <td><%= row.perAnnum %></td>
-              <td><%= row.perMonth %></td>
+              <td><%= item.component %></td>
+              <td><%= item.annualAmount.toLocaleString('en-IN') %></td>
+              <td><%= item.monthlyAmount.toLocaleString('en-IN') %></td>
             </tr>
           <% }) %>
         </tbody>
       </table>
 
-      <div>
-        <strong>Note:</strong>
+      <div class="note">
+        <p><strong>Note:</strong></p>
         <ul>
-          <li>Medical Insurance covers Rs.4 Lakhs for the employee and the dependents.</li>
-          <li>Personal Accident Insurance covers Rs. 7.5 Lakhs for the employee.</li>
-          <li>Procedure for standard reimbursement: The LTA can be claimed against production of bills at the end of the financial year subject to provision of Income Tax Act. Any unclaimed amount will be paid to you at the end of the financial year after deducting the necessary taxes.</li>
+          <li>Medical Insurance covers Rs.4 Lakhs for the employee and dependents.</li>
+          <li>Personal Accident Insurance covers Rs.7.5 Lakhs for the employee.</li>
+          <li>LTA can be claimed at the end of the financial year as per Income Tax Act provisions.</li>
         </ul>
       </div>
     </div>
 
-    <div style="margin-top:18px; font-size:12px;">
-      <div style="display:flex; justify-content:space-between; margin-top:30px;">
-        <div>
-          <div>Date: ____________________</div>
-          <div style="margin-top:12px;">Place: ____________________</div>
-        </div>
-        <div style="text-align:center;">
-          <div>Signature: ____________________</div>
-        </div>
-      </div>
-    </div>
-
+    <% if (footerPath) { %>
+      <img src="<%= footerPath %>" class="footer" alt="Footer" />
+    <% } %>
   </div>
 </body>
 </html>
