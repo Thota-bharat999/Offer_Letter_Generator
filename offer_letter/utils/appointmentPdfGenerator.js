@@ -121,6 +121,8 @@ const generateAppointmentPDF = async (appointmentData) => {
       appointmentDate: appointmentData.appointmentDate || new Date(),
       employeeName: appointmentData.employeeName || "Employee",
       address: appointmentData.address || "Address Not Provided",
+      designation: appointmentData.designation || "Designation Not Provided",
+      joiningDate: appointmentData.joiningDate || new Date(),
       logoPath,
       letterheadPath,
       signaturePath,
