@@ -20,7 +20,8 @@
   const employeeName = (form && form.employeeName) ? form.employeeName : "Candidate Name";
   const firstName = employeeName.split(" ")[0] || "Candidate";
   const designation = (form && form.designation) ? form.designation : "Designation";
-  const ctcAnnual = (form && form.ctcAnnual) ? Number(form.ctcAnnual).toLocaleString("en-IN") : "0";
+  const ctcAnnualNum = (form && form.ctcAnnual) ? Number(form.ctcAnnual) : 680000;
+  const ctcAnnual = ctcAnnualNum.toLocaleString("en-IN");
   const ctcWords = (form && form.ctcWords) ? form.ctcWords : "Amount in words";
 %>
 <div class="letter-page">
@@ -210,7 +211,7 @@
   const specialYearly = (form && form.specialYearly) || 68000;
   const travelYearly = (form && form.travelYearly) || 68000;
   const otherYearly = (form && form.otherYearly) || 68000;
-  const ctcAnnual = (form && form.ctcAnnual) || 680000;
+  const ctcAnnualNum = (form && form.ctcAnnual) || 680000;
   const employeeName = (form && form.employeeName) || "";
 %>
 <div class="letter-page">
