@@ -18,13 +18,13 @@
     line-height: 1.45;
   }
 
-  /* === Page layout === */
+  /* === Each page wrapper === */
   .page {
     width: 210mm;
     height: 297mm;
     position: relative;
     box-sizing: border-box;
-    padding: 25mm 22mm 20mm 25mm; /* ✅ top, right, bottom, left */
+    padding: 0 25mm; /* Left-right padding only */
     page-break-after: always;
     overflow: hidden;
     display: flex;
@@ -32,7 +32,7 @@
     justify-content: flex-start;
   }
 
-  /* === Letterhead Background === */
+  /* === Letterhead background === */
   .letterhead {
     position: absolute;
     top: 0;
@@ -43,21 +43,22 @@
     object-fit: cover;
   }
 
-  /* === Main Content Area === */
+  /* === Main content area === */
   .content {
     position: relative;
     z-index: 2;
+    flex-grow: 1;
     text-align: justify;
-    margin-top: 25px;  /* ✅ Space below letterhead logo */
-    margin-bottom: 20px; /* ✅ Space above footer */
-    height: calc(100% - 45px); /* ✅ Reserve safe zone for top+bottom */
-    overflow: visible;
+    margin-top: 25px; /* ✅ Exact 25px below logo */
+    margin-bottom: 20px; /* ✅ 20px above footer area */
+    padding-top: 5px;
+    height: calc(297mm - 45px); /* ✅ Ensure usable height for content */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
   }
 
-  /* === Headings and Paragraphs === */
+  /* === Text & headings === */
   .title {
     font-size: 15px;
     font-weight: bold;
@@ -100,10 +101,10 @@
   li {
     margin-bottom: 8px;
     text-align: justify;
-    page-break-inside: avoid; /* ✅ Prevents breaking list items mid-way */
+    page-break-inside: avoid;
   }
 
-  /* === Signature Area === */
+  /* === Signature section === */
   .signature-block {
     margin-top: auto;
     line-height: 1.4;
@@ -137,7 +138,7 @@
     font-weight: bold;
   }
 
-  /* === Notes and Misc === */
+  /* === Notes === */
   .note {
     font-size: 11px;
     margin-top: 18px;
@@ -151,11 +152,12 @@
     margin-left: 20px;
   }
 
-  /* === Force New Page === */
+  /* === Page break enforcement === */
   .page-break {
     page-break-before: always;
   }
 </style>
+
 
 
 </head>
