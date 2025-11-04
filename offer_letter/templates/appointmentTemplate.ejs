@@ -4,158 +4,173 @@
   <meta charset="utf-8" />
   <title>Letter of Appointment</title>
   <style>
-  @page { size: A4; margin: 0; }
+    @page {
+      size: A4;
+      margin: 0;
+    }
 
-  body {
-    font-family: "Calibri", Arial, sans-serif;
-    font-size: 13px;
-    color: #000;
-    margin: 0;
-    padding: 0;
-    line-height: 1.6;
-  }
+    body {
+      font-family: "Calibri", Arial, sans-serif;
+      font-size: 13px;
+      color: #000;
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
+    }
 
-  .page {
-    width: 210mm;
-    height: 297mm;
-    position: relative;
-    page-break-after: always;
-    padding: 70mm 25mm 25mm 25mm;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
+    /* === Page Container === */
+    .page {
+      width: 210mm;
+      height: 297mm;
+      position: relative;
+      page-break-after: always;
+      box-sizing: border-box;
+      padding: 55mm 25mm 30mm 25mm; /* added top space to stay below header area */
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
 
-  /* === Letterhead === */
-  .letterhead {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 210mm;
-    height: 297mm;
-    z-index: 0;
-   object-fit: cover;
-  }
+    /* === Letterhead Background === */
+    .letterhead {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 210mm;
+      height: 297mm;
+      z-index: -1;
+      object-fit: cover;
+    }
 
-  /* === Safe Content Area === */
-  .content {
-    position: relative;
-    z-index: 2;
-    text-align: justify;
-    
-  }
+    /* === Content Wrapper === */
+    .content {
+      position: relative;
+      z-index: 2;
+      text-align: justify;
+      flex: 1;
+      overflow-wrap: break-word;
+    }
 
-  .content::after {
-    content: "";
-    display: block;
-    height: 20px; /* Safe space at bottom */
-  }
+    .title {
+      font-size: 15px;
+      font-weight: bold;
+      text-decoration: underline;
+      text-align: center;
+      margin-bottom: 18px;
+    }
 
-  /* === Headings & Text === */
-  .title {
-    font-size: 15px;
-    font-weight: bold;
-    text-decoration: underline;
-    text-align: center;
-    margin-bottom: 18px;
-  }
+    .date {
+      text-align: left;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
 
-  .date {
-    text-align: left;
-    font-size: 12px;
-    margin-bottom: 12px;
-  }
+    .to {
+      margin-bottom: 35px;
+      line-height: 1.5;
+    }
+    .to .name {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .to .addr {
+      white-space: normal;
+      margin-top: 0;
+    }
 
-  .to {
-    margin-bottom: 35px;
-    line-height: 1.5;
-  }
+    .section {
+      margin-bottom: 12px;
+    }
 
-  .to .name {
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
+    ol {
+      margin-left: 20px;
+      margin-top: 0;
+      padding-left: 10px;
+    }
 
-  .to .addr {
-    white-space: normal;
-    margin-top: 0;
-  }
+    li {
+      margin-bottom: 8px;
+      text-align: justify;
+    }
 
-  p, li {
-    margin-bottom: 10px;
-    text-align: justify;
-  }
+    p {
+      margin-bottom: 10px;
+      text-align: justify;
+    }
 
-  ol {
-    margin-left: 20px;
-    margin-top: 0;
-    padding-left: 10px;
-  }
+    /* === Signature Section === */
+    .signature-block {
+      margin-top: 25px;
+      line-height: 1.4;
+      page-break-inside: avoid;
+    }
 
-  li {
-    margin-bottom: 8px;
-  }
+    .signature-block img {
+      width: 110px;
+      height: auto;
+      margin-top: 6px;
+      opacity: 0.95;
+    }
 
-  /* === Signature === */
-  .signature-block {
-    margin-top: 25px;
-    line-height: 1.4;
-  }
+    /* === Annexure Title & Salary Table === */
+    .annexure-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
 
-  .signature-block img {
-    width: 110px;
-    height: auto;
-    margin-top: 6px;
-  }
+    .salary-table {
+      border-collapse: collapse;
+      width: 85%;
+      margin: 0 auto;
+      font-size: 12px;
+      border: 1px solid #000;
+      table-layout: fixed;
+    }
 
-  /* === Annexure Table === */
-  .annexure-title {
-    text-align: center;
-    font-weight: bold;
-    font-size: 14px;
-    margin-top: 20px;
-    margin-bottom: 8px;
-  }
+    .salary-table th,
+    .salary-table td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      text-align: center;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
 
-  .salary-table {
-    border-collapse: collapse;
-    width: 85%;
-    margin: 0 auto;
-    font-size: 12px;
-    border: 1px solid #000;
-    table-layout: fixed;
-  }
+    .salary-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
 
-  .salary-table th,
-  .salary-table td {
-    border: 1px solid #000;
-    padding: 6px 8px;
-    text-align: center;
-    vertical-align: middle;
-    word-wrap: break-word;
-  }
+    .note {
+      font-size: 11px;
+      margin-top: 18px;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-  .salary-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-    letter-spacing: 0.3px;
-  }
+    .note ul {
+      margin-top: 6px;
+      margin-left: 20px;
+    }
 
-  .note {
-    font-size: 11px;
-    margin-top: 18px;
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-  }
+    /* === Ensure each page bottom spacing === */
+    .page::after {
+      content: "";
+      display: block;
+      height: 20px;
+    }
 
-  .note ul {
-    margin-top: 6px;
-    margin-left: 20px;
-  }
-
-  .page-break { page-break-after: always; }
-</style>
-
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
 </head>
 
 <body>
@@ -170,43 +185,28 @@
       <p class="date"><%= appointment.issueDate || appointment.appointmentDate || "" %></p>
 
       <p class="title">Letter of Appointment</p>
+
       <div class="to">
-  <p><strong>To,</strong></p>
-  <p class="name"><%= appointment.employeeName || "" %>,</p>
-  <%
-    // Split address naturally into 3 lines (not word-by-word)
-    const address = appointment.address || '';
-    const parts = address
-      .split(/[,;\n]+/)
-      .map(p => p.trim())
-      .filter(Boolean);
-
-    // Join logically into 3 well-balanced lines
-    let formatted = [];
-    if (parts.length <= 3) {
-      formatted = parts;
-    } else if (parts.length === 4) {
-      formatted = [
-        parts.slice(0, 2).join(', '),
-        parts[2],
-        parts[3]
-      ];
-    } else {
-      formatted = [
-        parts.slice(0, 2).join(', '),
-        parts.slice(2, 4).join(', '),
-        parts.slice(4).join(', ')
-      ];
-    }
-  %>
-
-  <p class="addr">
-    <% formatted.forEach(function(line, index){ %>
-      <%= line %><% if (index < formatted.length - 1) { %>,<% } %><br/>
-    <% }) %>
-  </p>
-</div>
-
+        <p><strong>To,</strong></p>
+        <p class="name"><%= appointment.employeeName || "" %>,</p>
+        <%
+          const address = appointment.address || '';
+          const parts = address.split(/[,;\n]+/).map(p => p.trim()).filter(Boolean);
+          let formatted = [];
+          if (parts.length <= 3) {
+            formatted = parts;
+          } else if (parts.length === 4) {
+            formatted = [parts.slice(0, 2).join(', '), parts[2], parts[3]];
+          } else {
+            formatted = [parts.slice(0, 2).join(', '), parts.slice(2, 4).join(', '), parts.slice(4).join(', ')];
+          }
+        %>
+        <p class="addr">
+          <% formatted.forEach(function(line, index){ %>
+            <%= line %><% if (index < formatted.length - 1) { %>,<% } %><br/>
+          <% }) %>
+        </p>
+      </div>
 
       <p>Dear <strong><%= appointment.employeeName || "" %></strong>,</p>
 
@@ -217,27 +217,16 @@
       <p><strong>Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <strong><%= appointment.joiningDate || "" %></strong> and following are the terms and conditions:</p>
 
       <ol>
-        <li><strong>Job Assignment:</strong>In your assignment you will be required to perform duties as laid down in the 
-Job Description for your position.</li>
-        <li><strong>Leave Entitlement:</strong>You will be entitled to leaves as per Amazon IT Solutions policy 
-Mentioned in Rules and Regulations formulated in the Employee Hand Book of Amazon IT solutions 
-from time to time.</li>
+        <li><strong>Job Assignment:</strong>In your assignment you will be required to perform duties as laid down in the Job Description for your position.</li>
+        <li><strong>Leave Entitlement:</strong>You will be entitled to leaves as per Amazon IT Solutions policy Mentioned in Rules and Regulations formulated in the Employee Hand Book of Amazon IT solutions from time to time.</li>
         <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctc ? Number(appointment.ctc).toLocaleString('en-IN') : "" %> (<%= appointment.ctcWords || "" %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
       </ol>
 
       <p><strong>Note:</strong> Breakup of the fixed salary is as per the Annexure sheet.</p>
 
       <ol start="4">
-        <li><strong>Statutory Deductions:</strong>: Deductions, if any, will be made from your salary as per the prevailing 
-law of the country. However, for your income tax you shall be personally responsible for filing 
-returns etc. The company will provide you the tax deductions certificate, if applicable at the end of 
-each financial year.</li>
-        <li><strong>Code of Conduct:</strong> The Code of Business conduct and Ethics helps to ensure compliance with 
-legal requirements and our standards as approved by the Board from time to time formulated in 
-Employee Hand Book of Amazon IT solutions. Al employees are expected to read and understand 
-this Code of Business conduct and Ethics, uphold these standards in day-to-day activities, comply 
-with all applicable policies and procedures and adhere to these standards. 
-</li>
+        <li><strong>Statutory Deductions:</strong>: Deductions, if any, will be made from your salary as per the prevailing law of the country. However, for your income tax you shall be personally responsible for filing returns etc. The company will provide you the tax deductions certificate, if applicable at the end of each financial year.</li>
+        <li><strong>Code of Conduct:</strong> The Code of Business conduct and Ethics helps to ensure compliance with legal requirements and our standards as approved by the Board from time to time formulated in Employee Hand Book of Amazon IT solutions. All employees are expected to read and understand this Code, uphold these standards, comply with all applicable policies and procedures and adhere to these standards.</li>
       </ol>
     </div>
   </div>
