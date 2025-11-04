@@ -3,169 +3,149 @@
 <head>
   <meta charset="utf-8" />
   <title>Letter of Appointment</title>
-  <style>
-    @page { size: A4; margin: 0; }
+ <style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
 
-    :root{
-      /* Tweak these if you need slightly different spacing */
-      --headerHeightPx: 95px;   /* approximate logo vertical area (px) */
-      --topGapPx: 25px;         /* gap BELOW logo that you requested (px) */
-      --footerHeightPx: 60px;   /* safe area above footer/address area (px) */
-      --sidePadMm: 25mm;        /* left & right padding in mm (keeps content aligned with logo) */
-    }
+  body {
+    font-family: "Calibri", Arial, sans-serif;
+    font-size: 13px;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+  }
 
-    body {
-      font-family: "Calibri", Arial, sans-serif;
-      font-size: 13px;
-      color: #000;
-      margin: 0;
-      padding: 0;
-      line-height: 1.4;
-    }
+  /* Page container */
+  .page {
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    box-sizing: border-box;
+    padding: 25mm 20mm 20mm 25mm; /* ✅ balanced margins */
+    page-break-after: always;
+    overflow: hidden;
+  }
 
-    /* Each PDF page: use background-image set inline on each .page element */
-    .page {
-      width: 210mm;
-      min-height: 297mm;
-      box-sizing: border-box;
+  /* Letterhead background */
+  .letterhead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    height: 297mm;
+    object-fit: cover;
+    z-index: -1;
+  }
 
-      /* top padding = header area (logo) + requested 25px gap, bottom = footer area */
-      padding-top: calc(var(--headerHeightPx) + var(--topGapPx));
-      padding-bottom: calc(var(--footerHeightPx));
-      padding-left: var(--sidePadMm);
-      padding-right: var(--sidePadMm);
+  /* Main content */
+  .content {
+    position: relative;
+    z-index: 2;
+    text-align: justify;
+    overflow: hidden;
+    height: calc(100% - 45mm); /* ✅ ensures content fills but respects top/bottom */
+    padding-top: 25px; /* space below logo */
+    padding-bottom: 20px; /* space above footer */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
 
-      page-break-after: always;
+  .title {
+    font-size: 15px;
+    font-weight: bold;
+    text-decoration: underline;
+    text-align: center;
+    margin-bottom: 18px;
+  }
 
-      /* Background set inline via style attribute: background-image: url('<%= letterheadPath %>');
-         keep background centered and contained so logo & footer visible */
-      background-repeat: no-repeat;
-      background-position: top center;
-      background-size: contain;
-      display: flex;
-      flex-direction: column;
-    }
+  .date {
+    text-align: left;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
 
-    /* Hide previous image-based letterhead (if present) */
-    .letterhead { display:none !important; }
+  .to {
+    margin-bottom: 25px;
+    line-height: 1.5;
+  }
+  .to .name {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .to .addr {
+    white-space: normal;
+    margin-top: 0;
+  }
 
-    /* Content area — fills vertical space between top and bottom padding */
-    .content {
-      flex: 1 1 auto; /* grow to available space */
-      box-sizing: border-box;
-      text-align: justify;
-      overflow: visible;
-    }
+  p {
+    margin-bottom: 8px;
+    text-align: justify;
+  }
 
-    /* Prevent awkward breaks inside blocks */
-    p, ol, ul, li, table, tr, td {
-      page-break-inside: avoid;
-      orphans: 2;
-      widows: 2;
-    }
+  ol {
+    margin-left: 20px;
+    padding-left: 10px;
+  }
 
-    .title {
-      font-size: 15px;
-      font-weight: bold;
-      text-decoration: underline;
-      text-align: center;
-      margin-bottom: 18px;
-    }
+  li {
+    margin-bottom: 8px;
+    text-align: justify;
+  }
 
-    .date {
-      text-align: left;
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
+  /* Signature block */
+  .signature-block {
+    margin-top: auto;
+    line-height: 1.4;
+  }
+  .signature-block img {
+    width: 110px;
+    height: auto;
+    margin-top: 6px;
+  }
 
-    .to {
-      margin-bottom: 25px;
-      line-height: 1.5;
-    }
+  /* Salary table */
+  .salary-table {
+    border-collapse: collapse;
+    width: 85%;
+    margin: 0 auto;
+    font-size: 12px;
+    border: 1px solid #000;
+  }
 
-    .to .name {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
+  .salary-table th,
+  .salary-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: center;
+  }
 
-    .to .addr {
-      white-space: normal;
-      margin-top: 0;
-    }
+  .salary-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
 
-    p {
-      margin-bottom: 8px;
-      text-align: justify;
-    }
+  .note {
+    font-size: 11px;
+    margin-top: 18px;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-    ol {
-      margin-left: 20px;
-      padding-left: 10px;
-    }
+  .note ul {
+    margin-top: 6px;
+    margin-left: 20px;
+  }
 
-    li {
-      margin-bottom: 8px;
-      text-align: justify;
-    }
+  .page-break {
+    page-break-after: always;
+  }
+</style>
 
-    .signature-block {
-      margin-top: 25px;
-      line-height: 1.4;
-    }
-
-    .signature-block img {
-      width: 110px;
-      height: auto;
-      margin-top: 6px;
-    }
-
-    .annexure-title {
-      text-align: center;
-      font-weight: bold;
-      font-size: 14px;
-      margin-top: 20px;
-      margin-bottom: 8px;
-    }
-
-    .salary-table {
-      border-collapse: collapse;
-      width: 85%;
-      margin: 0 auto;
-      font-size: 12px;
-      border: 1px solid #000;
-      table-layout: fixed;
-    }
-
-    .salary-table th,
-    .salary-table td {
-      border: 1px solid #000;
-      padding: 6px 8px;
-      text-align: center;
-      vertical-align: middle;
-      word-wrap: break-word;
-    }
-
-    .salary-table th {
-      background-color: #f5f5f5;
-      font-weight: bold;
-    }
-
-    .note {
-      font-size: 11px;
-      margin-top: 18px;
-      width: 80%;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .note ul {
-      margin-top: 6px;
-      margin-left: 20px;
-    }
-
-    /* last page don't force page-break-after */
-    .page:last-child { page-break-after: auto; }
-  </style>
 </head>
 <body>
 
