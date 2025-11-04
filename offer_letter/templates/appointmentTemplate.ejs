@@ -4,12 +4,11 @@
   <meta charset="utf-8" />
   <title>Letter of Appointment</title>
   <style>
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
-  body {
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body {
     font-family: "Calibri", Arial, sans-serif;
     font-size: 13px;
     color: #000;
@@ -21,15 +20,13 @@
   /* Each PDF page */
   .page {
     width: 210mm;
-    min-height: 297mm;
+    height: 297mm;
     position: relative;
     box-sizing: border-box;
-    padding: 25px 25mm 20px 25mm; /* ✅ top 25px, bottom 20px */
+
+    /* ✅ 25px from top, 20px from bottom */
+    padding: 25px 25mm 20px 25mm; 
     page-break-after: always;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* ✅ evenly distribute vertical space */
-    overflow: hidden;
   }
 
   /* ✅ Letterhead as full-page background */
@@ -43,16 +40,16 @@
     object-fit: cover;
   }
 
-  /* ✅ Keep content aligned and auto-fill space */
+  /* Content always stays inside safe printable area */
   .content {
     position: relative;
-    flex: 1;
+    z-index: 2;
     text-align: justify;
-    display: block;
-    box-sizing: border-box;
-    overflow: visible;
+    margin-top: 45mm; /* ✅ pushes text below the top logo (approx. 25px + logo zone) */
+    margin-bottom: 20mm; /* ✅ ensures space above footer zone */
   }
 
+  /* Headings and general formatting */
   .title {
     font-size: 15px;
     font-weight: bold;
@@ -67,16 +64,15 @@
     margin-bottom: 10px;
   }
 
+  /* Address section */
   .to {
     margin-bottom: 25px;
     line-height: 1.5;
   }
-
   .to .name {
     font-weight: bold;
     margin-bottom: 4px;
   }
-
   .to .addr {
     white-space: normal;
     margin-top: 0;
@@ -102,7 +98,6 @@
     margin-top: 25px;
     line-height: 1.4;
   }
-
   .signature-block img {
     width: 110px;
     height: auto;
@@ -117,7 +112,6 @@
     font-size: 12px;
     border: 1px solid #000;
   }
-
   .salary-table th,
   .salary-table td {
     border: 1px solid #000;
@@ -125,36 +119,37 @@
     text-align: center;
   }
 
-  .salary-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-    text-align: center;
-    letter-spacing: 0.3px;
-  }
+    .salary-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
 
-  .note {
-    font-size: 11px;
-    margin-top: 18px;
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-  }
+    .note {
+      font-size: 11px;
+      margin-top: 18px;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-  .note ul {
-    margin-top: 6px;
-    margin-left: 20px;
-  }
+    .note ul {
+      margin-top: 6px;
+      margin-left: 20px;
+    }
 
-  /* === Ensure each page fits content, no blank gaps === */
-  .page:last-child {
-    page-break-after: auto;
-  }
+    /* === Ensure each page bottom spacing === */
+    .page::after {
+      content: "";
+      display: block;
+      height: 20px;
+    }
 
-  p, ol, ul, li, div {
-    page-break-inside: avoid;
-  }
-</style>
-
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
 </head>
 
 <body>
