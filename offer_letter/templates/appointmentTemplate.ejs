@@ -15,49 +15,45 @@
     color: #000;
     margin: 0;
     padding: 0;
-    line-height: 1.45;
+    line-height: 1.4;
   }
 
-  /* === Page layout === */
+  /* Page container */
   .page {
     width: 210mm;
     height: 297mm;
     position: relative;
     box-sizing: border-box;
-    padding: 25mm 22mm 20mm 25mm; /* ✅ top, right, bottom, left */
+    padding: 25mm 20mm 20mm 25mm; /* ✅ balanced margins */
     page-break-after: always;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
   }
 
-  /* === Letterhead Background === */
+  /* Letterhead background */
   .letterhead {
     position: absolute;
     top: 0;
     left: 0;
     width: 210mm;
     height: 297mm;
-    z-index: -1;
     object-fit: cover;
+    z-index: -1;
   }
 
-  /* === Main Content Area === */
+  /* Main content */
   .content {
     position: relative;
     z-index: 2;
     text-align: justify;
-    margin-top: 25px;  /* ✅ Space below letterhead logo */
-    margin-bottom: 20px; /* ✅ Space above footer */
-    height: calc(100% - 45px); /* ✅ Reserve safe zone for top+bottom */
-    overflow: visible;
+    overflow: hidden;
+    height: calc(100% - 45mm); /* ✅ ensures content fills but respects top/bottom */
+    padding-top: 25px; /* space below logo */
+    padding-bottom: 20px; /* space above footer */
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
   }
 
-  /* === Headings and Paragraphs === */
   .title {
     font-size: 15px;
     font-weight: bold;
@@ -76,12 +72,10 @@
     margin-bottom: 25px;
     line-height: 1.5;
   }
-
   .to .name {
     font-weight: bold;
     margin-bottom: 4px;
   }
-
   .to .addr {
     white-space: normal;
     margin-top: 0;
@@ -93,30 +87,27 @@
   }
 
   ol {
-    margin-left: 18px;
-    padding-left: 8px;
+    margin-left: 20px;
+    padding-left: 10px;
   }
 
   li {
     margin-bottom: 8px;
     text-align: justify;
-    page-break-inside: avoid; /* ✅ Prevents breaking list items mid-way */
   }
 
-  /* === Signature Area === */
+  /* Signature block */
   .signature-block {
     margin-top: auto;
     line-height: 1.4;
-    page-break-inside: avoid;
   }
-
   .signature-block img {
     width: 110px;
     height: auto;
     margin-top: 6px;
   }
 
-  /* === Salary Table === */
+  /* Salary table */
   .salary-table {
     border-collapse: collapse;
     width: 85%;
@@ -137,7 +128,6 @@
     font-weight: bold;
   }
 
-  /* === Notes and Misc === */
   .note {
     font-size: 11px;
     margin-top: 18px;
@@ -151,12 +141,10 @@
     margin-left: 20px;
   }
 
-  /* === Force New Page === */
   .page-break {
-    page-break-before: always;
+    page-break-after: always;
   }
 </style>
-
 
 </head>
 <body>
