@@ -18,18 +18,17 @@
     line-height: 1.45;
   }
 
-  /* === Each page wrapper === */
+  /* === Each Page Layout === */
   .page {
     width: 210mm;
     height: 297mm;
     position: relative;
     box-sizing: border-box;
-    padding: 0 25mm; /* Left-right padding only */
+    padding: 0 25mm; /* Left & right padding only */
     page-break-after: always;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
   }
 
   /* === Letterhead background === */
@@ -49,16 +48,19 @@
     z-index: 2;
     flex-grow: 1;
     text-align: justify;
-    margin-top: 25px; /* ✅ Exact 25px below logo */
-    margin-bottom: 20px; /* ✅ 20px above footer area */
-    padding-top: 5px;
-    height: calc(297mm - 45px); /* ✅ Ensure usable height for content */
+
+    /* ✅ Key fix for overlap: push content lower below logo */
+    margin-top: 65mm; /* ~2.5 inches below top logo area */
+
+    /* ✅ Bottom space for footer address zone */
+    margin-bottom: 20mm;
+
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
   }
 
-  /* === Text & headings === */
+  /* === Title & Headers === */
   .title {
     font-size: 15px;
     font-weight: bold;
@@ -73,19 +75,17 @@
     margin-bottom: 10px;
   }
 
+  /* === Address Section === */
   .to {
     margin-bottom: 25px;
     line-height: 1.5;
   }
-
   .to .name {
     font-weight: bold;
-    margin-bottom: 4px;
   }
 
   .to .addr {
     white-space: normal;
-    margin-top: 0;
   }
 
   p {
@@ -104,7 +104,7 @@
     page-break-inside: avoid;
   }
 
-  /* === Signature section === */
+  /* === Signature Section === */
   .signature-block {
     margin-top: auto;
     line-height: 1.4;
@@ -152,14 +152,11 @@
     margin-left: 20px;
   }
 
-  /* === Page break enforcement === */
+  /* === Page break control === */
   .page-break {
     page-break-before: always;
   }
 </style>
-
-
-
 </head>
 <body>
 
