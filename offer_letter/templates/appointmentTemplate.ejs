@@ -28,10 +28,6 @@
     padding: 25px 25mm 20px 25mm; 
     page-break-after: always;
   }
-  .page:not(:first-of-type) {
-  padding: 60px 20mm 40px 25mm; /* reduce top padding to fill gap */
-}
-
   /* ✅ Letterhead as full-page background */
   .letterhead {
     position: absolute;
@@ -307,30 +303,41 @@ appointment will be deemed to have been withdrawn and cancelled</li>
 
   <!-- ===== PAGE 4: ANNEXURE ===== -->
   <!-- PAGE 4: Annexure -->
+<!-- ===== PAGE 4: ANNEXURE ===== -->
 <div class="page">
   <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
 
-  <div class="content">
+  <div class="content" style="margin-top: 60mm;">
     <p style="text-align:center; font-size:12px;">
       <strong>Note:</strong> This is a computer-generated document. No Signature is required.
     </p>
 
     <p style="text-align:center; margin-top:15px;">
-      This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned terms and conditions and accept them.
+      This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned terms
+      and conditions and I hereby accept without any duress or coercion, and agree to the offer.
     </p>
 
-    <p style="margin-top:30px; text-align:center;">
-      Date: ____________ &nbsp;&nbsp; Place: ____________ &nbsp;&nbsp; Signature: ____________
-    </p>
+    <table style="width:80%; margin: 20px auto 25px auto; font-size:12px;">
+      <tr>
+        <td>Date:</td>
+        <td style="width:20%; border-bottom:1px dotted #000;"></td>
+        <td style="width:10%;"></td>
+        <td>Place:</td>
+        <td style="width:20%; border-bottom:1px dotted #000;"></td>
+        <td style="width:10%;"></td>
+        <td>Signature:</td>
+        <td style="width:20%; border-bottom:1px dotted #000;"></td>
+      </tr>
+    </table>
 
     <!-- ===== Annexure Title ===== -->
-    <p class="annexure-title">Annexure-I</p>
+    <p style="text-align:center; font-weight:bold; margin-top:10px; font-size:13px;">Annexure-I</p>
     <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
       SALARY COMPUTATION
     </p>
 
     <!-- ===== Salary Table ===== -->
-    <table class="salary-table">
+    <table class="salary-table" style="margin-top:5px; width:70%;">
       <thead>
         <tr>
           <th style="width:50%;">Components</th>
@@ -349,13 +356,18 @@ appointment will be deemed to have been withdrawn and cancelled</li>
       </tbody>
     </table>
 
-    <!-- ===== Notes Below Table ===== -->
-    <div class="note">
+    <!-- ===== Notes at the end ===== -->
+    <div class="note" style="margin-top:25px; width:70%; font-size:11px;">
       <p><strong>Note:</strong></p>
       <ul>
-        <li>Medical Insurance covers Rs.4 Lakhs for the employee and dependents.</li>
+        <li>Medical Insurance covers Rs.4 Lakhs for the employee and the dependents.</li>
         <li>Personal Accident Insurance covers Rs.7.5 Lakhs for the employee.</li>
-        <li>The LTA can be claimed against bills at the end of the financial year subject to provisions of the Income Tax Act.</li>
+        <li>
+          Procedure for standard reimbursement:  
+          The LTA can be claimed against production of bills at the end of the financial year subject
+          to provision of Income Tax Act. Any unclaimed amount will be paid to you at the end of
+          the financial year after deducting the necessary taxes.
+        </li>
       </ul>
     </div>
   </div>
