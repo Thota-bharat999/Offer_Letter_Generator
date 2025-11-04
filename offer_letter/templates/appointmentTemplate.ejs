@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <title>Letter of Appointment</title>
- <style>
-  @page {
-    size: A4;
-    margin: 0;
-  }
-
-  body {
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    body {
     font-family: "Calibri", Arial, sans-serif;
     font-size: 13px;
     color: #000;
@@ -18,42 +17,39 @@
     line-height: 1.4;
   }
 
-  /* Page container */
+  /* Each PDF page */
   .page {
     width: 210mm;
     height: 297mm;
     position: relative;
     box-sizing: border-box;
-    padding: 25mm 20mm 20mm 25mm; /* ✅ balanced margins */
+
+    /* ✅ 25px from top, 20px from bottom */
+    padding: 25px 25mm 20px 25mm; 
     page-break-after: always;
-    overflow: hidden;
   }
 
-  /* Letterhead background */
+  /* ✅ Letterhead as full-page background */
   .letterhead {
     position: absolute;
     top: 0;
     left: 0;
     width: 210mm;
     height: 297mm;
-    object-fit: cover;
     z-index: -1;
+    object-fit: cover;
   }
 
-  /* Main content */
+  /* Content always stays inside safe printable area */
   .content {
     position: relative;
     z-index: 2;
     text-align: justify;
-    overflow: hidden;
-    height: calc(100% - 45mm); /* ✅ ensures content fills but respects top/bottom */
-    padding-top: 25px; /* space below logo */
-    padding-bottom: 20px; /* space above footer */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
+    margin-top: 45mm; /* ✅ pushes text below the top logo (approx. 25px + logo zone) */
+    margin-bottom: 20mm; /* ✅ ensures space above footer zone */
   }
 
+  /* Headings and general formatting */
   .title {
     font-size: 15px;
     font-weight: bold;
@@ -68,6 +64,7 @@
     margin-bottom: 10px;
   }
 
+  /* Address section */
   .to {
     margin-bottom: 25px;
     line-height: 1.5;
@@ -82,7 +79,7 @@
   }
 
   p {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     text-align: justify;
   }
 
@@ -96,9 +93,9 @@
     text-align: justify;
   }
 
-  /* Signature block */
+  /* Signature */
   .signature-block {
-    margin-top: auto;
+    margin-top: 25px;
     line-height: 1.4;
   }
   .signature-block img {
@@ -107,7 +104,7 @@
     margin-top: 6px;
   }
 
-  /* Salary table */
+  /* Annexure salary table */
   .salary-table {
     border-collapse: collapse;
     width: 85%;
@@ -115,7 +112,6 @@
     font-size: 12px;
     border: 1px solid #000;
   }
-
   .salary-table th,
   .salary-table td {
     border: 1px solid #000;
@@ -123,34 +119,47 @@
     text-align: center;
   }
 
-  .salary-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-  }
+    .salary-table th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
 
-  .note {
-    font-size: 11px;
-    margin-top: 18px;
-    width: 80%;
-    margin-left: auto;
-    margin-right: auto;
-  }
+    .note {
+      font-size: 11px;
+      margin-top: 18px;
+      width: 80%;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-  .note ul {
-    margin-top: 6px;
-    margin-left: 20px;
-  }
+    .note ul {
+      margin-top: 6px;
+      margin-left: 20px;
+    }
 
-  .page-break {
-    page-break-after: always;
-  }
-</style>
+    /* === Ensure each page bottom spacing === */
+    .page::after {
+      content: "";
+      display: block;
+      height: 20px;
+    }
 
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
 </head>
+
 <body>
 
   <!-- ===== PAGE 1 ===== -->
-  <div class="page" style="background-image: url('<%= letterheadPath %>'); background-size: contain; background-position: top center;">
+  <div class="page">
+    <% if (letterheadPath) { %>
+      <img src="<%= letterheadPath %>" class="letterhead" alt="Letterhead" />
+    <% } %>
+
     <div class="content">
       <p class="date"><%= appointment.issueDate || appointment.appointmentDate || "" %></p>
 
@@ -202,13 +211,14 @@
   </div>
 
   <!-- ===== PAGE 2 ===== -->
-  <div class="page" style="background-image: url('<%= letterheadPath %>'); background-size: contain; background-position: top center;">
+  <div class="page">
+    <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
     <div class="content">
       <ol start="6">
         <li><strong>Posting & Transfer:</strong> Your initial posting will be at Hyderabad. However, your services are 
-liable to be transferred, at the sole discretion of Management, as the company may 
-determine, to any department/ section, location, associate, sister concern or subsidiary, at any 
-place in India or abroad, whether existing today or which may come up in future. In such a case, you will be 
+liable to be transferred, at the sole discretion of Management, as the company may determine, to 
+any department/ section, location, associate, sister concern or subsidiary, at any place in India or 
+abroad, whether existing today or which may come up in future. In such a case, you will be 
 governed by the terms and conditions of the service applicable at the new placement location.</li>
         <li><strong>Probation:</strong>You will be on probation for a period of six months. The period of probation can 
 be extended at the discretion of the Management and you will continue to be on probation till an 
@@ -233,7 +243,8 @@ property of the Company.</li>
   </div>
 
   <!-- ===== PAGE 3 ===== -->
-  <div class="page" style="background-image: url('<%= letterheadPath %>'); background-size: contain; background-position: top center;">
+  <div class="page">
+    <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
     <div class="content">
       <ol start="11">
         <li><strong>Responsibilities & Duties:</strong>Your work in the organization will be subject to the rules and 
@@ -292,54 +303,59 @@ appointment will be deemed to have been withdrawn and cancelled</li>
   </div>
 
   <!-- ===== PAGE 4: ANNEXURE ===== -->
-  <div class="page" style="background-image: url('<%= letterheadPath %>'); background-size: contain; background-position: top center;">
-    <div class="content">
-      <p style="text-align:center; font-size:12px;">
-        <strong>Note:</strong> This is a computer-generated document. No Signature is required.
-      </p>
+  <!-- PAGE 4: Annexure -->
+<div class="page">
+  <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
 
-      <p style="text-align:center; margin-top:15px;">
-        This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned terms and conditions and accept them.
-      </p>
+  <div class="content">
+    <p style="text-align:center; font-size:12px;">
+      <strong>Note:</strong> This is a computer-generated document. No Signature is required.
+    </p>
 
-      <p style="margin-top:30px; text-align:center;">
-        Date: ____________ &nbsp;&nbsp; Place: ____________ &nbsp;&nbsp; Signature: ____________
-      </p>
+    <p style="text-align:center; margin-top:15px;">
+      This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned terms and conditions and accept them.
+    </p>
 
-      <p class="annexure-title">Annexure-I</p>
-      <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
-        SALARY COMPUTATION
-      </p>
+    <p style="margin-top:30px; text-align:center;">
+      Date: ____________ &nbsp;&nbsp; Place: ____________ &nbsp;&nbsp; Signature: ____________
+    </p>
 
-      <table class="salary-table">
-        <thead>
+    <!-- ===== Annexure Title ===== -->
+    <p class="annexure-title">Annexure-I</p>
+    <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
+      SALARY COMPUTATION
+    </p>
+
+    <!-- ===== Salary Table ===== -->
+    <table class="salary-table">
+      <thead>
+        <tr>
+          <th style="width:50%;">Components</th>
+          <th style="width:25%;">Per annum</th>
+          <th style="width:25%;">Per month</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% (appointment.salaryComponents || []).forEach(function(row){ %>
           <tr>
-            <th style="width:50%;">Components</th>
-            <th style="width:25%;">Per annum</th>
-            <th style="width:25%;">Per month</th>
+            <td style="text-align:left; padding-left:10px;"><%= row.label %></td>
+            <td><%= row.perAnnum.toLocaleString('en-IN') %></td>
+            <td><%= row.perMonth.toLocaleString('en-IN') %></td>
           </tr>
-        </thead>
-        <tbody>
-          <% (appointment.salaryComponents || []).forEach(function(row){ %>
-            <tr>
-              <td style="text-align:left; padding-left:10px;"><%= row.label %></td>
-              <td><%= row.perAnnum.toLocaleString('en-IN') %></td>
-              <td><%= row.perMonth.toLocaleString('en-IN') %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
+        <% }) %>
+      </tbody>
+    </table>
 
-      <div class="note">
-        <p><strong>Note:</strong></p>
-        <ul>
-          <li>Medical Insurance covers Rs.4 Lakhs for the employee and dependents.</li>
-          <li>Personal Accident Insurance covers Rs.7.5 Lakhs for the employee.</li>
-          <li>The LTA can be claimed against bills at the end of the financial year subject to provisions of the Income Tax Act.</li>
-        </ul>
-      </div>
+    <!-- ===== Notes Below Table ===== -->
+    <div class="note">
+      <p><strong>Note:</strong></p>
+      <ul>
+        <li>Medical Insurance covers Rs.4 Lakhs for the employee and dependents.</li>
+        <li>Personal Accident Insurance covers Rs.7.5 Lakhs for the employee.</li>
+        <li>The LTA can be claimed against bills at the end of the financial year subject to provisions of the Income Tax Act.</li>
+      </ul>
     </div>
   </div>
-
+</div>
 </body>
 </html>
