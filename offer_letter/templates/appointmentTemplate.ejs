@@ -28,6 +28,8 @@
     padding: 25px 25mm 20px 25mm; 
     page-break-after: always;
   }
+ 
+
   /* ✅ Letterhead as full-page background */
   .letterhead {
     position: absolute;
@@ -104,13 +106,58 @@
   }
 
   /* Annexure salary table */
+ .annexure-content {
+    margin-top: 60mm;
+    position: relative;
+    font-family: "Calibri", Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  .annexure-header {
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .annexure-paragraph {
+    text-align: center;
+    margin-top: 15px;
+  }
+
+  .annexure-table {
+    width: 80%;
+    margin: 20px auto 25px auto;
+    font-size: 12px;
+    border-collapse: collapse;
+  }
+
+  .annexure-table td {
+    padding: 4px 8px;
+  }
+
+  .annexure-title {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .salary-heading {
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+  }
+
   .salary-table {
     border-collapse: collapse;
-    width: 85%;
+    width: 70%;
     margin: 0 auto;
     font-size: 12px;
     border: 1px solid #000;
   }
+
   .salary-table th,
   .salary-table td {
     border: 1px solid #000;
@@ -118,26 +165,27 @@
     text-align: center;
   }
 
-    .salary-table th {
-      background-color: #f5f5f5;
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
+  .salary-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+  }
 
-    .note {
-      font-size: 11px;
-      margin-top: 18px;
-      width: 80%;
-      margin-left: auto;
-      margin-right: auto;
-    }
+  .note-section {
+    width: 70%;
+    font-size: 11px;
+    margin: 25px auto 0 auto;
+  }
 
-    .note ul {
-      margin-top: 6px;
-      margin-left: 20px;
-    }
+  .note-section p {
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
 
+  .note-section ul {
+    margin-top: 5px;
+    margin-left: 20px;
+  }
     /* === Ensure each page bottom spacing === */
     .page::after {
       content: "";
@@ -303,41 +351,38 @@ appointment will be deemed to have been withdrawn and cancelled</li>
 
   <!-- ===== PAGE 4: ANNEXURE ===== -->
   <!-- PAGE 4: Annexure -->
-<!-- ===== PAGE 4: ANNEXURE ===== -->
 <div class="page">
-  <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
+  <% if (letterheadPath) { %>
+    <img src="<%= letterheadPath %>" class="letterhead" alt="Letterhead" />
+  <% } %>
 
-  <div class="content" style="margin-top: 60mm;">
-    <p style="text-align:center; font-size:12px;">
+  <div class="annexure-content">
+    <p class="annexure-header">
       <strong>Note:</strong> This is a computer-generated document. No Signature is required.
     </p>
 
-    <p style="text-align:center; margin-top:15px;">
-      This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned terms
-      and conditions and I hereby accept without any duress or coercion, and agree to the offer.
+    <p class="annexure-paragraph">
+      This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned
+      terms and conditions and I hereby accept without any duress or coercion, and agree to the offer.
     </p>
 
-    <table style="width:80%; margin: 20px auto 25px auto; font-size:12px;">
+    <table class="annexure-table">
       <tr>
         <td>Date:</td>
         <td style="width:20%; border-bottom:1px dotted #000;"></td>
-        <td style="width:10%;"></td>
+        <td style="width:5%;"></td>
         <td>Place:</td>
         <td style="width:20%; border-bottom:1px dotted #000;"></td>
-        <td style="width:10%;"></td>
+        <td style="width:5%;"></td>
         <td>Signature:</td>
         <td style="width:20%; border-bottom:1px dotted #000;"></td>
       </tr>
     </table>
 
-    <!-- ===== Annexure Title ===== -->
-    <p style="text-align:center; font-weight:bold; margin-top:10px; font-size:13px;">Annexure-I</p>
-    <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
-      SALARY COMPUTATION
-    </p>
+    <p class="annexure-title">Annexure-I</p>
+    <p class="salary-heading">SALARY COMPUTATION</p>
 
-    <!-- ===== Salary Table ===== -->
-    <table class="salary-table" style="margin-top:5px; width:70%;">
+    <table class="salary-table">
       <thead>
         <tr>
           <th style="width:50%;">Components</th>
@@ -356,21 +401,18 @@ appointment will be deemed to have been withdrawn and cancelled</li>
       </tbody>
     </table>
 
-    <!-- ===== Notes at the end ===== -->
-    <div class="note" style="margin-top:25px; width:70%; font-size:11px;">
-      <p><strong>Note:</strong></p>
+    <!-- ===== Notes at the bottom ===== -->
+    <div class="note-section">
+      <p>Note:</p>
       <ul>
         <li>Medical Insurance covers Rs.4 Lakhs for the employee and the dependents.</li>
         <li>Personal Accident Insurance covers Rs.7.5 Lakhs for the employee.</li>
         <li>
-          Procedure for standard reimbursement:  
-          The LTA can be claimed against production of bills at the end of the financial year subject
-          to provision of Income Tax Act. Any unclaimed amount will be paid to you at the end of
-          the financial year after deducting the necessary taxes.
+          Procedure for standard reimbursement: The LTA can be claimed against production of bills at the end
+          of the financial year subject to the provisions of the Income Tax Act. Any unclaimed amount will be
+          paid to you at the end of the financial year after deducting the necessary taxes.
         </li>
       </ul>
     </div>
-  </div>
-</div>
 </body>
 </html>
