@@ -28,6 +28,9 @@
     padding: 25px 25mm 20px 25mm; 
     page-break-after: always;
   }
+  .page:not(:first-of-type) {
+  padding: 60px 20mm 40px 25mm; /* reduce top padding to fill gap */
+}
 
   /* ✅ Letterhead as full-page background */
   .letterhead {
