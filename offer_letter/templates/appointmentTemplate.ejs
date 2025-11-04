@@ -1,3 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Letter of Appointment</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Times New Roman", serif;
+      color: #000;
+    }
+
+    .letter-page {
+      position: relative;
+      width: 794px; /* A4 width */
+      height: 1123px; /* A4 height */
+      background: url("../../assets/letterHead.jpg") no-repeat center top;
+      background-size: cover;
+      margin: 0 auto;
+      padding: 150px 70px 90px 70px; /* ✅ 25px below top logo + 20px above footer */
+      font-size: 14.2px;
+      line-height: 1.45;
+      box-sizing: border-box;
+      page-break-after: always;
+      overflow: hidden;
+    }
+
+    .letter-page:not(:first-child) {
+      padding-top: 130px;
+    }
+
+    .date-line {
+      text-align: left;
+      font-size: 13.5px;
+      margin-bottom: 18px;
+      margin-top: 20px;
+    }
+
+    .letter-title {
+      text-align: center;
+      font-weight: bold;
+      text-decoration: underline;
+      font-size: 16px;
+      margin: 8px 0 20px 0;
+    }
+
+    .to-section {
+      margin-bottom: 18px;
+    }
+
+    .to-label {
+      margin: 0 0 4px 0;
+    }
+
+    .to-name {
+      font-weight: bold;
+      margin: 0 0 4px 0;
+    }
+
+    .to-address {
+      white-space: pre-line;
+      margin: 0 0 35px 0;
+      font-size: 13.6px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    .letter-subject {
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .letter-section,
+    .letter-section1 {
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    .letter-section1 {
+      margin-left: 35px;
+    }
+
+    .signature-section {
+      margin-top: 40px;
+      line-height: 1.5;
+    }
+
+    .signature-section strong {
+      font-weight: bold;
+    }
+
+    table {
+      width: calc(100% - 180px);
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 20px 90px;
+      table-layout: fixed;
+      border: 1px solid #000;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 5px 6px;
+    }
+
+    th {
+      font-weight: bold;
+      text-align: center;
+    }
+
+    td {
+      text-align: right;
+    }
+
+    td:first-child {
+      text-align: left;
+    }
+
+    .center {
+      text-align: center;
+      margin-top: 35px;
+      font-size: 13px;
+    }
+
+    @media print {
+      .letter-page {
+        -webkit-print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
 <%
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -11,8 +152,7 @@
   const today = formatDate((form && form.issueDate) || new Date());
   const joiningDate = (form && form.joiningDate) ? formatDate(form.joiningDate) : "";
 
-  const defaultAddress = "H.NO: 1-1/1 Mandepally, Mandepally,\nKarimnagar District, Telangana, India - 505405";
-
+  const defaultAddress = "H.NO: 1-1/1 Mandepally,\nKarimnagar District,\nTelangana, India - 505405";
   const addressText = form && form.employeeAddress && String(form.employeeAddress).trim()
     ? form.employeeAddress
     : defaultAddress;
@@ -20,10 +160,11 @@
   const employeeName = (form && form.employeeName) ? form.employeeName : "Candidate Name";
   const firstName = employeeName.split(" ")[0] || "Candidate";
   const designation = (form && form.designation) ? form.designation : "Designation";
-  const ctcAnnualNum = (form && form.ctcAnnual) ? Number(form.ctcAnnual) : 680000;
-  const ctcAnnual = ctcAnnualNum.toLocaleString("en-IN");
+  const ctcAnnual = (form && form.ctcAnnual) ? Number(form.ctcAnnual).toLocaleString("en-IN") : "0";
   const ctcWords = (form && form.ctcWords) ? form.ctcWords : "Amount in words";
 %>
+
+<!-- ===== PAGE 1 ===== -->
 <div class="letter-page">
   <p class="date-line"><%= today %></p>
 
@@ -31,368 +172,108 @@
 
   <div class="to-section">
     <p class="to-label">To,</p>
-    <p class="to-name">
-      <strong><%= employeeName %></strong>
-    </p>
-    <p class="to-address" style="white-space: pre-line;">
-      <%= addressText %>
-    </p>
+    <p class="to-name"><%= employeeName %></p>
+    <p class="to-address"><%= addressText %></p>
   </div>
 
-  <p class="dear-line">
-    Dear <%= firstName %>,
-  </p>
+  <p>Dear <%= firstName %>,</p>
 
-  <p class="letter-subject">
-    <strong>Sub: Your Career with AMAZON IT SOLUTIONS.</strong>
-  </p>
+  <p class="letter-subject"><strong>Sub: Your Career with AMAZON IT SOLUTIONS.</strong></p>
 
-  <p class="intro-para">
-    We are immensely pleased appointing you as a
-    <strong><%= designation %></strong>, and have you as a
-    part of Amazon IT Solutions Family. We believe your potential skills
-    will be a valuable contribution to our company.
-  </p>
+  <p>We are immensely pleased appointing you as a <strong><%= designation %></strong>, and have you as a part of Amazon IT Solutions Family. We believe your potential skills will be a valuable contribution to our company.</p>
 
-  <p class="intro-para">
-    <strong>Effective Date of Appointment:</strong> Your Date of Joining at
-    <strong>“Amazon IT Solutions”</strong> is
-    <strong><%= joiningDate || "dd-mm-yyyy" %></strong> and following are the
-    terms and conditions:
-  </p>
+  <p><strong>Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <strong><%= joiningDate || "dd-mm-yyyy" %></strong> and following are the terms and conditions:</p>
 
-  <p class="letter-section">
-    <strong>1. Job Assignment:</strong> In your assignment you will be
-    required to perform duties as laid down in the Job Description for your
-    position.
-  </p>
+  <p><strong>1. Job Assignment:</strong> In your assignment you will be required to perform duties as laid down in the Job Description for your position.</p>
 
-  <p class="letter-section">
-    <strong>2. Leave Entitlement:</strong> You will be entitled to leaves as
-    per Amazon IT Solutions policy mentioned in Rules and Regulations
-    formulated in the Employee Hand Book of Amazon IT Solutions from time to
-    time.
-  </p>
+  <p><strong>2. Leave Entitlement:</strong> You will be entitled to leaves as per Amazon IT Solutions policy mentioned in Rules and Regulations formulated in the Employee Hand Book of Amazon IT Solutions from time to time.</p>
 
-  <p class="letter-section">
-    <strong>3. Placement & Compensation:</strong> You will be placed in the
-    appropriate responsibility level of the Company and will be entitled to
-    total compensation of
-    <strong>
-      INR <%= ctcAnnual %>
-      (<%= ctcWords %>)
-    </strong>
-    per Annum. Compensation will be governed by the rules of the Company, as
-    applicable and amended hereafter.
-  </p>
+  <p><strong>3. Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= ctcAnnual %> (<%= ctcWords %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</p>
 
-  <p class="letter-section">
-    <em>Note: Breakup of the fixed salary is as per the Annexure sheet.</em>
-  </p>
+  <p><em>Note: Breakup of the fixed salary is as per the Annexure sheet.</em></p>
 
-  <p class="letter-section">
-    <strong>4. Statutory Deductions:</strong> Deductions, if any, will be
-    made from your salary as per the prevailing law of the country. However,
-    for your income tax you shall be personally responsible for filing
-    returns etc. The company will provide you the tax deductions
-    certificate, if applicable at the end of each financial year.
-  </p>
+  <p><strong>4. Statutory Deductions:</strong> Deductions, if any, will be made from your salary as per the prevailing law of the country. However, for your income tax you shall be personally responsible for filing returns etc. The company will provide you the tax deductions certificate, if applicable at the end of each financial year.</p>
 
-  <p class="letter-section">
-    <strong>5. Code of Conduct:</strong> The Code of Business Conduct and
-    Ethics helps to ensure compliance with legal requirements and our
-    standards as approved by the Board from time to time formulated in the
-    Employee Hand Book of Amazon IT Solutions. All employees are expected to
-    read and understand this Code of Business Conduct and Ethics, uphold
-    these standards in day-to-day activities, comply with all applicable
-    policies and procedures and adhere to these standards.
-  </p>
+  <p><strong>5. Code of Conduct:</strong> The Code of Business conduct and Ethics helps to ensure compliance with legal requirements and our standards as approved by the Board from time to time formulated in Employee Hand Book of Amazon IT Solutions. All employees are expected to read and understand this Code, uphold these standards, comply with all applicable policies and procedures and adhere to these standards.</p>
 </div>
+
+<!-- ===== PAGE 2 ===== -->
 <div class="letter-page">
-  <p class="letter-section">
-    <strong><br>6. Posting & Transfer:</strong> Your initial posting will be at Hyderabad. However, your
-    services are liable to be transferred, at the sole discretion of Management, as the company may
-    determine, to any department / section, location, associate, sister concern or subsidiary, at any
-    place in India or abroad, whether existing today or which may come up in future. In such a case, you will be
-    governed by the terms and conditions of service applicable at the new placement location.
-  </p>
+  <p><strong>6. Posting & Transfer:</strong> Your initial posting will be at Hyderabad. However, your services are liable to be transferred, at the sole discretion of Management, as the company may determine, to any department/ section, location, associate, sister concern or subsidiary, at any place in India or abroad, whether existing today or which may come up in future. In such a case, you will be governed by the terms and conditions of the service applicable at the new placement location.</p>
 
-  <p class="letter-section">
-    <strong>7. Probation:</strong> You will be on probation for a period of six months. The period of probation can
-    be extended at the discretion of the Management and you will continue to be on probation till an order of confirmation has been issued.
-  </p>
+  <p><strong>7. Probation:</strong> You will be on probation for a period of six months. The period of probation can be extended at the discretion of the Management and you will continue to be on probation till an order of confirmation has been issued.</p>
 
-  <p class="letter-section">
-    <strong>8. Full Time Employment:</strong> Your position is a full-time employment with the Company and you
-    shall devote yourself exclusively to the business and interests of the company. You will not take up any other work for remuneration (part time shareholder’s or director work in an advisory capacity), be or become directly or indirectly (accept the shareholder / debenture holder) in any other trade or business during your employment with the company, without written permission from the Management of the Company. You will also not seek membership of any local or public bodies without first obtaining specific permission from the Management.
-  </p>
+  <p><strong>8. Full time employment:</strong> Your position is a full-time employment with the Company and you shall devote yourself exclusively to the business and interests of the company. You will not take up any other work for remuneration (part time or otherwise) or work in an advisory capacity, or be interested directly or indirectly (except as shareholder / debenture holder), in any other trade or business during your employment with the company, without written permission from the Management of the Company. You will also not seek membership of any local or public bodies without first obtaining specific permission from the Management.</p>
 
-  <p class="letter-section">
-    <strong>9. Confidentiality:</strong> You will not, at any time, during the employment or after, without the
-    consent of the Management disclose or divulge or make public, except on legal obligations, any information concerning the Company’s affairs or make any publication or research carried out, whether the results are stated to or becomes known to you in the course of your service or otherwise.
-  </p>
+  <p><strong>9. Confidentiality:</strong> You will not, at any time, during the employment or after, without the consent of the Management disclose or divulge or make public, except on legal obligations, any information regarding the Company’s affairs or administration or research carried out, whether the same is confided to you or becomes known to you in the course of your service or otherwise.</p>
 
-  <p class="letter-section">
-    <strong>10. Intellectual Property:</strong> If you conceive any new or advanced method of improving designs / systems / formulae / systems etc., in relation to the company’s operations, the development shall be fully communicated to the company and will be, and remain, the sole right / property of the company.
-  </p>
+  <p><strong>10. Intellectual Property:</strong> If you conceive any new or advanced method of improving designs/ processes/ formulae/ systems, etc. in relation to the business/ operations of the Company, such developments will be fully communicated to the company and will be, and remain, the sole right/ property of the Company.</p>
 
-  <p class="letter-section">
-    <strong>11. Duties & Discipline:</strong> You are to work in the organization subject to the rules and
-    regulations of the organization as laid down in relation to conduct, discipline and other matters.
-    You will always be held responsible and liable to perform your office duties and conduct yourself
-    according to the expectations of the company. An onsite opportunity may be provided to a period of 12 months (UK/US) preferably based on project requirement, specific skills, expansion, for a short or long term.
-  </p>
+  <p><strong>11. Responsibilities & Duties:</strong> Your work in the organization will be subject to the rules and regulations of the organization as laid down in relation to conduct, discipline and other matters. You will always be alive to responsibilities and duties attached to your office and conduct yourself accordingly. You must effectively perform to ensure results. An onsite opportunity may be provided to you either in US/UK geography based on project requirement, specific skills, expansion, for a period of 6-12 months of time.</p>
 
-  <p class="letter-section">
-    <strong>12. Past Records:</strong> If any declaration given or information furnished by you to the company proves to be false, or if you are found to have wilfully suppressed any material information, in such case, your name liable to be removed from service without any notice.
-  </p>
+  <p><strong>12. Past Records:</strong> If any declaration given or information furnished by you, to the company proves to be false, or if you are found to have wilfully suppressed any material information, in such cases, you will be liable to removal from services without any notice.</p>
 
-  <p class="letter-section">
-    <strong>13. Termination of employment:</strong>
-  </p>
-  
-  <p class="letter-section1">
-    13.1 During the probationary period and any extension thereof, services can be terminated by either party by giving two months notice in writing or gross salary in lieu thereof, only by the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing or gross salary in lieu thereof, only by the employer and this does not apply for the employee. Giving out of notice period is up to the sole discretion of the management.
-  </p>
+  <p><strong>13. Termination of employment:</strong> During the probationary period and any extension thereof, services can be terminated by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing or gross salary in lieu thereof, only by the employer and this does not apply for the employee. Buying out of notice period is up to the sole discretion of the management.</p>
 </div>
+
+<!-- ===== PAGE 3 ===== -->
 <div class="letter-page">
+  <p>Upon termination of employment, you will immediately hand over to the Company all correspondence, specifications, formulae, books, documents, market data, cost data, drawings, affects or records belonging to the Company or relating to its business and shall not retain or make copies of these items.</p>
 
-  <p class="letter-section1">
-    <br>13.2 Upon termination of employment, you will immediately hand over to the Company all correspondence, specifications, formulae, books, documents, market data, cost data, drawings, office or records belonging to the Company or relating to its business and shall not retain in any form copies of these items.
-  </p>
+  <p>Upon termination of employment, you will also return all company property, which may be in your possession.</p>
 
-  <p class="letter-section1">
-    13.3 Upon termination of employment, you will also return all company property which may be in your possession.
-  </p>
+  <p><strong>14. General Conditions:</strong> You will be bound by the following:</p>
+  <ul style="margin-left:25px;">
+    <li>You will not engage in any unlawful or any subversive activity while in the service of Amazon IT Solutions.</li>
+    <li>Amazon IT Solutions will expect you to work in section/department/process/project in which you are placed with a high standard of initiative, efficiency and economy.</li>
+    <li>You shall not, under any circumstances either directly or indirectly, receive or accept for own benefit any commission, rebate, discount, gift or profit of any nature from any person, company or firm having business transaction with Amazon IT Solutions.</li>
+    <li>You will, in all respects be governed by the rules and regulations applicable to your category of employees from time to time.</li>
+    <li>Should you remain absent from work, without reasonable explanation, for more than seven consecutive days, it will be presumed that you are no longer interested in working for Amazon IT Solutions and have abandoned its services, thereby terminating your employment with Amazon IT Solutions.</li>
+  </ul>
 
-  <p class="letter-section">
-    <strong>14. General Conditions:</strong> You will be bound by the following:
-  </p>
+  <p><strong>15. Non-Disclosure:</strong> You will not disclose by word of mouth or otherwise, particulars or details of business plans /trade secret /finance or any confidential information of business coming to your knowledge by virtue of your being in the employment of Amazon IT Solutions.</p>
 
-  <p class="letter-section1">
-    14.1 You will not engage in any unlawful or any subversive activity while in the service of Amazon IT Solutions.
-  </p>
+  <p><strong>16. Acceptance:</strong> If you accept the above terms and conditions of the service, please signify your acceptance by signing up the photo copy of this Appointment letter thereof otherwise this letter of appointment will be deemed to have been withdrawn and cancelled.</p>
 
-  <p class="letter-section1">
-    14.2 Amazon IT Solutions will expect you to work in section / department / process / project in which you are placed with a high standard of initiative, efficiency and economy.
-  </p>
-
-  <p class="letter-section1">
-    14.3 You shall not under any circumstances either directly or indirectly receive or accept for own benefit any commission, rebate, discount, gift or profit of any nature from any person, company or firm having business transaction with Amazon IT Solutions.
-  </p>
-
-  <p class="letter-section1">
-    14.4 You will, in all respects, be governed by the rules and regulations applicable to your category of employees from time to time.
-  </p>
-
-  <p class="letter-section">
-    <strong>15. Non-Disclosure:</strong> You will not disclose by word of mouth or otherwise, particulars or details of business or trade. We are immensely pleased appointing you as Security Analyst and having you as part of our team. Any confidential information of business coming to your knowledge by virtue of your being in the employment of Amazon IT Solutions is strictly confidential.
-  </p>
-
-  <p class="letter-section">
-    <strong>16. Acceptance:</strong> If you accept the above terms and conditions of the service, please signify your acceptance by signing up the photo copy of this Appointment Letter thereof otherwise this letter of appointment will be deemed to have been withdrawn and cancelled.
-  </p>
-
-  <div class="signature-section"><br>
-    <p>
-      For Amazon IT Solutions.<br><br><br>
-      <br>
-      <strong>Chakravarthy Devarakonda</strong><br>
-      Manager – Human Resources
-    </p>
+  <div class="signature-section">
+    <p>For Amazon IT Solutions,<br><br><br>
+    <strong>Chakravarthy Devarakonda</strong><br>
+    Manager – Human Resources</p>
   </div>
 </div>
-<%
-  const yearly = (val) => Number(val || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
-  const monthly = (val) => Math.round((Number(val || 0) / 12)).toLocaleString("en-IN");
 
-  const basicYearly = (form && form.basicYearly) || 272000;
-  const hraYearly = (form && form.hraYearly) || 204000;
-  const specialYearly = (form && form.specialYearly) || 68000;
-  const travelYearly = (form && form.travelYearly) || 68000;
-  const otherYearly = (form && form.otherYearly) || 68000;
-  const ctcAnnualNum = (form && form.ctcAnnual) || 680000;
-  const employeeName = (form && form.employeeName) || "";
-%>
+<!-- ===== PAGE 4 : ANNEXURE ===== -->
 <div class="letter-page">
-  <br><br><br>
-  <p>
-    This is to certify that I, <strong><%= employeeName %></strong>, have
-    read and understood all the above-mentioned terms and conditions and I
-    hereby accept without any duress or coercion, and agree to the offer.
-  </p>
-  <br>
-  <br>
-  <p>
-    <strong>Date:</strong> _________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    <strong>Place:</strong> _________________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <p>This is to certify that I, <strong><%= employeeName %></strong>, have read and understood all the above-mentioned terms and conditions and accept them.</p>
+
+  <p style="margin-top:25px;">
+    <strong>Date:</strong> _________________________ &nbsp;&nbsp;
+    <strong>Place:</strong> _________________________ &nbsp;&nbsp;
     <strong>Signature:</strong> ______________________
   </p>
 
-  <h3 style="text-align: center; font-weight: bold; margin: 30px 0 5px 0; font-size: 14px;">
-    Annexure-I
-  </h3>
+  <h3 style="text-align:center; margin:30px 0 10px; font-size:14px; font-weight:bold;">Annexure-I</h3>
 
-  <table style="width: calc(100% - 180px); border-collapse: collapse; font-size: 14px; margin: 10px 90px 10px 90px; table-layout: fixed; border: 1px solid #000;">
-    <colgroup>
-      <col style="width: 60%;" />
-      <col style="width: 20%;" />
-      <col style="width: 20%;" />
-    </colgroup>
+  <% const yearly = (v)=>Number(v||0).toLocaleString("en-IN"); const monthly=(v)=>Math.round((Number(v||0)/12)).toLocaleString("en-IN"); %>
+  <table>
     <thead>
-      <tr>
-        <th colspan="3" style="border: 1px solid #000; text-align: center; padding: 6px; font-weight: bold; background-color: #fff; font-size: 13px;">
-          SALARY COMPUTATION
-        </th>
-      </tr>
-      <tr>
-        <th style="border: 1px solid #000; text-align: left; padding: 5px 6px; font-weight: bold; background-color: #fff;">
-          Components
-        </th>
-        <th style="border: 1px solid #000; text-align: right; padding: 5px 6px; font-weight: bold; background-color: #fff;">
-          Per Annum
-        </th>
-        <th style="border: 1px solid #000; text-align: right; padding: 5px 6px; font-weight: bold; background-color: #fff;">
-          Per Month
-        </th>
-      </tr>
+      <tr><th colspan="3">SALARY COMPUTATION</th></tr>
+      <tr><th>Components</th><th>Per Annum</th><th>Per Month</th></tr>
     </thead>
     <tbody>
-      <tr>
-        <td style="border: 1px solid #000; padding: 4px 6px;">Basic Wage</td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= yearly(basicYearly) %></td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= monthly(basicYearly) %></td>
-      </tr>
-
-      <tr>
-        <td style="border: 1px solid #000; padding: 4px 6px;">HRA</td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= yearly(hraYearly) %></td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= monthly(hraYearly) %></td>
-      </tr>
-
-      <tr>
-        <td style="border: 1px solid #000; padding: 4px 6px;">Special Allowances</td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= yearly(specialYearly) %></td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= monthly(specialYearly) %></td>
-      </tr>
-
-      <tr>
-        <td style="border: 1px solid #000; padding: 4px 6px;">Travel Allowances</td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= yearly(travelYearly) %></td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= monthly(travelYearly) %></td>
-      </tr>
-
-      <tr>
-        <td style="border: 1px solid #000; padding: 4px 6px;">Other Allowances</td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= yearly(otherYearly) %></td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px;"><%= monthly(otherYearly) %></td>
-      </tr>
-
-      <tr>
-        <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold;">Fixed CTC</td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px; font-weight: bold;"><%= yearly(ctcAnnual) %></td>
-        <td style="border: 1px solid #000; text-align: right; padding: 4px 6px; font-weight: bold;"><%= monthly(ctcAnnual) %></td>
-      </tr>
+      <tr><td>Basic Wage</td><td><%= yearly(form?.basicYearly) %></td><td><%= monthly(form?.basicYearly) %></td></tr>
+      <tr><td>HRA</td><td><%= yearly(form?.hraYearly) %></td><td><%= monthly(form?.hraYearly) %></td></tr>
+      <tr><td>Special Allowances</td><td><%= yearly(form?.specialYearly) %></td><td><%= monthly(form?.specialYearly) %></td></tr>
+      <tr><td>Travel Allowances</td><td><%= yearly(form?.travelYearly) %></td><td><%= monthly(form?.travelYearly) %></td></tr>
+      <tr><td>Other Allowances</td><td><%= yearly(form?.otherYearly) %></td><td><%= monthly(form?.otherYearly) %></td></tr>
+      <tr><td><strong>Fixed CTC</strong></td><td><strong><%= yearly(form?.ctcAnnual) %></strong></td><td><strong><%= monthly(form?.ctcAnnual) %></strong></td></tr>
     </tbody>
   </table>
-  <br><br>
 
-  <p class="letter-section">
-    <strong>Procedure for standard reimbursement:</strong><br><br>The LTA can be
-    claimed against production of bills at the end of the financial year
-    subject to provision of Income Tax Act. Any unclaimed amount will be
-    paid to you at the end of the financial year after deducting the
-    necessary taxes.
-  </p>
-  <br>
-  <p class="center">Note: This is a computer-generated document. No signature is required*.</p>
+  <p><strong>Procedure for standard reimbursement:</strong><br><br>The LTA can be claimed against bills at the end of the financial year subject to the provisions of the Income Tax Act.</p>
+
+  <p class="center">Note: This is a computer-generated document. No signature is required.</p>
 </div>
-.letter-page {
-  position: relative;
-  width: 794px; /* A4 width */
-  height: 1123px; /* A4 height */
-  background: url("../../assets/letterHead.jpg") no-repeat center top;
-  background-size: cover;
-  margin: 15px auto;
-  padding: 140px 70px 100px 70px;
-  font-family: "Times New Roman", serif;
-  color: #000;
-  font-size: 14.2px;
-  line-height: 1.45;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.12);
-  page-break-after: always;
-}
 
-.date-line {
-  text-align: left;
-  margin-bottom: 18px;
-  font-size: 13.5px;
-  color: #000;
-  margin-top: 30px;
-}
-
-.letter-title {
-  text-align: center;
-  font-weight: bold;
-  text-decoration: underline;
-  font-size: 16px;
-  margin: 6px 0 20px;
-}
-
-.to-section {
-  margin-bottom: 18px;
-}
-
-.to-label {
-  margin: 0 0 4px 0;
-}
-
-.to-name {
-  margin: 0 0 4px 0;
-  font-weight: 600;
-}
-
-.to-address {
-  margin: 0 0 50px 0;
-  font-size: 13.6px;
-  color: #000;
-  white-space: pre-line;
-}
-
-.dear-line {
-  margin-bottom: 10px;
-}
-
-.letter-subject {
-  font-weight: bold;
-  margin-bottom: 12px;
-}
-
-.intro-para {
-  margin-bottom: 10px;
-  text-align: justify;
-}
-
-.letter-section {
-  margin-top: 8px;
-  margin-bottom: 6px;
-  text-align: justify;
-}
-
-.letter-section1 {
-  margin-top: 8px;
-  margin-bottom: 6px;
-  text-align: justify;
-  margin-left: 40px;
-}
-
-@media print {
-  .letter-page {
-    page-break-after: always;
-    -webkit-print-color-adjust: exact;
-  }
-}
-.center{
-  text-align: center;
-  margin-top: 40px;
-}
+</body>
+</html>
