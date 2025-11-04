@@ -8,137 +8,116 @@
       size: A4;
       margin: 0;
     }
-
     body {
-      font-family: "Calibri", Arial, sans-serif;
-      font-size: 13px;
-      color: #000;
-      margin: 0;
-      padding: 0;
-      line-height: 1.6;
-    }
+    font-family: "Calibri", Arial, sans-serif;
+    font-size: 13px;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+  }
 
-    /* === Page Container === */
-    .page {
-      width: 210mm;
-      height: 297mm;
-      position: relative;
-      page-break-after: always;
-      box-sizing: border-box;
-      padding: 55mm 25mm 30mm 25mm; /* added top space to stay below header area */
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+  /* Each PDF page */
+  .page {
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    box-sizing: border-box;
 
-    /* === Letterhead Background === */
-    .letterhead {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 210mm;
-      height: 297mm;
-      z-index: -1;
-      object-fit: cover;
-    }
+    /* ✅ 25px from top, 20px from bottom */
+    padding: 25px 25mm 20px 25mm; 
+    page-break-after: always;
+  }
 
-    /* === Content Wrapper === */
-    .content {
-      position: relative;
-      z-index: 2;
-      text-align: justify;
-      flex: 1;
-      overflow-wrap: break-word;
-    }
+  /* ✅ Letterhead as full-page background */
+  .letterhead {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    height: 297mm;
+    z-index: -1;
+    object-fit: cover;
+  }
 
-    .title {
-      font-size: 15px;
-      font-weight: bold;
-      text-decoration: underline;
-      text-align: center;
-      margin-bottom: 18px;
-    }
+  /* Content always stays inside safe printable area */
+  .content {
+    position: relative;
+    z-index: 2;
+    text-align: justify;
+    margin-top: 45mm; /* ✅ pushes text below the top logo (approx. 25px + logo zone) */
+    margin-bottom: 20mm; /* ✅ ensures space above footer zone */
+  }
 
-    .date {
-      text-align: left;
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
+  /* Headings and general formatting */
+  .title {
+    font-size: 15px;
+    font-weight: bold;
+    text-decoration: underline;
+    text-align: center;
+    margin-bottom: 18px;
+  }
 
-    .to {
-      margin-bottom: 35px;
-      line-height: 1.5;
-    }
-    .to .name {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-    .to .addr {
-      white-space: normal;
-      margin-top: 0;
-    }
+  .date {
+    text-align: left;
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
 
-    .section {
-      margin-bottom: 12px;
-    }
+  /* Address section */
+  .to {
+    margin-bottom: 25px;
+    line-height: 1.5;
+  }
+  .to .name {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .to .addr {
+    white-space: normal;
+    margin-top: 0;
+  }
 
-    ol {
-      margin-left: 20px;
-      margin-top: 0;
-      padding-left: 10px;
-    }
+  p {
+    margin-bottom: 10px;
+    text-align: justify;
+  }
 
-    li {
-      margin-bottom: 8px;
-      text-align: justify;
-    }
+  ol {
+    margin-left: 20px;
+    padding-left: 10px;
+  }
 
-    p {
-      margin-bottom: 10px;
-      text-align: justify;
-    }
+  li {
+    margin-bottom: 8px;
+    text-align: justify;
+  }
 
-    /* === Signature Section === */
-    .signature-block {
-      margin-top: 25px;
-      line-height: 1.4;
-      page-break-inside: avoid;
-    }
+  /* Signature */
+  .signature-block {
+    margin-top: 25px;
+    line-height: 1.4;
+  }
+  .signature-block img {
+    width: 110px;
+    height: auto;
+    margin-top: 6px;
+  }
 
-    .signature-block img {
-      width: 110px;
-      height: auto;
-      margin-top: 6px;
-      opacity: 0.95;
-    }
-
-    /* === Annexure Title & Salary Table === */
-    .annexure-title {
-      text-align: center;
-      font-weight: bold;
-      font-size: 14px;
-      margin-top: 20px;
-      margin-bottom: 8px;
-    }
-
-    .salary-table {
-      border-collapse: collapse;
-      width: 85%;
-      margin: 0 auto;
-      font-size: 12px;
-      border: 1px solid #000;
-      table-layout: fixed;
-    }
-
-    .salary-table th,
-    .salary-table td {
-      border: 1px solid #000;
-      padding: 6px 8px;
-      text-align: center;
-      vertical-align: middle;
-      word-wrap: break-word;
-    }
+  /* Annexure salary table */
+  .salary-table {
+    border-collapse: collapse;
+    width: 85%;
+    margin: 0 auto;
+    font-size: 12px;
+    border: 1px solid #000;
+  }
+  .salary-table th,
+  .salary-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: center;
+  }
 
     .salary-table th {
       background-color: #f5f5f5;
