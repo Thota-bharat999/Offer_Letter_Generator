@@ -47,12 +47,13 @@
   /* Content always stays inside safe printable area */
   .content {
     position: relative;
-  flex-grow: 1;
-  margin-top: 25px;  /* Space below the top logo */
-  margin-bottom: 20px; /* Space above footer */
-  text-align: justify;
-  overflow: hidden;
-  box-sizing: border-box;
+    flex-grow: 1;
+    z-index: 2;
+    text-align: justify;
+    margin-top: 45mm; /* ✅ pushes text below the top logo (approx. 25px + logo zone) */
+    margin-bottom: 20mm;
+    overflow: hidden;
+  box-sizing: border-box; /* ✅ ensures space above footer zone */
   }
 
   /* Headings and general formatting */
