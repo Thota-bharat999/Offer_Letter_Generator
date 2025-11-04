@@ -149,19 +149,19 @@
     return `${day}-${month}-${year}`;
   };
 
-  const today = formatDate((form && form.issueDate) || new Date());
-  const joiningDate = (form && form.joiningDate) ? formatDate(form.joiningDate) : "";
+  const today = formatDate((appointment && appointment.issueDate) || new Date());
+  const joiningDate = (appointment && appointment.joiningDate) ? formatDate(appointment.joiningDate) : "";
 
   const defaultAddress = "H.NO: 1-1/1 Mandepally,\nKarimnagar District,\nTelangana, India - 505405";
-  const addressText = form && form.employeeAddress && String(form.employeeAddress).trim()
-    ? form.employeeAddress
+  const addressText = appointment && appointment.employeeAddress && String(appointment.employeeAddress).trim()
+    ? appointment.employeeAddress
     : defaultAddress;
 
-  const employeeName = (form && form.employeeName) ? form.employeeName : "Candidate Name";
+  const employeeName = (appointment && appointment.employeeName) ? appointment.employeeName : "Candidate Name";
   const firstName = employeeName.split(" ")[0] || "Candidate";
-  const designation = (form && form.designation) ? form.designation : "Designation";
-  const ctcAnnual = (form && form.ctcAnnual) ? Number(form.ctcAnnual).toLocaleString("en-IN") : "0";
-  const ctcWords = (form && form.ctcWords) ? form.ctcWords : "Amount in words";
+  const designation = (appointment && appointment.designation) ? appointment.designation : "Designation";
+  const ctcAnnual = (appointment && appointment.ctcAnnual) ? Number(appointment.ctcAnnual).toLocaleString("en-IN") : "0";
+  const ctcWords = (appointment && appointment.ctcWords) ? appointment.ctcWords : "Amount in words";
 %>
 
 <!-- ===== PAGE 1 ===== -->
@@ -261,12 +261,12 @@
       <tr><th>Components</th><th>Per Annum</th><th>Per Month</th></tr>
     </thead>
     <tbody>
-      <tr><td>Basic Wage</td><td><%= yearly(form?.basicYearly) %></td><td><%= monthly(form?.basicYearly) %></td></tr>
-      <tr><td>HRA</td><td><%= yearly(form?.hraYearly) %></td><td><%= monthly(form?.hraYearly) %></td></tr>
-      <tr><td>Special Allowances</td><td><%= yearly(form?.specialYearly) %></td><td><%= monthly(form?.specialYearly) %></td></tr>
-      <tr><td>Travel Allowances</td><td><%= yearly(form?.travelYearly) %></td><td><%= monthly(form?.travelYearly) %></td></tr>
-      <tr><td>Other Allowances</td><td><%= yearly(form?.otherYearly) %></td><td><%= monthly(form?.otherYearly) %></td></tr>
-      <tr><td><strong>Fixed CTC</strong></td><td><strong><%= yearly(form?.ctcAnnual) %></strong></td><td><strong><%= monthly(form?.ctcAnnual) %></strong></td></tr>
+      <tr><td>Basic Wage</td><td><%= yearly(appointment?.basicYearly) %></td><td><%= monthly(appointment?.basicYearly) %></td></tr>
+      <tr><td>HRA</td><td><%= yearly(appointment?.hraYearly) %></td><td><%= monthly(appointment?.hraYearly) %></td></tr>
+      <tr><td>Special Allowances</td><td><%= yearly(appointment?.specialYearly) %></td><td><%= monthly(appointment?.specialYearly) %></td></tr>
+      <tr><td>Travel Allowances</td><td><%= yearly(appointment?.travelYearly) %></td><td><%= monthly(appointment?.travelYearly) %></td></tr>
+      <tr><td>Other Allowances</td><td><%= yearly(appointment?.otherYearly) %></td><td><%= monthly(appointment?.otherYearly) %></td></tr>
+      <tr><td><strong>Fixed CTC</strong></td><td><strong><%= yearly(appointment?.ctcAnnual) %></strong></td><td><strong><%= monthly(appointment?.ctcAnnual) %></strong></td></tr>
     </tbody>
   </table>
 
