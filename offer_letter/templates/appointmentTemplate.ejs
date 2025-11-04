@@ -20,6 +20,7 @@
     height: 297mm;
     position: relative;
     page-break-after: always;
+    padding: 70mm 25mm 25mm 25mm;
     box-sizing: border-box;
     overflow: hidden;
   }
@@ -32,7 +33,7 @@
     width: 210mm;
     height: 297mm;
     z-index: 0;
-    opacity: 0.15; /* Prevent content from being hidden under the image */
+   object-fit: cover;
   }
 
   /* === Safe Content Area === */
@@ -40,10 +41,7 @@
     position: relative;
     z-index: 2;
     text-align: justify;
-    padding: 115px 30mm 25px 25mm; /* Top adjusted so text starts below letterhead logo */
-    height: calc(297mm - 140px); /* Keep content inside letterhead */
-    box-sizing: border-box;
-    overflow: hidden;
+    
   }
 
   .content::after {
