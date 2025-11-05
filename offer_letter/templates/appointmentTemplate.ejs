@@ -95,6 +95,51 @@
   .li .space{
     margin-left: 20px;
   }
+  ol.main {
+  counter-reset: item 12;
+  margin-left: 18px;
+  padding-left: 0;
+  line-height: 1.45;
+}
+
+ol.main > li {
+  position: relative;
+  margin-bottom: 8px;
+  padding-left: 28px;
+  text-align: justify;
+}
+
+ol.main > li::before {
+  counter-increment: item;
+  content: counter(item) ". ";
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+ol.sub {
+  counter-reset: subitem;
+  list-style: none;
+  margin: 6px 0 0 0;
+  padding-left: 0;
+}
+
+ol.sub > li {
+  position: relative;
+  margin-bottom: 6px;
+  padding-left: 36px;
+  text-align: justify;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+ol.sub > li::before {
+  counter-increment: subitem;
+  content: counter(item) "." counter(subitem) " ";
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
 
   /* Signature */
   .signature-block {
@@ -250,51 +295,79 @@ period of 6-12 months of time.</li>
 <li><strong>Past Records:</strong>If any declaration given or information furnished by you, to the company 
 proves to be false, or if you are found to have wilfully suppressed any material information, in such 
 cases, you will be liable to removal from services without any notice.</li>
-        <li class="space"><strong>Termination of employment:</strong><br/>13.1 During the probationary period and any extension thereof, services can be terminated 
-by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by 
-the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing 
-or gross salary in lieu thereof, only by the employer and this does not apply for the 
-employee. Buying out of notice period is up to the sole.</li>
+<ol class="main" start="13">
+  <li>
+    <strong>Termination of employment:</strong>
+    <ol class="sub">
+      <li>
+        During the probationary period and any extension thereof, services can be terminated 
+        by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by 
+        the employer and this does not apply for the employee. However, on confirmation the services 
+        can be terminated by either party by giving Ninety Days (90 days) notice in writing or gross 
+        salary in lieu thereof, only by the employer and this does not apply for the employee. Buying 
+        out of notice period is up to the sole discretion of the company.
+      </li>
+      <li>
+        
       </ol>
     </div>
   </div>
 
   <!-- ===== PAGE 3 ===== -->
-  <div class="page">
-    <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
-    <div class="content">
-<li class="space">13.2 Upon termination of employment, you will immediately hand over to the Company 
-all correspondence, specifications, formulae, books, documents, market data, cost data, 
-drawings, affects or records belonging to the Company or relating to its business and shall 
-not retain or make copies of these items. </li>
-<li class="space">13.3 Upon termination of employment, you will also return all company property, which 
-maybe in your possession. </li>
-<ol start="14">
-        <li><strong>General Conditions:</strong> You will be bound by the following: </li>
- <ol>
-          <li>14.1 You will not engage in any unlawful or any subversive activity while in the service of 
-"amazon IT solutions.".</li>
-          <li>14.2 Amazon IT solutions will expect you to work in section/department/process/project 
-in which you are placed with a high standard of initiative, efficiency and economy. </li>
-          <li>14.3 You shall not, under any circumstances either directly or indirectly, receive or accept 
-for own benefit any commission, rebate, discount, gift or profit of any nature from any 
-person, company or firm having business transaction with amazon IT solutions.</li>
-<li>14.4 You will, in all respects be governed by the rules and regulations applicable to your 
-category of employees from time to time.</li>
-<li>14.5 Should you remain absent from work, without reasonable explanation, for more than 
-seven consecutive days, it will be presumed that you are no longer interested in working for 
-amazon IT solutions. and have abandoned its services, thereby terminating your 
-employment with amazon IT solutions. In such case, you will not be entitled to any 
-compensation for the loss of service.</li>
+  
+        Upon termination of employment, you will immediately hand over to the Company 
+        all correspondence, specifications, formulae, books, documents, market data, cost data, 
+        drawings, affects or records belonging to the Company or relating to its business and shall 
+        not retain or make copies of these items.
       </li>
+      <li>
+        Upon termination of employment, you will also return all company property, which 
+        may be in your possession.
+      </li>
+    </ol>
+  </li>
 
-        <li><strong>Non-Disclosure:</strong> You will not disclose by word of mouth or otherwise, particulars or details of 
-business plans /trade We are immensely pleased to appointing you secret /finance [know how and 
-or any confidential information of business coming to your knowledge by virtue of your being in the 
-employment of amazon IT solutions.</li>
-        <li><strong>Acceptance:</strong>: If you accept the above terms and conditions of the service, please signify your 
-acceptance by signing up the photo copy of this Appointment letter thereof otherwise this letter of 
-appointment will be deemed to have been withdrawn and cancelled</li>
+  <li>
+    <strong>General Conditions:</strong> You will be bound by the following:
+    <ol class="sub">
+      <li>
+        You will not engage in any unlawful or any subversive activity while in the service of 
+        "amazon IT solutions."
+      </li>
+      <li>
+        Amazon IT solutions will expect you to work in section/department/process/project 
+        in which you are placed with a high standard of initiative, efficiency and economy.
+      </li>
+      <li>
+        You shall not, under any circumstances either directly or indirectly, receive or accept 
+        for own benefit any commission, rebate, discount, gift or profit of any nature from any 
+        person, company or firm having business transaction with amazon IT solutions.
+      </li>
+      <li>
+        You will, in all respects be governed by the rules and regulations applicable to your 
+        category of employees from time to time.
+      </li>
+      <li>
+        Should you remain absent from work, without reasonable explanation, for more than 
+        seven consecutive days, it will be presumed that you are no longer interested in working for 
+        amazon IT solutions and have abandoned its services, thereby terminating your 
+        employment with amazon IT solutions. In such case, you will not be entitled to any 
+        compensation for the loss of service.
+      </li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Non-Disclosure:</strong> You will not disclose by word of mouth or otherwise, particulars or details of 
+    business plans / trade / secret / finance [know how and/or any confidential information of business 
+    coming to your knowledge by virtue of your being in the employment of amazon IT solutions.
+  </li>
+
+  <li>
+    <strong>Acceptance:</strong> If you accept the above terms and conditions of the service, please signify your 
+    acceptance by signing up the photocopy of this Appointment Letter thereof, otherwise this letter of 
+    appointment will be deemed to have been withdrawn and cancelled.
+  </li>
 </ol>
 
       <div class="signature-block">
