@@ -44,6 +44,7 @@ const generateAppointmentPDF = async (appointmentData) => {
       path.join(assetsDir, "sign.png"),
       path.join(assetsDir, "signature.jpg"),
     ]);
+    
 
     const stampPath = embedImage([
       path.join(assetsDir, "stamp.png"),
@@ -88,6 +89,7 @@ const generateAppointmentPDF = async (appointmentData) => {
         hrName: appointmentData.hrName || "HR Manager",
         hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
       },
+      companyName: appointmentData.companyName || "Amazon IT Solutions",
       logoPath,
       letterheadPath,
       signaturePath,
