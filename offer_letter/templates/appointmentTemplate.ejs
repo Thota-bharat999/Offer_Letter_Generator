@@ -25,7 +25,7 @@
     box-sizing: border-box;
 
     /* ✅ 25px from top, 20px from bottom */
-    padding: 25px 15mm 20px 15mm;
+    padding: 25px 15mm 20px 20mm;
     page-break-after: always;
   }
 
@@ -326,9 +326,12 @@ appointment will be deemed to have been withdrawn and cancelled</li>
 
   <div class="content">
     <p style="text-align:justify; margin-top:15px;">
-      This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>,  have read and understood all the above-mentioned terms 
-and conditions and I hereby accept without any duress or coercion, and agree to the offer.
-    </p>
+  This is to certify that I, 
+  <strong style="text-decoration: underline;"><%= appointment.employeeName || "" %></strong>, 
+  have read and understood all the above-mentioned terms 
+  and conditions and I hereby accept without any duress or coercion, and agree to the offer.
+</p>
+
 
     <p style="margin-top:30px; text-align:left;">
       Date: _______________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Place: _______________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Signature: ______________
