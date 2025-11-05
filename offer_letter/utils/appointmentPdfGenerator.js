@@ -69,8 +69,8 @@ const generateAppointmentPDF = async (appointmentData) => {
     // Ensure numeric formatting for table
     salaryComponents = salaryComponents.map((item) => ({
       label: item.label || item.component || "",
-      perAnnum: Number(item.perAnnum || item.annual || item.yearly || 0),
-      perMonth: Number(item.perMonth || item.monthly || 0),
+      perAnnum: Number(item.perAnnum || item.annualAmount || item.annual || item.yearly || 0),
+      perMonth: Number(item.perMonth || item.monthlyAmount || item.monthly || 0),
     }));
 
     console.log("✅ Salary components prepared:", salaryComponents);
