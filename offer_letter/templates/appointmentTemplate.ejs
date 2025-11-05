@@ -41,14 +41,14 @@
   }
 
   /* Content always stays inside safe printable area */
-  /* Content area - reduced left/right white space */
+  /* Content area - increased left/right white space */
 .content {
   position: relative;
   z-index: 2;
   text-align: justify;
-  margin: 0 15mm; /* 🔽 was 25mm — narrower content area */
+  margin: 0 35mm; /* 🔼 was 25mm — now more white space on both sides */
   padding-bottom: 25mm; /* keep footer space */
-  max-height: 245mm; /* ensure no bleed into footer */
+  max-height: 245mm; /* ensures no overlap with footer */
   box-sizing: border-box;
 }
 
