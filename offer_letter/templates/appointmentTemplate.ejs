@@ -356,11 +356,11 @@ appointment will be deemed to have been withdrawn and cancelled</li>
           </tr>
         </thead>
         <tbody>
-          <% (salaryBreakdown || []).forEach(function(item){ %>
+          <% (appointment.salaryComponents || []).forEach(function(row){ %>
             <tr>
-              <td><%= item.component %></td>
-              <td><%= Number(item.annualAmount || 0).toLocaleString('en-IN') %></td>
-              <td><%= Number(item.monthlyAmount || 0).toLocaleString('en-IN') %></td>
+              <td><%= row.label %></td>
+              <td><%= Number(row.perAnnum || 0).toLocaleString('en-IN') %></td>
+              <td><%= Number(row.perMonth || 0).toLocaleString('en-IN') %></td>
             </tr>
           <% }); %>
         </tbody>
