@@ -47,8 +47,7 @@
     text-align: justify;
     margin-top: 45mm; /* ✅ pushes text below the top logo (approx. 25px + logo zone) */
     margin-bottom: 20mm; /* ✅ ensures space above footer zone */
-    margin-left: 10px;
-    margin-right: 10px;
+   
   }
 
   /* Headings and general formatting */
@@ -72,7 +71,7 @@
     line-height: 1.5;
   }
   .to .name {
-    font-weight: bold;
+    font-weight: 300;
     margin-bottom: 4px;
   }
   .to .addr {
@@ -171,12 +170,12 @@
     <% } %>
 
     <div class="content">
-      <p class="date"><%= appointment.issueDate || appointment.appointmentDate || "" %></p>
+      <p class="date"><% const dateStr = appointment.issueDate || appointment.appointmentDate || ""; if (dateStr) { const [year, month, day] = dateStr.split('-'); %><%= `${day}-${month}-${year}` %><% } %></p>
 
       <p class="title">Letter of Appointment</p>
 
       <div class="to">
-        <p><strong>To,</strong></p>
+        <p>To,</p>
         <p class="name"><%= appointment.employeeName || "" %>,</p>
         <%
           const address = appointment.address || '';
@@ -197,25 +196,30 @@
         </p>
       </div>
 
-      <p>Dear <strong><%= appointment.employeeName || "" %></strong>,</p>
+      <p>Dear <%= appointment.employeeName || "" %>,</p>
 
       <p><strong>Sub: Your Career with AMAZON IT SOLUTIONS.</strong></p>
 
       <p>We are immensely pleased appointing you as a <strong><%= appointment.position || appointment.designation || "" %></strong>, and have you as a part of Amazon IT Solutions Family. We believe your potential skills will be a valuable contribution to our company.</p>
 
-      <p><strong>Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <strong><%= appointment.joiningDate || "" %></strong> and following are the terms and conditions:</p>
+      <p><strong>Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <%= appointment.joiningDate || "" %> and following are the terms and conditions:</p>
 
       <ol>
         <li><strong>Job Assignment:</strong>In your assignment you will be required to perform duties as laid down in the Job Description for your position.</li>
         <li><strong>Leave Entitlement:</strong>You will be entitled to leaves as per Amazon IT Solutions policy Mentioned in Rules and Regulations formulated in the Employee Hand Book of Amazon IT solutions from time to time.</li>
-        <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctcAnnual ? Number(appointment.ctcAnnual).toLocaleString('en-IN') : "" %> (<%= appointment.ctcWords || "" %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
+        <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctcAnnual ? Number(appointment.ctcAnnual).toLocaleString('en-IN') : "" %> (<%= appointment.ctcWords || "" %>)</strong> Per Annum. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
       </ol>
 
-      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Note:</strong> Breakup of the fixed salary is as per the Annexure sheet.</p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Note: Breakup of the fixed salary is as per the Annexure sheet.</p>
 
       <ol start="4">
         <li><strong>Statutory Deductions:</strong> Deductions, if any, will be made from your salary as per the prevailing law of the country. However, for your income tax you shall be personally responsible for filing returns etc. The company will provide you the tax deductions certificate, if applicable at the end of each financial year.</li>
-        <li><strong>Code of Conduct:</strong> The Code of Business conduct and Ethics helps to ensure compliance with legal requirements and our standards as approved by the Board from time to time formulated in Employee Hand Book of Amazon IT solutions. All employees are expected to read and understand this Code, uphold these standards, comply with all applicable policies and procedures and adhere to these standards.</li>
+        <li><strong>Code of Conduct:</strong> The Code of Business conduct and Ethics helps to ensure compliance with 
+legal requirements and our standards as approved by the Board from time to time formulated in 
+Employee Hand Book of Amazon IT solutions. Al employees are expected to read and understand 
+this Code of Business conduct and Ethics, uphold these standards in day-to-day activities, comply 
+with all applicable policies and procedures and adhere to these standards. 
+</li>
       </ol>
     </div>
   </div>
@@ -258,7 +262,7 @@ period of 6-12 months of time.</li>
 proves to be false, or if you are found to have wilfully suppressed any material information, in such 
 cases, you will be liable to removal from services without any notice.</li>
         <li><strong>Termination of employment:</strong>
-          <p >13.1 During the probationary period and any extension thereof, services can be terminated
+          <p style="margin-left: 50px;">13.1 During the probationary period and any extension thereof, sources can be terminated
 by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by
 the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing
 or gross salary in lieu thereof, only by the employer and this does not apply for the
@@ -271,6 +275,7 @@ employee. Buying out of notice period is up to the sole.</p>
   <div class="page">
     <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
     <div class="content">
+      <h4>discretion of the management.</h4>
 <p class="right">13.2 Upon termination of employment, you will immediately hand over to the Company 
 all correspondence, specifications, formulae, books, documents, market data, cost data, 
 drawings, affects or records belonging to the Company or relating to its business and shall 
@@ -290,19 +295,19 @@ person, company or firm having business transaction with amazon IT solutions.</p
 <p>14.4 You will, in all respects be governed by the rules and regulations applicable to your 
 category of employees from time to time.</p>
 <p>14.5 Should you remain absent from work, without reasonable explanation, for more than 
-seven consecutive days, it will be presumed that you are no longer interested in working for 
+seven (7) consecutive days, it will be presumed that you are no longer interested in working for 
 amazon IT solutions. and have abandoned its services, thereby terminating your 
 employment with amazon IT solutions. In such case, you will not be entitled to any 
 compensation for the loss of service.</p>
       </li>
 
         <li><strong>Non-Disclosure:</strong> You will not disclose by word of mouth or otherwise, particulars or details of 
-business plans /trade We are immensely pleased to appointing you secret /finance [know how and 
+business plans /trade I secret /finance [know how and 
 or any confidential information of business coming to your knowledge by virtue of your being in the 
 employment of amazon IT solutions.</li>
         <li><strong>Acceptance:</strong>: If you accept the above terms and conditions of the service, please signify your 
 acceptance by signing up the photo copy of this Appointment letter thereof otherwise this letter of 
-appointment will be deemed to have been withdrawn and cancelled</li>
+appointment will be deemed to have been withdrawn and cancelled.</li>
 </ol>
 
   <div class="signature">
