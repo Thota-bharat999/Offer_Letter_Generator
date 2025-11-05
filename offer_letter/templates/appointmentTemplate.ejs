@@ -92,19 +92,23 @@
     margin-bottom: 8px;
     text-align: justify;
   }
-  .li .space{
+  /* .li .space{
     margin-left: 20px;
-  }
+  } */
 
   /* Signature */
   .signature-block {
-    margin-top: 25px;
+    margin-top: 30px;
     line-height: 1.4;
   }
   .signature-block img {
     width: 110px;
     height: auto;
-    margin-top: 6px;
+    margin-top: 8px;
+  }
+  .rigth{
+    margin-left: 20px;
+    padding-left: 10px;
   }
 
   /* Annexure salary table */
@@ -250,8 +254,8 @@ period of 6-12 months of time.</li>
 <li><strong>Past Records:</strong>If any declaration given or information furnished by you, to the company 
 proves to be false, or if you are found to have wilfully suppressed any material information, in such 
 cases, you will be liable to removal from services without any notice.</li>
-        <li class="space"><strong>Termination of employment:</strong>
-          <p>13.1 During the probationary period and any extension thereof, services can be terminated 
+        <li><strong>Termination of employment:</strong>
+          <p class="right">13.1 During the probationary period and any extension thereof, services can be terminated 
 by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by 
 the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing 
 or gross salary in lieu thereof, only by the employer and this does not apply for the 
@@ -264,11 +268,11 @@ employee. Buying out of notice period is up to the sole.</p>
   <div class="page">
     <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
     <div class="content">
-<p>13.2 Upon termination of employment, you will immediately hand over to the Company 
+<p class="right">13.2 Upon termination of employment, you will immediately hand over to the Company 
 all correspondence, specifications, formulae, books, documents, market data, cost data, 
 drawings, affects or records belonging to the Company or relating to its business and shall 
 not retain or make copies of these items. </p>
-<p>13.3 Upon termination of employment, you will also return all company property, which 
+<p class="right">13.3 Upon termination of employment, you will also return all company property, which 
 maybe in your possession. </p>
 <ol start="14">
         <li><strong>General Conditions:</strong> You will be bound by the following: </li>
