@@ -100,32 +100,36 @@
     .signature { margin-top: 6mm; }
       .signature .for { font-weight: 700; font-family: cambria; margin-top: -6px; }
       .signature .signer { font-weight: 300; font-family: cambria; margin-top:-9px; }
-  .p .rigth{
-    margin-right: 20px;
-    padding-left: 10px;
+  .right {
+    margin-left: 20px;
   }
 
   /* Annexure salary table */
-  .salary-table {
-    border-collapse: collapse;
-    width: 85%;
-    margin: 0 auto;
-    font-size: 12px;
-    border: 1px solid #000;
-  }
-  .salary-table th,
-  .salary-table td {
-    border: 1px solid #000;
-    padding: 6px 8px;
-    text-align: center;
-  }
-
-    .salary-table th {
-      background-color: #f5f5f5;
-      font-weight: bold;
-      text-align: center;
-      letter-spacing: 0.3px;
-    }
+  table {
+        width: calc(100% - 120px);
+        border-collapse: collapse;
+        margin: 10px 60px 12px 60px;
+        font-size: 14px;
+        font-family: Cambria, serif !important;
+        border: 1px solid #000;
+        table-layout: fixed;
+      }
+      th, td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        line-height: 1.25;
+        vertical-align: middle;
+      }
+      th {
+        background: #fff;
+        font-weight: bold;
+        text-align: center;
+        font-family: Cambria, serif !important;
+        padding: 5px 6px;
+      }
+      th:first-child, td:first-child { text-align: left; }
+      th:nth-child(2), td:nth-child(2),
+      th:nth-child(3), td:nth-child(3) { text-align: right; }
 
     .note {
       font-size: 11px;
@@ -202,7 +206,7 @@
         <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctcAnnual ? Number(appointment.ctcAnnual).toLocaleString('en-IN') : "" %> (<%= appointment.ctcWords || "" %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
       </ol>
 
-      <p><strong>Note:</strong> Breakup of the fixed salary is as per the Annexure sheet.</p>
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Note:</strong> Breakup of the fixed salary is as per the Annexure sheet.</p>
 
       <ol start="4">
         <li><strong>Statutory Deductions:</strong>: Deductions, if any, will be made from your salary as per the prevailing law of the country. However, for your income tax you shall be personally responsible for filing returns etc. The company will provide you the tax deductions certificate, if applicable at the end of each financial year.</li>
@@ -249,7 +253,7 @@ period of 6-12 months of time.</li>
 proves to be false, or if you are found to have wilfully suppressed any material information, in such 
 cases, you will be liable to removal from services without any notice.</li>
         <li><strong>Termination of employment:</strong>
-          <p class="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13.1 During the probationary period and any extension thereof, services can be terminated 
+          <p class="right">13.1 During the probationary period and any extension thereof, services can be terminated 
 by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by 
 the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing 
 or gross salary in lieu thereof, only by the employer and this does not apply for the 
@@ -262,11 +266,11 @@ employee. Buying out of notice period is up to the sole.</p>
   <div class="page">
     <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
     <div class="content">
-<p class="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13.2 Upon termination of employment, you will immediately hand over to the Company 
+<p class="right">13.2 Upon termination of employment, you will immediately hand over to the Company 
 all correspondence, specifications, formulae, books, documents, market data, cost data, 
 drawings, affects or records belonging to the Company or relating to its business and shall 
 not retain or make copies of these items. </p>
-<p class="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13.3 Upon termination of employment, you will also return all company property, which 
+<p class="right">13.3 Upon termination of employment, you will also return all company property, which 
 maybe in your possession. </p>
 <ol start="14">
         <li><strong>General Conditions:</strong> You will be bound by the following: </li>
@@ -330,29 +334,37 @@ appointment will be deemed to have been withdrawn and cancelled</li>
 
     <!-- ===== Annexure Title ===== -->
     <p class="annexure-title">Annexure-I</p>
-    <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
+    <!-- <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
       SALARY COMPUTATION
-    </p>
+    </p> -->
 
     <!-- ===== Salary Table ===== -->
-    <table class="salary-table">
-      <thead>
-        <tr>
-          <th style="width:50%;">Components</th>
-          <th style="width:25%;">Per annum</th>
-          <th style="width:25%;">Per month</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% (appointment.salaryComponents || []).forEach(function(row){ %>
+    <table>
+        <colgroup>
+          <col style="width: 65%;" />
+          <col style="width: 17.5%;" />
+          <col style="width: 17.5%;" />
+        </colgroup>
+        <thead>
           <tr>
-            <td style="text-align:left; padding-left:10px;"><%= row.label %></td>
-            <td><%= row.perAnnum.toLocaleString('en-IN') %></td>
-            <td><%= row.perMonth.toLocaleString('en-IN') %></td>
+            <th colspan="3" style="text-align: center;">SALARY COMPUTATION</th>
           </tr>
-        <% }) %>
-      </tbody>
-    </table>
+          <tr>
+            <th>Components</th>
+            <th>Per annum</th>
+            <th>Per Month</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (salaryBreakdown || []).forEach(function(item){ %>
+            <tr>
+              <td><%= item.component %></td>
+              <td><%= Number(item.annualAmount || 0).toLocaleString('en-IN') %></td>
+              <td><%= Number(item.monthlyAmount || 0).toLocaleString('en-IN') %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
 
     <!-- ===== Notes Below Table ===== -->
     <div class="note">
