@@ -25,7 +25,7 @@
     box-sizing: border-box;
 
     /* ✅ 25px from top, 20px from bottom */
-    padding: 25px 20mm 20px 20mm;
+    padding: 25px 25mm 20px 25mm;
     page-break-after: always;
   }
 
@@ -41,13 +41,17 @@
   }
 
   /* Content always stays inside safe printable area */
-  .content {
-    position: relative;
-    z-index: 2;
-    text-align: justify;
-    margin-top: 45mm; /* ✅ pushes text below the top logo (approx. 25px + logo zone) */
-    margin-bottom: 20mm; /* ✅ ensures space above footer zone */
-  }
+  /* Content area - reduced left/right white space */
+.content {
+  position: relative;
+  z-index: 2;
+  text-align: justify;
+  margin: 0 15mm; /* 🔽 was 25mm — narrower content area */
+  padding-bottom: 25mm; /* keep footer space */
+  max-height: 245mm; /* ensure no bleed into footer */
+  box-sizing: border-box;
+}
+
 
   /* Headings and general formatting */
   .title {
