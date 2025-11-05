@@ -14,97 +14,67 @@ const generateAppointmentPDF = async (appointmentData) => {
     const templatePath = path.join(__dirname, "../templates/appointmentTemplate.ejs");
     const assetsDir = path.resolve(__dirname, "../assets");
 
-    // === EMBED LOGO ===
-    const logoCandidates = [
+    /** Utility: Encode image to base64 */
+    const embedImage = (candidates) => {
+      const found = candidates.find((p) => fs.existsSync(p));
+      if (!found) return "";
+      const mime = found.endsWith(".png")
+        ? "image/png"
+        : found.endsWith(".jpg") || found.endsWith(".jpeg")
+        ? "image/jpeg"
+        : "application/octet-stream";
+      return `data:${mime};base64,${fs.readFileSync(found).toString("base64")}`;
+    };
+
+    // === EMBED ALL IMAGES ===
+    const logoPath = embedImage([
       path.join(assetsDir, "image.png"),
       path.join(assetsDir, "Amazon-Logo1.png"),
       path.join(assetsDir, "logo.png"),
-    ];
-    const foundLogo = logoCandidates.find((p) => fs.existsSync(p));
-    let logoPath = "";
-    if (foundLogo) {
-      const mime = foundLogo.endsWith(".png")
-        ? "image/png"
-        : foundLogo.endsWith(".jpg") || foundLogo.endsWith(".jpeg")
-        ? "image/jpeg"
-        : "application/octet-stream";
-      logoPath = `data:${mime};base64,${fs.readFileSync(foundLogo).toString("base64")}`;
-      console.log("✅ Logo embedded:", foundLogo);
-    } else console.warn("⚠️ Logo not found in:", logoCandidates);
+    ]);
 
-    // === EMBED LETTERHEAD ===
-    const letterheadCandidates = [
+    const letterheadPath = embedImage([
       path.join(assetsDir, "letterhead.png"),
       path.join(assetsDir, "letterhead.jpg"),
       path.join(assetsDir, "letterhead.jpeg"),
-    ];
-    const foundLetterhead = letterheadCandidates.find((p) => fs.existsSync(p));
-    let letterheadPath = "";
-    if (foundLetterhead) {
-      const mime = foundLetterhead.endsWith(".png")
-        ? "image/png"
-        : foundLetterhead.endsWith(".jpg") || foundLetterhead.endsWith(".jpeg")
-        ? "image/jpeg"
-        : "application/octet-stream";
-      letterheadPath = `data:${mime};base64,${fs.readFileSync(foundLetterhead).toString("base64")}`;
-      console.log("✅ Letterhead embedded:", foundLetterhead);
-    } else console.warn("⚠️ Letterhead not found in:", letterheadCandidates);
+    ]);
 
-    // === EMBED SIGNATURE ===
-    const signatureCandidates = [
+    const signaturePath = embedImage([
       path.join(assetsDir, "signature.png"),
       path.join(assetsDir, "sign.png"),
       path.join(assetsDir, "signature.jpg"),
-    ];
-    const foundSignature = signatureCandidates.find((p) => fs.existsSync(p));
-    let signaturePath = "";
-    if (foundSignature) {
-      const mime = foundSignature.endsWith(".png")
-        ? "image/png"
-        : foundSignature.endsWith(".jpg") || foundSignature.endsWith(".jpeg")
-        ? "image/jpeg"
-        : "application/octet-stream";
-      signaturePath = `data:${mime};base64,${fs.readFileSync(foundSignature).toString("base64")}`;
-      console.log("✅ Signature embedded:", foundSignature);
-    } else console.warn("⚠️ Signature not found in:", signatureCandidates);
+    ]);
 
-    // === EMBED STAMP ===
-    const stampCandidates = [
+    const stampPath = embedImage([
       path.join(assetsDir, "stamp.png"),
       path.join(assetsDir, "seal.png"),
       path.join(assetsDir, "company-stamp.png"),
-    ];
-    const foundStamp = stampCandidates.find((p) => fs.existsSync(p));
-    let stampPath = "";
-    if (foundStamp) {
-      const mime = foundStamp.endsWith(".png")
-        ? "image/png"
-        : foundStamp.endsWith(".jpg") || foundStamp.endsWith(".jpeg")
-        ? "image/jpeg"
-        : "application/octet-stream";
-      stampPath = `data:${mime};base64,${fs.readFileSync(foundStamp).toString("base64")}`;
-      console.log("✅ Stamp embedded:", foundStamp);
-    } else console.warn("⚠️ Stamp not found in:", stampCandidates);
+    ]);
 
-    // === EMBED FOOTER ===
-    const footerCandidates = [
+    const footerPath = embedImage([
       path.join(assetsDir, "footer.png"),
       path.join(assetsDir, "bottom.png"),
       path.join(assetsDir, "footer-strip.png"),
-    ];
-    const foundFooter = footerCandidates.find((p) => fs.existsSync(p));
-    let footerPath = "";
-    if (foundFooter) {
-      const mime = foundFooter.endsWith(".png")
-        ? "image/png"
-        : foundFooter.endsWith(".jpg") || foundFooter.endsWith(".jpeg")
-        ? "image/jpeg"
-        : "application/octet-stream";
-      footerPath = `data:${mime};base64,${fs.readFileSync(foundFooter).toString("base64")}`;
-      console.log("✅ Footer embedded:", foundFooter);
-    } else console.warn("⚠️ Footer not found in:", footerCandidates);
+    ]);
 
-    // === RENDER EJS TEMPLATE ===
+    /** ✅ Normalize Salary Data */
+    let salaryComponents = [];
+    if (Array.isArray(appointmentData.salaryComponents) && appointmentData.salaryComponents.length > 0) {
+      salaryComponents = appointmentData.salaryComponents;
+    } else if (Array.isArray(appointmentData.salaryBreakdown) && appointmentData.salaryBreakdown.length > 0) {
+      salaryComponents = appointmentData.salaryBreakdown;
+    }
+
+    // Ensure numeric formatting for table
+    salaryComponents = salaryComponents.map((item) => ({
+      label: item.label || item.component || "",
+      perAnnum: Number(item.perAnnum || item.annual || item.yearly || 0),
+      perMonth: Number(item.perMonth || item.monthly || 0),
+    }));
+
+    console.log("✅ Salary components prepared:", salaryComponents);
+
+    // === Render EJS Template ===
     const html = await ejs.renderFile(templatePath, {
       appointment: {
         issueDate: appointmentData.appointmentDate || new Date(),
@@ -114,20 +84,10 @@ const generateAppointmentPDF = async (appointmentData) => {
         joiningDate: appointmentData.joiningDate || new Date(),
         ctcAnnual: appointmentData.ctcAnnual || 0,
         ctcWords: appointmentData.ctcWords || "",
-        salaryComponents: appointmentData.salaryComponents || appointmentData.salaryBreakdown || [],
+        salaryComponents, // ✅ guaranteed table data
         hrName: appointmentData.hrName || "HR Manager",
         hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
       },
-      appointmentDate: appointmentData.appointmentDate || new Date(),
-      employeeName: appointmentData.employeeName || "Employee",
-      address: appointmentData.address || "Address Not Provided",
-      designation: appointmentData.designation || "Designation Not Provided",
-      joiningDate: appointmentData.joiningDate || new Date(),
-      ctcAnnual: appointmentData.ctcAnnual || 0,
-      ctcWords: appointmentData.ctcWords || "",
-      hrName: appointmentData.hrName || "HR Manager",
-      hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
-      salaryComponents: appointmentData.salaryComponents || appointmentData.salaryBreakdown || [], 
       logoPath,
       letterheadPath,
       signaturePath,
@@ -137,8 +97,7 @@ const generateAppointmentPDF = async (appointmentData) => {
 
     console.log("✅ [8] Appointment EJS rendered successfully");
 
-    // === LAUNCH PUPPETEER ===
-    console.log("🟩 [10] Launching Puppeteer...");
+    // === Launch Puppeteer ===
     const browser = await puppeteer.launch({
       headless: true,
       args: [
@@ -152,8 +111,6 @@ const generateAppointmentPDF = async (appointmentData) => {
       executablePath: puppeteer.executablePath(),
     });
 
-    console.log("✅ [11] Puppeteer launched successfully");
-
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(0);
     await page.setDefaultTimeout(0);
@@ -161,9 +118,7 @@ const generateAppointmentPDF = async (appointmentData) => {
     console.log("🟩 [12] Setting HTML content...");
     await page.setContent(html, { waitUntil: "networkidle0", timeout: 0 });
     await page.evaluateHandle("document.fonts.ready");
-    console.log("✅ [13] Page fully loaded with fonts");
 
-    // === OUTPUT DIRECTORY ===
     const uploadsDir = path.resolve(__dirname, "../uploads");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -181,9 +136,7 @@ const generateAppointmentPDF = async (appointmentData) => {
     });
 
     console.log("✅ [15] Appointment PDF generated successfully:", pdfPath);
-
     await browser.close();
-    console.log("✅ [16] Browser closed successfully");
 
     return pdfPath;
   } catch (error) {
