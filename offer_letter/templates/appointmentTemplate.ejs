@@ -199,7 +199,7 @@
       <ol>
         <li><strong>Job Assignment:</strong>In your assignment you will be required to perform duties as laid down in the Job Description for your position.</li>
         <li><strong>Leave Entitlement:</strong>You will be entitled to leaves as per Amazon IT Solutions policy Mentioned in Rules and Regulations formulated in the Employee Hand Book of Amazon IT solutions from time to time.</li>
-        <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctc ? Number(appointment.ctc).toLocaleString('en-IN') : "" %> (<%= appointment.ctcWords || "" %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
+        <li><strong>Placement & Compensation:</strong> You will be placed in the appropriate responsibility level of the Company and will be entitled to total compensation of <strong>INR <%= appointment.ctcAnnual ? Number(appointment.ctcAnnual).toLocaleString('en-IN') : "" %> (<%= appointment.ctcWords || "" %>) Per Annum</strong>. Compensation will be governed by rules of the Company, as applicable and/or amended hereafter.</li>
       </ol>
 
       <p><strong>Note:</strong> Breakup of the fixed salary is as per the Annexure sheet.</p>
@@ -249,7 +249,7 @@ period of 6-12 months of time.</li>
 proves to be false, or if you are found to have wilfully suppressed any material information, in such 
 cases, you will be liable to removal from services without any notice.</li>
         <li><strong>Termination of employment:</strong>
-          <p class="right">13.1 During the probationary period and any extension thereof, services can be terminated 
+          <p class="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13.1 During the probationary period and any extension thereof, services can be terminated 
 by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by 
 the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing 
 or gross salary in lieu thereof, only by the employer and this does not apply for the 
@@ -262,11 +262,11 @@ employee. Buying out of notice period is up to the sole.</p>
   <div class="page">
     <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
     <div class="content">
-<p class="right">13.2 Upon termination of employment, you will immediately hand over to the Company 
+<p class="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13.2 Upon termination of employment, you will immediately hand over to the Company 
 all correspondence, specifications, formulae, books, documents, market data, cost data, 
 drawings, affects or records belonging to the Company or relating to its business and shall 
 not retain or make copies of these items. </p>
-<p class="right">13.3 Upon termination of employment, you will also return all company property, which 
+<p class="right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;13.3 Upon termination of employment, you will also return all company property, which 
 maybe in your possession. </p>
 <ol start="14">
         <li><strong>General Conditions:</strong> You will be bound by the following: </li>
