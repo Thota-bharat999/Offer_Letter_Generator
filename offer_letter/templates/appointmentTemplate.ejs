@@ -139,10 +139,10 @@
       margin-right: auto;
     }
 
-    .note ul {
+    /* .note ul {
       margin-top: 6px;
       margin-left: 20px;
-    }
+    } */
 
     /* === Ensure each page bottom spacing === */
     .page::after {
@@ -253,10 +253,10 @@ period of 6-12 months of time.</li>
 proves to be false, or if you are found to have wilfully suppressed any material information, in such 
 cases, you will be liable to removal from services without any notice.</li>
         <li><strong>Termination of employment:</strong>
-          <p class="right">13.1 During the probationary period and any extension thereof, services can be terminated 
-by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by 
-the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing 
-or gross salary in lieu thereof, only by the employer and this does not apply for the 
+          <p class="right" style="margin-left: 20px;">13.1 During the probationary period and any extension thereof, services can be terminated
+by either party by giving two months’ notice in writing or gross salary in lieu thereof, only by
+the employer and this does not apply for the employee. However, on confirmation the services can be terminated by either party by giving Ninety Days (90 days) notice in writing
+or gross salary in lieu thereof, only by the employer and this does not apply for the
 employee. Buying out of notice period is up to the sole.</p>
       </ol>
     </div>
@@ -320,10 +320,6 @@ appointment will be deemed to have been withdrawn and cancelled</li>
   <% if (letterheadPath) { %><img src="<%= letterheadPath %>" class="letterhead" /><% } %>
 
   <div class="content">
-    <p style="text-align:center; font-size:12px;">
-      <strong>Note:</strong> This is a computer-generated document. No Signature is required.
-    </p>
-
     <p style="text-align:center; margin-top:15px;">
       This is to certify that I, <strong><%= appointment.employeeName || "" %></strong>, have read and understood all the above-mentioned terms and conditions and accept them.
     </p>
@@ -333,7 +329,7 @@ appointment will be deemed to have been withdrawn and cancelled</li>
     </p>
 
     <!-- ===== Annexure Title ===== -->
-    <p class="annexure-title">Annexure-I</p>
+    <p class="annexure-title text-align: center;">Annexure-I</p>
     <!-- <p style="text-align:center; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">
       SALARY COMPUTATION
     </p> -->
@@ -368,12 +364,13 @@ appointment will be deemed to have been withdrawn and cancelled</li>
 
     <!-- ===== Notes Below Table ===== -->
     <div class="note">
-      <p><strong>Note:</strong></p>
-      <ul>
-        <li>Medical Insurance covers Rs.4 Lakhs for the employee and dependents.</li>
-        <li>Personal Accident Insurance covers Rs.7.5 Lakhs for the employee.</li>
-        <li>The LTA can be claimed against bills at the end of the financial year subject to provisions of the Income Tax Act.</li>
-      </ul>
+      <p style="text-align:center; font-size:12px;">
+      <strong>Note:</strong> This is a computer-generated document. No Signature is required.
+    </p>
+      <h4 style="font-size: 10pt; font-family: Cambria, serif !important; margin: 6px 0 2px 0;">Procedure for standard reimbursement:</h4>
+      <p style="font-size: 9pt; margin: 0 0 5px 0;">
+        The LTA can be claimed against production of bills at the end of the financial year subject to provision of Income TaxAct. Any unclaimed amount will be paid to you at the end of the financial year after deducting the necessary taxes.
+      </p>
     </div>
   </div>
 </div>
