@@ -202,7 +202,7 @@
 
       <p>We are immensely pleased to appoint you as a <strong><%= appointment.position || appointment.designation || "" %></strong>, and have you as a part of Amazon IT Solutions Family. We believe your potential skills will be a valuable contribution to our company.</p>
 
-      <p><strong> Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <% const dateStr = appointment.joiningDate || ""; if (dateStr) { const [year, month, day] = dateStr.split('-'); %><%= `${day}-${month}-${year}` %><% } %> and following are the terms and conditions:</p>
+      <p><strong> Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <% const joiningDateStr = appointment.joiningDate || ""; if (joiningDateStr) { const [year, month, day] = joiningDateStr.split('-'); %><%= `${day}-${month}-${year}` %><% } %> and following are the terms and conditions:</p>
 
       <ol>
         <li><strong> Job Assignment:</strong>In your assignment, you will be required to perform duties as laid down in the Job Description for your position.</li>
