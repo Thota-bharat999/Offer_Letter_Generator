@@ -45,7 +45,7 @@ const generateAppointmentPDF = async (appointmentData) => {
       path.join(assetsDir, "signature.jpg"),
     ]);
     
-
+ 
     const stampPath = embedImage([
       path.join(assetsDir, "stamp.png"),
       path.join(assetsDir, "seal.png"),
