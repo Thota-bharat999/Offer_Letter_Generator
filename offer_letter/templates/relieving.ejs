@@ -23,16 +23,16 @@
 
     .content {
       position: relative;
-      width: 75%;
+      width: 78%; /* ✅ slightly narrower for balanced left/right margins */
       margin: 0 auto;
-      top: 165px;
+      top: 160px;
       font-size: 13px;
       line-height: 1.8;
     }
 
     .date {
       text-align: left;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
 
     .title {
@@ -41,12 +41,11 @@
       text-decoration: underline;
       font-size: 16px;
       margin-top: 0;
-      margin-bottom: 50px;
+      margin-bottom: 45px;
     }
 
-    /* ✅ Increased gap between heading and Employee Name */
     .gap-after-title {
-      height: 35px; /* increased from 25px → 55px */
+      height: 35px;
     }
 
     .paragraph {
@@ -54,45 +53,59 @@
       text-align: justify;
     }
 
-    /* ✅ Add spacing after Employee details section */
     .employee-section {
       margin-bottom: 20px;
     }
 
-    /* .closing {
-      margin-top: 16pt;
-      line-height: 1.3;
-    }
-
-    .signature-block {
-      margin-top: 3pt;
+    /* ✅ Fixed Signature Section */
+    .signature {
+      margin-top: 40px;
+      margin-left: 25mm; /* ✅ consistent left indent */
       text-align: left;
-      line-height: 1.2;
+      line-height: 1.6;
+      font-family: Cambria, Calibri, serif;
+      font-size: 13px;
     }
 
-    .signature-block img {
+    .signature .sincerely {
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .signature .for {
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .signature-image {
+      margin: -6px 0 6px 10px;
+    }
+
+    .signature-image img {
       width: 85px;
       height: auto;
       opacity: 0.95;
-      margin-top: 2pt;
     }
 
-    .hr-details {
-      margin-top: 1pt;
-      margin-bottom: 15px ;
-      line-height: 1.2;
-    } */
-       .signature { margin-top: 6mm; }
-      .signature .for { font-weight: 700; font-family: cambria; margin-top: -6px; }
-      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-9px; }
+    .signature .signer {
+      font-weight: 600;
+      margin-top: 10px;
+      margin-bottom: 2px;
+    }
 
+    .signature .designation {
+      margin-top: -2px;
+      font-weight: bold;
+      text-decoration: underline;
+    }
 
+    /* ✅ Note style consistent with original */
     .note {
-      font-size: 10pt;
-      margin-top: 10pt;
-      margin-bottom: 30px;
-      position: relative;
+      font-size: 11pt;
+      margin-top: 35px;
+      margin-left: 25mm;
       text-align: left;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -103,11 +116,8 @@
     </p>
 
     <p class="title">Relieving and Experience Letter</p>
-
-    <!-- ✅ Larger gap after heading -->
     <div class="gap-after-title"></div>
 
-    <!-- ✅ Employee details block -->
     <div class="employee-section">
       <p class="paragraph"><strong>Employee Name:</strong> <%= employee_name %></p>
       <% if (employee_id) { %>
@@ -115,12 +125,12 @@
       <% } %>
     </div>
 
-    <p class="paragraph">This is with regard to your resignation,</p>
+    <p class="paragraph">This is with regard to your resignation.</p>
 
     <p class="paragraph">
-      Dated
-      <%= new Date(resignation_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
-      from the position of <strong><%= designation %></strong> — We would like to inform you that you have been relieved of your duties at the end of business hours of
+      Dated <%= new Date(resignation_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>
+      from the position of <strong><%= designation %></strong> — We would like to inform you that you have been
+      relieved of your duties at the end of business hours of
       <%= new Date(relieving_date).toLocaleDateString('en-GB').replace(/\//g, '-') %>.
     </p>
 
@@ -133,21 +143,23 @@
 
     <p class="paragraph">We wish you good luck for future endeavours.</p>
 
+    <!-- ✅ Signature section -->
     <div class="signature">
-  <p style="margin-bottom: 4px;"><strong>Yours Sincerely,</strong></p>
-  <p class="for" style="margin-bottom: 2px;"><strong>For <%= companyName %></strong></p>
-  <% if (signaturePath) { %>
-    <div style="margin: -6px 0 3px 12px; display: inline-block;">
-      <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:80px; height:auto; opacity:0.95;" />
-    </div>
-  <% } %>
-  <p class="signer">Chakravarthy Devarkonda</p>
-  <p style="margin-top: -8px;">Manager – Human Resources.</p>
-</div>
+      <p class="sincerely"><strong>Yours sincerely,</strong></p>
+      <p class="for"><strong>For <%= companyName %></strong></p>
+
+      <% if (signaturePath) { %>
+        <div class="signature-image">
+          <img src="<%= signaturePath %>" alt="Authorized Signature" />
+        </div>
+      <% } %>
+
+      <p class="signer"><strong>Chakravarthy Devarakonda</strong></p>
+      <p class="designation"><strong><u>Manager – Human Resources.</u></strong></p>
     </div>
 
     <p class="note">
-      Note: This is a computer-generated document. No Signature is required*
+      <strong>Note:</strong> This is a computer-generated document. No Signature is required*
     </p>
   </div>
 </body>
