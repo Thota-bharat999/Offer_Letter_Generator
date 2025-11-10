@@ -239,6 +239,9 @@ exports.getAllAppointmentLetters=async(req,res)=>{
       _id:letter._id,
       employeeName:letter.employeeName,
       designation:letter.designation,
+      joiningDate:letter.joiningDate,
+      ctcAnnual:letter.ctcAnnual,
+      appointmentDate:letter.appointmentDate,
 
     }));
     if(result.length==0){
