@@ -59,7 +59,7 @@
       margin-bottom: 20px;
     }
 
-    .closing {
+    /* .closing {
       margin-top: 16pt;
       line-height: 1.3;
     }
@@ -81,7 +81,11 @@
       margin-top: 1pt;
       margin-bottom: 15px ;
       line-height: 1.2;
-    }
+    } */
+       .signature { margin-top: 6mm; }
+      .signature .for { font-weight: 700; font-family: cambria; margin-top: -6px; }
+      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-9px; }
+
 
     .note {
       font-size: 10pt;
@@ -129,20 +133,17 @@
 
     <p class="paragraph">We wish you good luck for future endeavours.</p>
 
-    <div class="closing">
-      <p>Yours sincerely,</p>
-      <p>For Amazon IT Solutions</p>
+    <div class="signature">
+  <p style="margin-bottom: 4px;"><strong>Yours Sincerely,</strong></p>
+  <p class="for" style="margin-bottom: 2px;"><strong>For <%= companyName %></strong></p>
+  <% if (signaturePath) { %>
+    <div style="margin: -6px 0 3px 12px; display: inline-block;">
+      <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:80px; height:auto; opacity:0.95;" />
     </div>
-
-    <% if (signaturePath) { %>
-      <div class="signature-block">
-        <img src="<%= signaturePath %>" alt="Signature" />
-      </div>
-    <% } %>
-
-    <div class="hr-details">
-      <p><%= hrName %></p>
-      <p><strong><%= hrDesignation %></strong></p>
+  <% } %>
+  <p class="signer">Chakravarthy Devarkonda</p>
+  <p style="margin-top: -8px;">Manager – Human Resources.</p>
+</div>
     </div>
 
     <p class="note">
