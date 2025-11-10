@@ -80,6 +80,7 @@ const generateRelievingPDF = async (data) => {
       relieving_date: data.relievingDate || "2025-09-15",
       hrName: data.hrName || "Chakravarthy Devarkonda",
       hrDesignation: data.hrDesignation || "Manager – Human Resources",
+      companyName: data.companyName || "Amazon IT Solutions",
       logoPath,
       letterheadPath,
       signaturePath,
