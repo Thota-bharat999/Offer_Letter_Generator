@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Full Packet - <%= candidateName %></title>
+    <style>
+      @page { size: A4; margin: 0; }
+      :root {
+        --brand-blue: #1e6aa8;
+        --brand-pink: #e31c79;
+        --text: #000000;
+        --base-font: "Georgia, serif";
+      }
+
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: var(--base-font);
+        font-size: 10.5pt;
+        line-height: 1.35;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .container {
+        position: relative;
+        z-index: 1;
+        padding: 2mm 18mm 34mm 18mm;
+        page-break-inside: auto;
+      }
+
+      .header {
+        position: relative;
+        min-height: 20mm;
+        margin-bottom: 1mm;
+      }
+      .header .logo {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 120mm;
+        height: auto;
+      }
+
+      .meta { display: flex; justify-content: flex-end; }
+      .date { font-size: 10.5pt; font-weight: 700; font-family: Cambria, serif !important; }
+      .rule { height: 0; border: none; border-top: 2px solid var(--brand-blue); margin: 6mm 0; }
+
+      .to { margin: 0; margin-top: -4mm; }
+      .to p { margin: 0; line-height: 1.4; font-family: Calibri }
+      .to .name { font-weight: 500; margin-bottom: 0.5mm; font-family: Calibri }
+      .to .addr { white-space: normal; font-family: Calibri !important; }
+
+      .title-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        font-family: Cambria, serif !important;
+        align-items: center;
+        margin: 2mm 0 3mm;
+      }
+      .title-date-wrap {
+        margin-top:4mm;
+      }
+      .title {
+        grid-column: 2 / 3;
+        text-align: center;
+        text-decoration: underline;
+        font-weight: 700;
+        font-size: 12pt;
+        font-family: cambria,serif;
+      }
+      .date {
+        text-align: right;
+        font-family: Cambria, serif !important;
+        margin-top:12mm;
+        font-size: 10.5pt;
+        font-weight: 700;
+      }
+
+      p { margin: 0 0 2.5mm 0; text-align: justify; line-height: 1.7; font-size: 12px; }
+
+      .signature { margin-top: 6mm; }
+      .signature .for { font-weight: 700; font-family: cambria; margin-top: -6px; }
+      .signature .signer { font-weight: 300; font-family: cambria; margin-top:-9px; }
+
+      h3 {
+        margin: 0 0 3mm 0;
+        font-size: 12pt;
+        font-weight: 700;
+        font-family: cambria;
+      }
+
+      .anexure {
+        font-family: Cambria, serif;
+        font-weight: 700;
+        text-align: center;
+        margin: 10px 0 8px 0;
+        text-decoration: underline;
+      }
+
+      .numbered {
+        margin: 10px 0 14px 10px;
+        padding-left: 28px;
+        font-size: 12.5px;
+        font-family: Cambria, serif !important;
+        line-height: 1.35;
+      }
+      .numbered li {
+        margin: 2px 0;
+        padding-left: 4px;
+      }
+
+      .annexure-section p {
+        font-size: 12.5px;
+        margin: 4px 0 8px 0;
+        text-align: justify;
+        line-height: 1.35;
+        font-family: Cambria, serif !important;
+      }
+
+      table {
+        width: calc(100% - 120px);
+        border-collapse: collapse;
+        margin: 10px 60px 12px 60px;
+        font-size: 14px;
+        font-family: Cambria, serif !important;
+        border: 1px solid #000;
+        table-layout: fixed;
+      }
+      th, td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        line-height: 1.25;
+        vertical-align: middle;
+      }
+      th {
+        background: #fff;
+        font-weight: bold;
+        text-align: center;
+        font-family: Cambria, serif !important;
+        padding: 5px 6px;
+      }
+      th:first-child, td:first-child { text-align: left; }
+      th:nth-child(2), td:nth-child(2),
+      th:nth-child(3), td:nth-child(3) { text-align: right; }
+
+      .footer-note {
+        font-family: Cambria, serif !important;
+        font-size: 10pt;
+        margin-top: 20px;
+        text-align: left;
+        font-weight: bold;
+      }
+
+      .bottom-bars {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 10mm;
+      }
+      .bottom-bars .bar-blue { height: 6mm; background: var(--brand-blue); }
+      .bottom-bars .bar-pink { height: 3mm; background: var(--brand-pink); }
+
+      .watermark {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.05;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .watermark img { width: 55%; height: auto; }
+
+      .attachments {
+        page-break-before: always;
+        margin-top: 20px;
+      }
+      .attachment {
+        margin-bottom: 20px;
+        page-break-inside: avoid;
+      }
+      .attachment img {
+        max-width: 100%;
+        height: auto;
+      }
+      .attachment-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Watermark -->
+    <div class="watermark">
+      <% if (logoPath) { %>
+        <img src="<%= logoPath %>" alt="Watermark" />
+      <% } %>
+    </div>
+
+    <!-- PAGE 1 (Offer Letter) -->
+    <div class="container">
+      <div class="header">
+        <% if (logoPath) { %>
+          <img class="logo" src="<%= logoPath %>" alt="Company Logo" />
+        <% } %>
+      </div>
+      <div class="to">
+        <p class="name"><%= candidateName %>,</p>
+        <%
+          const address = candidateAddress || '';
+          const words = address.split(/\s+/).filter(Boolean);
+          let lines = [];
+          let currentLine = '';
+
+          for (let word of words) {
+            if (currentLine.length + word.length + (currentLine ? 1 : 0) <= 25) {
+              currentLine += (currentLine ? ' ' : '') + word;
+            } else {
+              if (currentLine) lines.push(currentLine);
+              currentLine = word;
+            }
+          }
+          if (currentLine) lines.push(currentLine);
+
+          while (lines.length < 4) {
+            lines.push('');
+          }
+          lines = lines.slice(0, 4);
+        %>
+        <p class="addr">
+          <% lines.forEach(function(line){ %>
+            <%= line %><br/>
+          <% }) %>
+        </p>
+      </div>
+
+      <div class="title-row">
+        <div></div>
+        <div class="title">Offer Letter</div>
+        <div class="date">
+          <strong>Date:</strong>
+          <%= new Date(dateIssued).toLocaleDateString('en-GB').replace(/\//g,'-') %>
+        </div>
+      </div>
+
+      <p><strong>Name: <%= candidateName %>.</strong></p>
+      <p>Dear <%= candidateName %>.</p>
+      <p>
+        We are pleased to offer you the position as a <strong><%= position %></strong> with
+        <%= companyName %>. You will be required to report for work on 
+        <strong><%= new Date(joiningDate).toLocaleDateString('en-GB').replace(/\//g,'-') %></strong>
+        up to which date this offer is valid.
+      </p>
+
+      <p>
+        Your total employment Cost to Company will be
+        <strong>INR <%= Number(ctcAmount || 0).toLocaleString('en-IN') %>/-</strong>
+        <strong>(<%= ctcInWords %>)</strong> per annum effective from your date of joining the Company, subject to
+        various deductions as per the company's and government policy.
+      </p>
+
+      <p>
+        A copy of your salary break-up is attached here with as Annexure II. Compensation and Benefits
+        information is personal and confidential in nature. We urge you to maintain the confidentiality
+        of your compensation details and not to share it with others.
+      </p>
+
+      <p>
+        You will be on probation initially for a period of six months (6 months) from the date of joining.
+        At the end of this probation period, you will be confirmed in the employment of the company on
+        the basis of a satisfactory performance report from your supervisor.
+      </p>
+
+      <p>
+        The roles and responsibilities, and other terms and conditions of your employment will be
+        explained and specified in detail in your letter of appointment, which will be given to you post
+        your joining the company.
+      </p>
+
+      <p>
+        Your employment with the company and continuance thereof is subject to your successful
+        reference check & medical fitness. In case you fail to meet any of the above, this offer will be
+        deemed as cancelled.
+      </p>
+
+      <p>
+        We look forward to seeing you on
+        <strong><%= new Date(joiningDate).toLocaleDateString('en-GB').replace(/\//g,'-') %></strong> at <%= joiningTime %>.
+        Please carry the documents listed in <strong>Annexure I</strong> to complete your joining formalities.
+      </p>
+
+      <p>
+         Kindly acknowledge this mail on/before
+        <strong><%= new Date(dateIssued).toLocaleDateString('en-GB').replace(/\//g,'-') %></strong> as an
+        acceptance of this offer Wishing you a great career and growth options with Amazon IT
+        Solutions.!
+      </p>
+
+      <div class="signature">
+        <p style="margin-bottom: 4px;"><strong>Yours Sincerely,</strong></p>
+        <p class="for" style="margin-bottom: 2px;"><strong>For <%= companyName %></strong></p>
+        <% if (signaturePath) { %>
+          <div style="margin: -6px 0 3px 12px; display: inline-block;">
+            <img src="<%= signaturePath %>" alt="Authorized Signature" style="width:80px; height:auto; opacity:0.95;" />
+          </div>
+        <% } %>
+        <p class="signer">Chakravarthy Devarkonda</p>
+        <p style="margin-top: -8px;">Manager – Human Resources.</p>
+      </div>
+    </div>
+
+    <!-- PAGE 2 (Annexures) -->
+    <div class="page-break"></div>
+    <div class="container annexure-section">
+      <div class="header">
+        <% if (logoPath) { %>
+          <img class="logo" src="<%= logoPath %>" alt="Company Logo" />
+        <% } %>
+      </div>
+
+      <h3 class="anexure">ANNEXURE I</h3>
+      <p>The following checklist indicates the documents that you have to submit at the time of your joining <strong><%= companyName %></strong>.</p>
+      <p>Originals and photocopies of the following documents should be produced on the date of joining for verification; the Originals would be returned post verification on the same day. Without the submission of the below mentioned documents, the joining formalities will be deferred.</p>
+      <p>Any concern on this, please inform the HR Department.</p>
+
+      <ol class="numbered">
+        <li>Three (3) recent passport size photographs (both hard copy and soft copy)</li>
+        <li>10th mark sheet and certificate</li>
+        <li>12th mark sheet and certificate</li>
+        <li>Graduation semester wise mark sheet and certificate</li>
+        <li>Post Graduation semester wise mark sheet and certificate (if any)</li>
+        <li>Photo ID proof (PAN/Passport/DL)</li>
+        <li>PAN Card copy (both hard copy and soft copy)</li>
+        <li>Aadhar Card copy (both hard copy and soft copy)</li>
+        <li>Present address proof</li>
+        <li>Permanent address proof</li>
+        <li>All previous company's offer letter/appointment letter</li>
+        <li>Immediate previous company's offer letter/appointment letter</li>
+        <li>Form 16</li>
+        <li>Last three month's salary slips</li>
+      </ol>
+
+      <h3 class="anexure">ANNEXURE II</h3>
+
+      <table>
+        <colgroup>
+          <col style="width: 65%;" />
+          <col style="width: 17.5%;" />
+          <col style="width: 17.5%;" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th colspan="3" style="text-align: center;">SALARY COMPUTATION</th>
+          </tr>
+          <tr>
+            <th>Components</th>
+            <th>Per annum</th>
+            <th>Per Month</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (salaryBreakdown || []).forEach(function(item){ %>
+            <tr>
+              <td><%= item.component %></td>
+              <td><%= Number(item.annualAmount || 0).toLocaleString('en-IN') %></td>
+              <td><%= Number(item.monthlyAmount || 0).toLocaleString('en-IN') %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+
+      <h4 style="font-size: 10pt; font-family: Cambria, serif !important; margin: 6px 0 2px 0;">Procedure for standard reimbursement:</h4>
+      <p style="font-size: 9pt; margin: 0 0 5px 0;">
+        The LTA can be claimed against production of bills at the end of the financial year subject to provision of Income TaxAct. Any unclaimed amount will be paid to you at the end of the financial year after deducting the necessary taxes.
+      </p>
+      <p><strong>Note: This offer is contingent on referral checks and salary verification.</strong></p>
+
+      <p class="footer-note"><strong>This is computer generated document no signature required*</strong></p>
+    </div>
+
+    <!-- ATTACHMENTS SECTION -->
+    <% if (attachments && attachments.length > 0) { %>
+      <div class="attachments">
+        <% attachments.forEach(function(att, index) { %>
+          <div class="attachment">
+            <h3 class="attachment-title">Attachment <%= index + 1 %>: <%= att.type %></h3>
+            <% if (att.data.startsWith('data:image/')) { %>
+              <img src="<%= att.data %>" alt="<%= att.type %>" />
+            <% } else if (att.data.startsWith('data:application/pdf')) { %>
+              <iframe src="<%= att.data %>" width="100%" height="600px"></iframe>
+            <% } %>
+          </div>
+          <% if (index < attachments.length - 1) { %>
+            <div class="page-break"></div>
+          <% } %>
+        <% }); %>
+      </div>
+    <% } %>
+  </body>
+</html>

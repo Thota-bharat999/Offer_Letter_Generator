@@ -12,6 +12,7 @@ const offerRoutes=require('./routes/offerRoutes');
 const companyRoutes=require('./routes/companyRoutes')
 const relievingRoutes=require('./routes/relievingRoutes')
 const appointmentRoutes=require('./routes/appointmentRoutes')
+const onboardingRoutes=require('./routes/onboardingRoutes')
 
 app.use(
   cors({
@@ -27,6 +28,7 @@ app.use('/api/offer', offerRoutes)
 app.use('/api/offer/company',companyRoutes);
 app.use('/api/relieving',relievingRoutes);
 app.use('/api/appointment',appointmentRoutes)
+app.use('/api/onboarding', onboardingRoutes)
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
