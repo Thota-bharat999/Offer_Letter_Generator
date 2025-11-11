@@ -10,7 +10,7 @@ exports.createOnboaringdingRecord=(req,res)=>{
         message: "Unauthorized: Admin credentials missing.",
       });
     }
-    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences}=req.bdoy;
+    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences}=req.body;
     if(!firstName || !lastName || !email || !phoneNumber || !panNumber || !aadharNumber){
       return res.status(400).json({
         success:false,
