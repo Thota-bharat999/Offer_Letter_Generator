@@ -17,35 +17,33 @@ exports.createOnboaringdingRecord=async(req,res)=>{
         if (Array.isArray(obj)) {
           return obj.map(normalizeObject);
         } else {
-          const keys = Object.keys(obj).sort();
-          // Check if it's a string-like object (consecutive numeric keys from 0)
-          if (keys.length > 0 && keys.every((k, i) => k === i.toString()) && keys.length === parseInt(keys[keys.length - 1]) + 1) {
-            return keys.map(k => obj[k]).join('');
-          } else {
-            const normalized = {};
-            for (const key in obj) {
-              normalized[key] = normalizeObject(obj[key]);
+          const keys = Object.keys(obj);
+          if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
+            const sortedKeys = keys.sort((a, b) => parseInt(a) - parseInt(b));
+            if (sortedKeys.every((k, i) => parseInt(k) === i)) {
+              return sortedKeys.map(k => obj[k]).join('');
             }
-            return normalized;
           }
+          const normalized = {};
+          for (const key in obj) {
+            normalized[key] = normalizeObject(obj[key]);
+          }
+          return normalized;
         }
       }
       return obj;
     };
     const normalizedBody = normalizeObject(req.body);
-    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences,qualifications}=normalizedBody;
+    const {qualifications, ...otherFields} = normalizedBody;
+    const normalizedQualifications = (qualifications || []).map(qual => {
+      const normalizedQual = normalizeObject(qual);
+      if (!normalizedQual.educationType) normalizedQual.educationType = 'Other';
+      if (!normalizedQual.institutionName) normalizedQual.institutionName = 'Not Provided';
+      return normalizedQual;
+    });
     const newCandidate=new CandidateOnboarding({
-      firstName,
-      lastName,
-      fatherName: guadianName,
-      email,
-      phoneNumber,
-      panNumber,
-      aadharNumber,
-      qualifications: qualifications || [],
-      experienceType: experienceType || "Fresher",
-      fresherDetails: experienceType === "Fresher" ? fresherDetails : undefined,
-      experiences: experienceType === "Experienced" ? experiences : [],
+      ...otherFields,
+      qualifications: normalizedQualifications,
       status: "Draft",
     })
     await newCandidate.save();
