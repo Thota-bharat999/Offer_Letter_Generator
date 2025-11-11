@@ -74,6 +74,40 @@ exports.updateCandidateSection=async(req,res)=>{
   try{
     const {id}=req.params;
     const updateData=req.body;
+    // Normalize updateData to convert object values to strings recursively
+    const normalizeObject = (obj) => {
+      if (typeof obj === 'string') return obj;
+      if (typeof obj === 'object' && obj !== null) {
+        if (Array.isArray(obj)) {
+          return obj.map(normalizeObject);
+        } else {
+          const keys = Object.keys(obj);
+          if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
+            const sortedKeys = keys.sort((a, b) => parseInt(a) - parseInt(b));
+            return sortedKeys.map(k => obj[k]).join('');
+          }
+          const normalized = {};
+          for (const key in obj) {
+            normalized[key] = normalizeObject(obj[key]);
+          }
+          return normalized;
+        }
+      }
+      return obj;
+    };
+    const normalizedUpdateData = normalizeObject(updateData);
+    // Normalize qualifications if present
+    if (normalizedUpdateData.qualifications) {
+      normalizedUpdateData.qualifications = normalizedUpdateData.qualifications.map(qual => {
+        if (!qual.educationType) qual.educationType = 'Other';
+        if (!qual.institutionName) qual.institutionName = 'Not Provided';
+        return qual;
+      });
+    }
+    // Fix experienceType if invalid
+    if (normalizedUpdateData.experienceType === 'Experience') {
+      normalizedUpdateData.experienceType = 'Experienced';
+    }
     if(!id){
       return res.status(400).json({
         success:false,
@@ -93,11 +127,11 @@ exports.updateCandidateSection=async(req,res)=>{
         message:"candidate Not Found"
       })
     }
-    for (const key in updateData) {
-      if (typeof updateData[key] === "object" && !Array.isArray(updateData[key])) {
-        candidate[key] = { ...candidate[key], ...updateData[key] };
+    for (const key in normalizedUpdateData) {
+      if (typeof normalizedUpdateData[key] === "object" && !Array.isArray(normalizedUpdateData[key])) {
+        candidate[key] = { ...candidate[key], ...normalizedUpdateData[key] };
       } else {
-        candidate[key] = updateData[key];
+        candidate[key] = normalizedUpdateData[key];
       }
     }
 
