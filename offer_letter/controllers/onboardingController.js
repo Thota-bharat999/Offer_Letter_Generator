@@ -10,25 +10,22 @@ exports.createOnboaringdingRecord=async(req,res)=>{
         message: "Unauthorized: Admin credentials missing.",
       });
     }
-    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences}=req.body;
-    if(!firstName || !lastName || !email || !phoneNumber || !panNumber || !aadharNumber){
-      return res.status(400).json({
-        success:false,
-        message:"Missing Required Fields (firstName, lastName, email, phoneNumber,panNumber,aadharNumber)"
-      })
-    }
+    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences,qualifications}=req.body;
+    // Convert object fields to strings if necessary
+    const convertToString = (value) => typeof value === 'object' ? Object.values(value).join('') : value;
     const newCandidate=new CandidateOnboarding({
-      firstName,
-      lastName,
-      guadianName,
-      email,
-      phoneNumber,
-      panNumber,
-      aadharNumber,
-      experienceType:experienceType || "Fresher",
-      fresherDetails:experienceType==="Fresher" ? fresherDetails:undefined,
-      experiences:experienceType==="Experienced" ? experiences:[],
-      status:"Draft",
+      firstName: convertToString(firstName),
+      lastName: convertToString(lastName),
+      fatherName: convertToString(guadianName),
+      email: convertToString(email),
+      phoneNumber: convertToString(phoneNumber),
+      panNumber: convertToString(panNumber),
+      aadharNumber: convertToString(aadharNumber),
+      qualifications: qualifications || [],
+      experienceType: convertToString(experienceType) || "Fresher",
+      fresherDetails: convertToString(experienceType) === "Fresher" ? fresherDetails : undefined,
+      experiences: convertToString(experienceType) === "Experienced" ? experiences : [],
+      status: "Draft",
     })
     await newCandidate.save();
     return res.status(201).json({
