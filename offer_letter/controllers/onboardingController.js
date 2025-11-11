@@ -10,21 +10,36 @@ exports.createOnboaringdingRecord=async(req,res)=>{
         message: "Unauthorized: Admin credentials missing.",
       });
     }
-    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences,qualifications}=req.body;
-    // Convert object fields to strings if necessary
-    const convertToString = (value) => typeof value === 'object' ? Object.values(value).join('') : value;
+    // Normalize req.body to convert object values to strings recursively
+    const normalizeObject = (obj) => {
+      if (typeof obj === 'string') return obj;
+      if (typeof obj === 'object' && obj !== null) {
+        if (Array.isArray(obj)) {
+          return obj.map(normalizeObject);
+        } else {
+          const normalized = {};
+          for (const key in obj) {
+            normalized[key] = normalizeObject(obj[key]);
+          }
+          return normalized;
+        }
+      }
+      return obj;
+    };
+    const normalizedBody = normalizeObject(req.body);
+    const {firstName,lastName,guadianName,email,phoneNumber,panNumber,aadharNumber,experienceType,fresherDetails,experiences,qualifications}=normalizedBody;
     const newCandidate=new CandidateOnboarding({
-      firstName: convertToString(firstName),
-      lastName: convertToString(lastName),
-      fatherName: convertToString(guadianName),
-      email: convertToString(email),
-      phoneNumber: convertToString(phoneNumber),
-      panNumber: convertToString(panNumber),
-      aadharNumber: convertToString(aadharNumber),
+      firstName,
+      lastName,
+      fatherName: guadianName,
+      email,
+      phoneNumber,
+      panNumber,
+      aadharNumber,
       qualifications: qualifications || [],
-      experienceType: convertToString(experienceType) || "Fresher",
-      fresherDetails: convertToString(experienceType) === "Fresher" ? fresherDetails : undefined,
-      experiences: convertToString(experienceType) === "Experienced" ? experiences : [],
+      experienceType: experienceType || "Fresher",
+      fresherDetails: experienceType === "Fresher" ? fresherDetails : undefined,
+      experiences: experienceType === "Experienced" ? experiences : [],
       status: "Draft",
     })
     await newCandidate.save();
