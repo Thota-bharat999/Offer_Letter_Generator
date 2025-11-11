@@ -55,3 +55,50 @@ exports.createOnboaringdingRecord=async(req,res)=>{
 
   }
 }
+// update Any Section Dynamically;
+exports.updateCandidateSection=async(req,res)=>{
+  try{
+    const {id}=req.params;
+    const updateData=req.body;
+    if(!id){
+      return res.status(400).json({
+        success:false,
+        message:"Candidate Id is Required",
+      })
+    }
+    if(!updateData || Object.keys(updateData).length===0){
+      return res.status(400).json({
+        success:false,
+        message:"No Data Provided for Update",
+      })
+    }
+    const candidate=await CandidateOnboarding.findById(id);
+    if(!candidate){
+      return res.status(404).json({
+        success:false,
+        message:"candidate Not Found"
+      })
+    }
+    Object.keys(updateData).forEach((key)=>{
+      if(typeof updateData[key] !== "object" && !Array.isArray(updateData[key])){
+        candidate[key]={...candidate[key], ...updateData[key]};
+      }else{
+        candidate[key]=updateData[key];
+      }
+    })
+    await candidate.save();
+    return res.status(200).json({
+      success:true,
+      message:"Candidate Section Updated Successfully",
+      data:candidate
+    })
+
+  }catch(error){
+    console.error("❌ Error updating candidate section:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+ });
+  }
+}
