@@ -32,6 +32,7 @@ const OnboardingSchema = new mongoose.Schema(
     // ================== 1️ Candidate Info ==================
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
+    guardianName:{type:String,required:true},
     fatherName: { type: String },
     email: { type: String, required: true },
     phoneNumber: { type: String, required: true },
