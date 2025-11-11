@@ -19,9 +19,13 @@ exports.createOnboaringdingRecord=async(req,res)=>{
         } else {
           const keys = Object.keys(obj);
           if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
-            const sortedKeys = keys.sort((a, b) => parseInt(a) - parseInt(b));
-            if (sortedKeys.every((k, i) => parseInt(k) === i)) {
-              return sortedKeys.map(k => obj[k]).join('');
+            const numericKeys = keys.map(k => parseInt(k));
+            const min = Math.min(...numericKeys);
+            const max = Math.max(...numericKeys);
+            const unique = new Set(numericKeys);
+            if (min === 0 && max === keys.length - 1 && unique.size === keys.length) {
+              const sorted = Array.from(unique).sort((a, b) => a - b);
+              return sorted.map(k => obj[k.toString()]).join('');
             }
           }
           const normalized = {};
