@@ -17,11 +17,17 @@ exports.createOnboaringdingRecord=async(req,res)=>{
         if (Array.isArray(obj)) {
           return obj.map(normalizeObject);
         } else {
-          const normalized = {};
-          for (const key in obj) {
-            normalized[key] = normalizeObject(obj[key]);
+          const keys = Object.keys(obj).sort();
+          // Check if it's a string-like object (consecutive numeric keys from 0)
+          if (keys.length > 0 && keys.every((k, i) => k === i.toString()) && keys.length === parseInt(keys[keys.length - 1]) + 1) {
+            return keys.map(k => obj[k]).join('');
+          } else {
+            const normalized = {};
+            for (const key in obj) {
+              normalized[key] = normalizeObject(obj[key]);
+            }
+            return normalized;
           }
-          return normalized;
         }
       }
       return obj;
