@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createOnboaringdingRecord } = require("../controllers/onboardingController");
+const { createOnboaringdingRecord, updateCandidateSection } = require("../controllers/onboardingController");
 
 // POST /api/onboarding - Create new candidate
 router.post("/create", verifyToken, createOnboaringdingRecord);
 
-// // PATCH /api/onboarding/:id - Update any section dynamically
-// router.patch("/:id", verifyToken, updateCandidate);
+// PATCH /api/onboarding/:id - Update any section dynamically
+router.patch("/:id", verifyToken, updateCandidateSection);
 
 // // GET /api/onboarding/:id - Get single candidate details
 // router.get("/:id", verifyToken, getCandidate);
