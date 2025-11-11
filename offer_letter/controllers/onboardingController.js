@@ -93,13 +93,12 @@ exports.updateCandidateSection=async(req,res)=>{
         message:"candidate Not Found"
       })
     }
-    Object.keys(updateData).forEach((key)=>{
-      if(typeof updateData[key] !== "object" && !Array.isArray(updateData[key])){
-        candidate[key]={...candidate[key], ...updateData[key]};
-      }else{
-        candidate[key]=updateData[key];
-      }
-    })
+    if (typeof updateData[key] === "object" && !Array.isArray(updateData[key])) {
+  candidate[key] = { ...candidate[key], ...updateData[key] };
+} else {
+  candidate[key] = updateData[key];
+}
+
     await candidate.save();
     return res.status(200).json({
       success:true,
