@@ -2,7 +2,7 @@ const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 
 // Create a new onboarding record
-exports.createOnboaringdingRecord=(req,res)=>{
+exports.createOnboaringdingRecord=async(req,res)=>{
   try{
      if (!req.admin || !req.admin.id) {
       return res.status(401).json({
@@ -17,7 +17,7 @@ exports.createOnboaringdingRecord=(req,res)=>{
         message:"Missing Required Fields (firstName, lastName, email, phoneNumber,panNumber,aadharNumber)"
       })
     }
-    const newCandidate=new CandidateOnboarding.create({
+    const newCandidate=new CandidateOnboarding({
       firstName,
       lastName,
       guadianName,
@@ -30,6 +30,7 @@ exports.createOnboaringdingRecord=(req,res)=>{
       experiences:experienceType==="Experienced" ? experiences:[],
       status:"Draft",
     })
+    await newCandidate.save();
     return res.status(201).json({
       success:true,
       message:"Onboarding Record Created Successfully",
