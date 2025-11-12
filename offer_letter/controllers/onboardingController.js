@@ -4,6 +4,7 @@ const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 
 // Create a new onboarding record
+// ✅ CREATE ONBOARDING CONTROLLER
 exports.createOnboaringdingRecord = async (req, res) => {
   try {
     // 🔐 Validate admin
@@ -37,14 +38,10 @@ exports.createOnboaringdingRecord = async (req, res) => {
     // ✅ Fallback for missing optional fields
     const fieldsToCheck = ["guardianName", "phoneNumber", "panAttachment", "aadharAttachment"];
     fieldsToCheck.forEach((field) => {
-      if (
-        normalizedBody[field] === undefined ||
-        normalizedBody[field] === null ||
-        normalizedBody[field] === ""
-      ) {
+      if (!normalizedBody[field] || normalizedBody[field].trim() === "") {
         normalizedBody[field] = "Not Provided";
       } else {
-        normalizedBody[field] = String(normalizedBody[field]);
+        normalizedBody[field] = String(normalizedBody[field]).trim();
       }
     });
 
@@ -75,49 +72,32 @@ exports.createOnboaringdingRecord = async (req, res) => {
         : map[normalized] || "Other";
     };
 
-    // ✅ Normalize qualifications array
+    // ✅ Normalize qualifications array (support object or array input)
     const { qualifications, ...otherFields } = normalizedBody;
 
-    const normalizedQualifications = (qualifications || []).map((qual) => {
-      const q = normalizeObject(qual);
+    const normalizedQualifications = Array.isArray(qualifications)
+      ? qualifications.map((qual) => {
+          const q = normalizeObject(qual);
 
-      q.educationType = mapEducationType(q.educationType);
+          q.educationType = mapEducationType(q.educationType);
+          q.institutionName =
+            q.institutionName && q.institutionName.trim() !== ""
+              ? q.institutionName.trim()
+              : "Not Provided";
+          q.universityOrBoard =
+            q.universityOrBoard && q.universityOrBoard.trim() !== ""
+              ? q.universityOrBoard.trim()
+              : "Not Provided";
+          q.subCourse = q.subCourse?.trim() || "Not Provided";
+          q.specialization = q.specialization?.trim() || "Not Provided";
+          q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
+          q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
+          q.certificateAttachment =
+            q.certificateAttachment?.trim() || "Not Provided";
 
-      q.institutionName =
-        q.institutionName && q.institutionName.trim() !== ""
-          ? q.institutionName
-          : "Not Provided";
-
-      q.universityOrBoard =
-        q.universityOrBoard && q.universityOrBoard.trim() !== ""
-          ? q.universityOrBoard
-          : "Not Provided";
-
-      q.subCourse =
-        q.subCourse && q.subCourse.trim() !== "" ? q.subCourse : "Not Provided";
-
-      q.specialization =
-        q.specialization && q.specialization.trim() !== ""
-          ? q.specialization
-          : "Not Provided";
-
-      q.yearOfPassing =
-        q.yearOfPassing && q.yearOfPassing.trim() !== ""
-          ? q.yearOfPassing
-          : "Not Provided";
-
-      q.percentageOrGPA =
-        q.percentageOrGPA && q.percentageOrGPA.trim() !== ""
-          ? q.percentageOrGPA
-          : "Not Provided";
-
-      q.certificateAttachment =
-        q.certificateAttachment && q.certificateAttachment.trim() !== ""
-          ? q.certificateAttachment
-          : "Not Provided";
-
-      return q;
-    });
+          return q;
+        })
+      : [];
 
     // ✅ Save new record
     const newCandidate = new CandidateOnboarding({
@@ -153,13 +133,12 @@ exports.createOnboaringdingRecord = async (req, res) => {
   }
 };
 
-// update Any Section Dynamically;
+// ✅ UPDATE ANY SECTION DYNAMICALLY
 exports.updateCandidateSection = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
-    // ✅ Validate input
     if (!id) {
       return res.status(400).json({ success: false, message: "Candidate ID is required." });
     }
@@ -167,7 +146,7 @@ exports.updateCandidateSection = async (req, res) => {
       return res.status(400).json({ success: false, message: "No data provided for update." });
     }
 
-    // ✅ Normalize data safely
+    // ✅ Normalize safely
     const normalizeObject = (obj) => {
       if (typeof obj === "string") return obj.trim();
       if (Array.isArray(obj)) return obj.map(normalizeObject);
@@ -181,7 +160,7 @@ exports.updateCandidateSection = async (req, res) => {
 
     const normalizedUpdateData = normalizeObject(updateData || {});
 
-    // ✅ EducationType mapper
+    // ✅ EducationType Mapper (same as above)
     const mapEducationType = (value) => {
       const normalized = String(value || "").trim();
       const allowed = [
@@ -207,30 +186,35 @@ exports.updateCandidateSection = async (req, res) => {
         : map[normalized] || "Other";
     };
 
-    // ✅ Normalize qualifications
-    if (normalizedUpdateData.qualifications && Array.isArray(normalizedUpdateData.qualifications)) {
-      normalizedUpdateData.qualifications = normalizedUpdateData.qualifications.map((qual) => {
-        qual.educationType = mapEducationType(qual.educationType);
-        qual.institutionName =
-          qual.institutionName && qual.institutionName.trim() !== ""
-            ? qual.institutionName
+    // ✅ Normalize qualifications safely
+    if (normalizedUpdateData.qualifications) {
+      let quals = normalizedUpdateData.qualifications;
+      if (!Array.isArray(quals) && typeof quals === "object") {
+        // handle case: frontend sends object instead of array
+        quals = Object.values(quals);
+      }
+      normalizedUpdateData.qualifications = quals.map((qual) => {
+        const q = normalizeObject(qual);
+        q.educationType = mapEducationType(q.educationType);
+        q.institutionName =
+          q.institutionName && q.institutionName.trim() !== ""
+            ? q.institutionName.trim()
             : "Not Provided";
-        return qual;
+        return q;
       });
     }
 
-    // ✅ Fix experience type
     if (normalizedUpdateData.experienceType === "Experience") {
       normalizedUpdateData.experienceType = "Experienced";
     }
 
-    // ✅ Find candidate
+    // ✅ Fetch candidate
     const candidate = await CandidateOnboarding.findById(id);
     if (!candidate) {
       return res.status(404).json({ success: false, message: "Candidate not found." });
     }
 
-    // ✅ Safely merge updates
+    // ✅ Merge safely
     for (const key in normalizedUpdateData) {
       const value = normalizedUpdateData[key];
       if (
@@ -238,7 +222,7 @@ exports.updateCandidateSection = async (req, res) => {
         !Array.isArray(value) &&
         Object.keys(value).length > 0
       ) {
-        candidate[key] = { ...candidate[key], ...value };
+        candidate[key] = { ...candidate[key]._doc, ...value };
       } else if (value !== undefined && value !== null && value !== "") {
         candidate[key] = value;
       }
@@ -253,13 +237,14 @@ exports.updateCandidateSection = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error updating candidate section:", error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Internal Server Error",
       error: error.message,
     });
   }
 };
+
 
 
 // upload Document Functionality 
