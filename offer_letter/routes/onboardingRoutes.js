@@ -1,8 +1,10 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createOnboaringdingRecord, updateCandidateSection } = require("../controllers/onboardingController");
+const { createOnboaringdingRecord, updateCandidateSection,uploadDocument } = require("../controllers/onboardingController");
 
+const upload = multer({ storage: multer.memoryStorage() });
 // POST /api/onboarding - Create new candidate
 router.post("/create", verifyToken, createOnboaringdingRecord);
 
@@ -18,8 +20,8 @@ router.patch("/:id", verifyToken, updateCandidateSection);
 // // DELETE /api/onboarding/:id - Delete candidate
 // router.delete("/:id", verifyToken, deleteCandidate);
 
-// // POST /api/onboarding/:id/upload - Upload document
-// router.post("/:id/upload", verifyToken, uploadDocument);
+// POST /api/onboarding/:id/upload - Upload document
+router.post("/:id/upload", verifyToken, uploadDocument);
 
 // // POST /api/onboarding/:id/generate-offer - Generate Offer Letter PDF
 // router.post("/:id/generate-offer", verifyToken, generateOfferPDF);

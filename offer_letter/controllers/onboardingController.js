@@ -1,3 +1,5 @@
+const path=require('path');
+const fs=require('fs');
 const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 
@@ -151,3 +153,91 @@ exports.updateCandidateSection=async(req,res)=>{
  });
   }
 }
+
+// upload Document Functionality 
+exports.uploadDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body; // e.g., "pan", "aadhar", "offer", "bank"
+    const file = req.file;
+
+    // 🔒 1️⃣ Validate candidate ID
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Candidate ID is required." });
+    }
+
+    // 🔒 2️⃣ Validate file
+    if (!file) {
+      return res.status(400).json({ success: false, message: "No file uploaded." });
+    }
+
+    // 🔒 3️⃣ Validate type
+    const allowedTypes = ["pan", "aadhar", "offer", "bank", "payslip", "certificate"];
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid upload type. Must be one of: ${allowedTypes.join(", ")}.`,
+      });
+    }
+
+    // ✅ 4️⃣ Build path for saving the file
+    const uploadsDir = path.join(__dirname, "../uploads/onboarding");
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+    const fileName = `${id}_${type}_${Date.now()}${path.extname(file.originalname)}`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    // ✅ 5️⃣ Save file
+    fs.writeFileSync(filePath, file.buffer);
+
+    // ✅ 6️⃣ Build relative path for DB storage
+    const relativePath = `uploads/onboarding/${fileName}`;
+
+    // ✅ 7️⃣ Update document based on type
+    const updateFields = {};
+    switch (type) {
+      case "pan":
+        updateFields.panAttachment = relativePath;
+        break;
+      case "aadhar":
+        updateFields.aadharAttachment = relativePath;
+        break;
+      case "offer":
+        updateFields["offerDetails.offerLetterAttachment"] = relativePath;
+        break;
+      case "bank":
+        updateFields["bankDetails.bankAttachment"] = relativePath;
+        break;
+      case "certificate":
+        updateFields["qualifications.0.certificateAttachment"] = relativePath;
+        break;
+      case "payslip":
+        updateFields["experiences.0.payslipAttachment"] = relativePath;
+        break;
+    }
+
+    // ✅ 8️⃣ Update candidate record
+    const updatedCandidate = await CandidateOnboarding.findByIdAndUpdate(
+      id,
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!updatedCandidate) {
+      return res.status(404).json({ success: false, message: "Candidate not found." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${type.toUpperCase()} document uploaded successfully.`,
+      data: { type, filePath: relativePath },
+    });
+  } catch (error) {
+    console.error("❌ Error uploading document:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
