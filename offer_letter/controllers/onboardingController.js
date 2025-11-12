@@ -158,7 +158,7 @@ exports.updateCandidateSection=async(req,res)=>{
 exports.uploadDocument = async (req, res) => {
   try {
     const { id } = req.params;
-    const { type } = req.body; // e.g., "pan", "aadhar", "offer", "bank"
+    const { type } = req.body || {}; // e.g., "pan", "aadhar", "offer", "bank"
     const file = req.file;
 
     // 🔒 1️⃣ Validate candidate ID

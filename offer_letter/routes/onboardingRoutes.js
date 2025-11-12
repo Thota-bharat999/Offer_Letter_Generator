@@ -21,7 +21,7 @@ router.patch("/:id", verifyToken, updateCandidateSection);
 // router.delete("/:id", verifyToken, deleteCandidate);
 
 // POST /api/onboarding/:id/upload - Upload document
-router.post("/:id/upload", verifyToken, uploadDocument);
+router.post("/:id/upload", verifyToken, upload.single('file'), uploadDocument);
 
 // // POST /api/onboarding/:id/generate-offer - Generate Offer Letter PDF
 // router.post("/:id/generate-offer", verifyToken, generateOfferPDF);
