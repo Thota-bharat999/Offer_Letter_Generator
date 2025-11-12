@@ -24,6 +24,7 @@ exports.createOnboaringdingRecord=async(req,res)=>{
             const sortedKeys = keys.sort((a, b) => parseInt(a) - parseInt(b));
             return sortedKeys.map(k => obj[k]).join('');
           }
+          if (keys.length === 0) return '';
           const normalized = {};
           for (const key in obj) {
             normalized[key] = normalizeObject(obj[key]);
@@ -38,8 +39,8 @@ exports.createOnboaringdingRecord=async(req,res)=>{
       normalizedBody.guardianName = normalizedBody.guadianName;
     }
     if (!normalizedBody.guardianName) normalizedBody.guardianName = 'Not Provided';
-    if (!normalizedBody.phoneNumber) normalizedBody.phoneNumber = 'Not Provided';
-    if (!normalizedBody.aadharAttachment) normalizedBody.aadharAttachment = 'Not Provided';
+    if (!normalizedBody.phoneNumber || typeof normalizedBody.phoneNumber !== 'string') normalizedBody.phoneNumber = 'Not Provided';
+    if (!normalizedBody.aadharAttachment || typeof normalizedBody.aadharAttachment !== 'string') normalizedBody.aadharAttachment = 'Not Provided';
     const {qualifications, ...otherFields} = normalizedBody;
     const normalizedQualifications = (qualifications || []).map(qual => {
       const normalizedQual = normalizeObject(qual);
