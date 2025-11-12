@@ -204,3 +204,36 @@ exports.uploadDocument = async (req, res) => {
     return res.status(500).json({ success: false, message: "File upload failed.", error: err.message });
   }
 };
+
+// get Candidate Details By Id
+exports.getCandidateById=async(req,res)=>{
+  try{
+    const {id}=req.params;
+    if(!id || !mongoose.Types.ObjectId.isValid(id)){
+      return res.status(400).json({
+        success:false,
+        message:"Valid Candidate Id Is Required",
+      })
+    }
+    const candidate=await CandidateOnboarding.findById(id).lean();
+    if(!candidate){
+      return res.status(404).json({
+        success:false,
+        message:"Candidate Not Found",
+      })
+    }
+    return res.status(200).json({
+      success:true,
+      message:"Candidate Details Fetched Successfully",
+      data:candidate,
+    })
+  }catch(error){
+    console.error("❌ Error fetching candidate:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+
+  }
+}

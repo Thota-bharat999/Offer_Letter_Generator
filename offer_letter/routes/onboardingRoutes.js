@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createOnboaringdingRecord, updateCandidateSection,uploadDocument } = require("../controllers/onboardingController");
+const { createOnboaringdingRecord, updateCandidateSection,uploadDocument, getCandidateById } = require("../controllers/onboardingController");
 
 const upload = multer({ storage: multer.memoryStorage() });
 // POST /api/onboarding - Create new candidate
@@ -11,8 +11,8 @@ router.post("/create", verifyToken, createOnboaringdingRecord);
 // PATCH /api/onboarding/:id - Update any section dynamically
 router.patch("/:id", verifyToken, updateCandidateSection);
 
-// // GET /api/onboarding/:id - Get single candidate details
-// router.get("/:id", verifyToken, getCandidate);
+// GET /api/onboarding/:id - Get single candidate details
+router.get("/:id", verifyToken, getCandidateById);
 
 // // GET /api/onboarding - List all candidates (filter by status/search)
 // router.get("/", verifyToken, getAllCandidates);
