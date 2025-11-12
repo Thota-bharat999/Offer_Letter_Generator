@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createOnboaringdingRecord, updateCandidateSection,uploadDocument, getCandidateById,getAllCandidates } = require("../controllers/onboardingController");
+const { createOnboaringdingRecord, updateCandidateSection,uploadDocument, getCandidateById,getAllCandidates, deleteCandidateById } = require("../controllers/onboardingController");
 
 const upload = multer({ storage: multer.memoryStorage() });
 // POST /api/onboarding - Create new candidate
@@ -19,8 +19,8 @@ router.get("/all", verifyToken, getAllCandidates);
 router.get("/:id", verifyToken, getCandidateById);
 
 
-// // DELETE /api/onboarding/:id - Delete candidate
-// router.delete("/:id", verifyToken, deleteCandidate);
+// DELETE /api/onboarding/:id - Delete candidate
+router.delete("/:id", verifyToken, deleteCandidateById);
 
 // POST /api/onboarding/:id/upload - Upload document
 router.post("/:id/upload", verifyToken, upload.fields([{ name: 'file', maxCount: 1 }, { name: 'type', maxCount: 1 }]), uploadDocument);

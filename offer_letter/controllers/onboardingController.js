@@ -290,3 +290,37 @@ exports.getAllCandidates=async(req,res)=>{
 
   }
 }
+
+// Delete Candidate By Id 
+exports.deleteCandidateById=async(req,res)=>{
+  try{
+    const {id}=req.params;
+    if(!id || !mongoose.Types.ObjectId.isValid(id)){
+      return res.status(400).json({
+        success:false,
+        message:"Invalid or missing Candidate ID",
+      })
+    }
+    const deleteCandidate=await CandidateOnboarding.findByIdAndDelete(id);
+    if(!deleteCandidate){
+      return res.status(404).json({
+        success:false,
+        message:"Candidate not found",
+      })
+    }
+    return res.status(200).json({
+      success:true,
+      message:"Candidate deleted successfully"
+    })
+
+  }catch(error){
+    console.error("❌ Error deleting candidate:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+
+
+  }
+}
