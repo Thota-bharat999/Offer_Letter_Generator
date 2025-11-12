@@ -157,88 +157,50 @@ exports.updateCandidateSection=async(req,res)=>{
 // upload Document Functionality 
 exports.uploadDocument = async (req, res) => {
   try {
-    const { id } = req.params;
-    let type = req.files && req.files.type ? req.files.type[0].buffer.toString() : req.body.type; // e.g., "pan", "aadhar", "offer", "bank"
-    type = type ? type.toLowerCase().trim() : type;
-    const file = req.files ? req.files.file ? req.files.file[0] : null : null;
+    const userId = req.params.id;
+    const file = req.files?.file?.[0];
+    const fileType = req.body.type?.toLowerCase();
 
-    // 🔒 1️⃣ Validate candidate ID
-    if (!id) {
-      return res.status(400).json({ success: false, message: "Candidate ID is required." });
-    }
-
-    // 🔒 2️⃣ Validate file
-    if (!file) {
-      return res.status(400).json({ success: false, message: "No file uploaded." });
-    }
-
-    // 🔒 3️⃣ Validate type
     const allowedTypes = ["pan", "aadhar", "offer", "bank", "payslip", "certificate"];
-    if (!allowedTypes.includes(type)) {
+    if (!allowedTypes.includes(fileType)) {
       return res.status(400).json({
         success: false,
         message: `Invalid upload type. Must be one of: ${allowedTypes.join(", ")}.`,
       });
     }
 
-    // ✅ 4️⃣ Build path for saving the file
-    const uploadsDir = path.join(__dirname, "../uploads/onboarding");
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    if (!file) {
+      return res.status(400).json({ success: false, message: "No file uploaded." });
+    }
 
-    const fileName = `${id}_${type}_${Date.now()}${path.extname(file.originalname)}`;
-    const filePath = path.join(uploadsDir, fileName);
+    // ✅ Ensure folder exists
+    const uploadDir = path.join(__dirname, "../uploads/onboarding");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // ✅ 5️⃣ Save file
+    // ✅ Construct safe file path
+    const fileExt = path.extname(file.originalname) || ".jpg";
+    const fileName = `${userId}_${fileType}_${Date.now()}${fileExt}`;
+    const filePath = path.join(uploadDir, fileName);
+
+    // ✅ Save file to disk
     fs.writeFileSync(filePath, file.buffer);
 
-    // ✅ 6️⃣ Build relative path for DB storage
+    console.log("✅ File saved at:", filePath);
+
+    // ✅ Store relative path (for DB or response)
     const relativePath = `uploads/onboarding/${fileName}`;
 
-    // ✅ 7️⃣ Update document based on type
-    const updateFields = {};
-    switch (type) {
-      case "pan":
-        updateFields.panAttachment = relativePath;
-        break;
-      case "aadhar":
-        updateFields.aadharAttachment = relativePath;
-        break;
-      case "offer":
-        updateFields["offerDetails.offerLetterAttachment"] = relativePath;
-        break;
-      case "bank":
-        updateFields["bankDetails.bankAttachment"] = relativePath;
-        break;
-      case "certificate":
-        updateFields["qualifications.0.certificateAttachment"] = relativePath;
-        break;
-      case "payslip":
-        updateFields["experiences.0.payslipAttachment"] = relativePath;
-        break;
-    }
-
-    // ✅ 8️⃣ Update candidate record
-    const updatedCandidate = await CandidateOnboarding.findByIdAndUpdate(
-      id,
-      { $set: updateFields },
-      { new: true }
-    );
-
-    if (!updatedCandidate) {
-      return res.status(404).json({ success: false, message: "Candidate not found." });
-    }
+    // Example: save to DB if needed
+    // await Candidate.findByIdAndUpdate(userId, { $set: { [`documents.${fileType}`]: relativePath } });
 
     return res.status(200).json({
       success: true,
-      message: `${type.toUpperCase()} document uploaded successfully.`,
-      data: { type, filePath: relativePath },
+      message: "File uploaded successfully.",
+      filePath: relativePath,
     });
-  } catch (error) {
-    console.error("❌ Error uploading document:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      error: error.message,
-    });
+
+  } catch (err) {
+    console.error("❌ Upload Error:", err);
+    return res.status(500).json({ success: false, message: "File upload failed.", error: err.message });
   }
 };
