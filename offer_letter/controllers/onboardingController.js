@@ -159,7 +159,7 @@ exports.uploadDocument = async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.body || {}; // e.g., "pan", "aadhar", "offer", "bank"
-    const file = req.file;
+    const file = req.files ? req.files.file ? req.files.file[0] : null : null;
 
     // 🔒 1️⃣ Validate candidate ID
     if (!id) {
