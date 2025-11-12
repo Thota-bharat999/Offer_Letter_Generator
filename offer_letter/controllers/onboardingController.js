@@ -154,87 +154,113 @@ exports.createOnboaringdingRecord = async (req, res) => {
 };
 
 // update Any Section Dynamically;
-exports.updateCandidateSection=async(req,res)=>{
-  try{
-    const {id}=req.params;
-    const updateData=req.body;
-    // Normalize updateData to convert object values to strings recursively
+exports.updateCandidateSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // ✅ Validate input
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Candidate ID is required." });
+    }
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res.status(400).json({ success: false, message: "No data provided for update." });
+    }
+
+    // ✅ Normalize data safely
     const normalizeObject = (obj) => {
-      if (typeof obj === 'string') return obj;
-      if (typeof obj === 'object' && obj !== null) {
-        if (Array.isArray(obj)) {
-          return obj.map(normalizeObject);
-        } else {
-          const keys = Object.keys(obj);
-          if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
-            const sortedKeys = keys.sort((a, b) => parseInt(a) - parseInt(b));
-            return sortedKeys.map(k => obj[k]).join('');
-          }
-          const normalized = {};
-          for (const key in obj) {
-            normalized[key] = normalizeObject(obj[key]);
-          }
-          return normalized;
-        }
+      if (typeof obj === "string") return obj.trim();
+      if (Array.isArray(obj)) return obj.map(normalizeObject);
+      if (obj && typeof obj === "object") {
+        const normalized = {};
+        for (const key in obj) normalized[key] = normalizeObject(obj[key]);
+        return normalized;
       }
       return obj;
     };
+
     const normalizedUpdateData = normalizeObject(updateData || {});
-    // Normalize qualifications if present
-    if (normalizedUpdateData.qualifications) {
-      normalizedUpdateData.qualifications = normalizedUpdateData.qualifications.map(qual => {
-        if (!qual.educationType) qual.educationType = 'Other';
-        if (!qual.institutionName) qual.institutionName = 'Not Provided';
+
+    // ✅ EducationType mapper
+    const mapEducationType = (value) => {
+      const normalized = String(value || "").trim();
+      const allowed = [
+        "SSC",
+        "Intermediate",
+        "Diploma",
+        "Graduation",
+        "Post-Graduation",
+        "Doctorate",
+        "Other",
+      ];
+      const map = {
+        "B.Tech": "Graduation",
+        "B.E": "Graduation",
+        "B.Sc": "Graduation",
+        "M.Tech": "Post-Graduation",
+        "M.Sc": "Post-Graduation",
+        "PhD": "Doctorate",
+      };
+      if (!normalized) return "Other";
+      return allowed.includes(normalized)
+        ? normalized
+        : map[normalized] || "Other";
+    };
+
+    // ✅ Normalize qualifications
+    if (normalizedUpdateData.qualifications && Array.isArray(normalizedUpdateData.qualifications)) {
+      normalizedUpdateData.qualifications = normalizedUpdateData.qualifications.map((qual) => {
+        qual.educationType = mapEducationType(qual.educationType);
+        qual.institutionName =
+          qual.institutionName && qual.institutionName.trim() !== ""
+            ? qual.institutionName
+            : "Not Provided";
         return qual;
       });
     }
-    // Fix experienceType if invalid
-    if (normalizedUpdateData.experienceType === 'Experience') {
-      normalizedUpdateData.experienceType = 'Experienced';
+
+    // ✅ Fix experience type
+    if (normalizedUpdateData.experienceType === "Experience") {
+      normalizedUpdateData.experienceType = "Experienced";
     }
-    if(!id){
-      return res.status(400).json({
-        success:false,
-        message:"Candidate Id is Required",
-      })
+
+    // ✅ Find candidate
+    const candidate = await CandidateOnboarding.findById(id);
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: "Candidate not found." });
     }
-    if(!updateData || Object.keys(updateData).length===0){
-      return res.status(400).json({
-        success:false,
-        message:"No Data Provided for Update",
-      })
-    }
-    const candidate=await CandidateOnboarding.findById(id);
-    if(!candidate){
-      return res.status(404).json({
-        success:false,
-        message:"candidate Not Found"
-      })
-    }
+
+    // ✅ Safely merge updates
     for (const key in normalizedUpdateData) {
-      if (typeof normalizedUpdateData[key] === "object" && !Array.isArray(normalizedUpdateData[key])) {
-        candidate[key] = { ...candidate[key], ...normalizedUpdateData[key] };
-      } else {
-        candidate[key] = normalizedUpdateData[key];
+      const value = normalizedUpdateData[key];
+      if (
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        Object.keys(value).length > 0
+      ) {
+        candidate[key] = { ...candidate[key], ...value };
+      } else if (value !== undefined && value !== null && value !== "") {
+        candidate[key] = value;
       }
     }
 
     await candidate.save();
-    return res.status(200).json({
-      success:true,
-      message:"Candidate Section Updated Successfully",
-      data:candidate
-    })
 
-  }catch(error){
+    return res.status(200).json({
+      success: true,
+      message: "Candidate section updated successfully",
+      data: candidate,
+    });
+  } catch (error) {
     console.error("❌ Error updating candidate section:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Internal Server Error",
       error: error.message,
- });
+    });
   }
-}
+};
+
 
 // upload Document Functionality 
 exports.uploadDocument = async (req, res) => {
