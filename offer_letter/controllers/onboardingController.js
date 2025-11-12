@@ -4,27 +4,22 @@ const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 
 // Create a new onboarding record
-exports.createOnboaringdingRecord=async(req,res)=>{
-  try{
-     if (!req.admin || !req.admin.id) {
+exports.createOnboaringdingRecord = async (req, res) => {
+  try {
+    if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized: Admin credentials missing.",
       });
     }
-    // Normalize req.body to convert object values to strings recursively
+
+    // ✅ Safer normalization
     const normalizeObject = (obj) => {
-      if (typeof obj === 'string') return obj;
-      if (typeof obj === 'object' && obj !== null) {
+      if (typeof obj === "string") return obj.trim();
+      if (typeof obj === "object" && obj !== null) {
         if (Array.isArray(obj)) {
           return obj.map(normalizeObject);
         } else {
-          const keys = Object.keys(obj);
-          if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
-            const sortedKeys = keys.sort((a, b) => parseInt(a) - parseInt(b));
-            return sortedKeys.map(k => obj[k]).join('');
-          }
-          if (keys.length === 0) return '';
           const normalized = {};
           for (const key in obj) {
             normalized[key] = normalizeObject(obj[key]);
@@ -34,55 +29,70 @@ exports.createOnboaringdingRecord=async(req,res)=>{
       }
       return obj;
     };
+
     const normalizedBody = normalizeObject(req.body || {});
+
+    // ✅ Fix typo and cleanup
     if (normalizedBody.guadianName && !normalizedBody.guardianName) {
       normalizedBody.guardianName = normalizedBody.guadianName;
+      delete normalizedBody.guadianName;
     }
-    if (normalizedBody.guardianName == null || normalizedBody.guardianName === '') normalizedBody.guardianName = 'Not Provided';
-    else normalizedBody.guardianName = String(normalizedBody.guardianName);
-    if (normalizedBody.phoneNumber == null || normalizedBody.phoneNumber === '') normalizedBody.phoneNumber = 'Not Provided';
-    else normalizedBody.phoneNumber = String(normalizedBody.phoneNumber);
-    if (normalizedBody.panAttachment == null || normalizedBody.panAttachment === '') normalizedBody.panAttachment = 'Not Provided';
-    else normalizedBody.panAttachment = String(normalizedBody.panAttachment);
-    if (normalizedBody.aadharAttachment == null || normalizedBody.aadharAttachment === '') normalizedBody.aadharAttachment = 'Not Provided';
-    else normalizedBody.aadharAttachment = String(normalizedBody.aadharAttachment);
-    const {qualifications, ...otherFields} = normalizedBody;
-    const normalizedQualifications = (qualifications || []).map(qual => {
+
+    // ✅ Only fill "Not Provided" if missing
+    const fieldsToCheck = ["guardianName", "phoneNumber", "panAttachment", "aadharAttachment"];
+    fieldsToCheck.forEach((field) => {
+      if (
+        normalizedBody[field] === undefined ||
+        normalizedBody[field] === null ||
+        normalizedBody[field] === ""
+      ) {
+        normalizedBody[field] = "Not Provided";
+      } else {
+        normalizedBody[field] = String(normalizedBody[field]);
+      }
+    });
+
+    const { qualifications, ...otherFields } = normalizedBody;
+
+    const normalizedQualifications = (qualifications || []).map((qual) => {
       const normalizedQual = normalizeObject(qual);
-      if (!normalizedQual.educationType) normalizedQual.educationType = 'Other';
-      if (!normalizedQual.institutionName) normalizedQual.institutionName = 'Not Provided';
+      if (!normalizedQual.educationType) normalizedQual.educationType = "Other";
+      if (!normalizedQual.institutionName) normalizedQual.institutionName = "Not Provided";
       return normalizedQual;
     });
-    const newCandidate=new CandidateOnboarding({
+
+    const newCandidate = new CandidateOnboarding({
       ...otherFields,
       qualifications: normalizedQualifications,
       status: "Draft",
-    })
+    });
+
     await newCandidate.save();
+
     return res.status(201).json({
-      success:true,
-      message:"Onboarding Record Created Successfully",
-      data:{
-        _id:newCandidate._id,
-        firstName:newCandidate.firstName,
-        lastName:newCandidate.lastName,
-        guardianName:newCandidate.guardianName,
-        email:newCandidate.email,
-        phoneNumber:newCandidate.phoneNumber,
-        panNumber:newCandidate.panNumber,
-        aadharNumber:newCandidate.aadharNumber
-      }
-    })
-  }catch(error){
+      success: true,
+      message: "Onboarding Record Created Successfully",
+      data: {
+        _id: newCandidate._id,
+        firstName: newCandidate.firstName,
+        lastName: newCandidate.lastName,
+        guardianName: newCandidate.guardianName,
+        email: newCandidate.email,
+        phoneNumber: newCandidate.phoneNumber,
+        panNumber: newCandidate.panNumber,
+        aadharNumber: newCandidate.aadharNumber,
+      },
+    });
+  } catch (error) {
     console.error("❌ Error creating candidate:", error);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
       error: error.message,
     });
-
   }
-}
+};
+
 // update Any Section Dynamically;
 exports.updateCandidateSection=async(req,res)=>{
   try{
