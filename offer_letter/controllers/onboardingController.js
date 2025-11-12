@@ -38,6 +38,8 @@ exports.createOnboaringdingRecord=async(req,res)=>{
       normalizedBody.guardianName = normalizedBody.guadianName;
     }
     if (!normalizedBody.guardianName) normalizedBody.guardianName = 'Not Provided';
+    if (!normalizedBody.phoneNumber) normalizedBody.phoneNumber = 'Not Provided';
+    if (!normalizedBody.aadharAttachment) normalizedBody.aadharAttachment = 'Not Provided';
     const {qualifications, ...otherFields} = normalizedBody;
     const normalizedQualifications = (qualifications || []).map(qual => {
       const normalizedQual = normalizeObject(qual);
