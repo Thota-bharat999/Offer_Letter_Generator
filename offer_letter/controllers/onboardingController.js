@@ -328,3 +328,47 @@ exports.deleteCandidateById=async(req,res)=>{
 
   }
 }
+
+// DashBoard Summary
+exports.getOnboardingDashboardSummary = async (req, res) => {
+  try {
+    // 1️ Aggregate counts by status
+    const summary = await CandidateOnboarding.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 2️Transform into readable object
+    const result = {
+      Draft: 0,
+      Submitted: 0,
+      OfferGenerated: 0,
+      Completed: 0,
+    };
+
+    summary.forEach((item) => {
+      result[item._id] = item.count;
+    });
+
+    // 3️ Total candidates
+    const total = Object.values(result).reduce((a, b) => a + b, 0);
+
+    // 4️ Success response
+    return res.status(200).json({
+      success: true,
+      totalCandidates: total,
+      summary: result,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching dashboard summary:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
