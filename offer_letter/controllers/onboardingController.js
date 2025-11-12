@@ -237,3 +237,50 @@ exports.getCandidateById=async(req,res)=>{
 
   }
 }
+// Get All Candidates With Pagination and Filtering
+
+exports.getAllCandidates=async(req,res)=>{
+  try{
+    const {status,search,page=1,limit=20}=req.query;
+    const filter={};
+    if(status){
+      filter.status=status;
+    }
+    if(search){
+      const searchRegex=new RegExp(search,'i');
+      filter.$or=[
+        {firstName:searchRegex},
+        {lastName:searchRegex},
+        {email:searchRegex},
+        {phoneNumber:searchRegex},
+    ]
+    }
+    const skip=(parseInt(page)-1)*parseInt(limit);
+    const [candidates,total]=await Promise.all([
+      CandidateOnboarding.find(filter)
+      .sort({createdAt:-1})
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean(),
+      CandidateOnboarding.countDocuments(filter),
+    ]);
+    return res.status(200).json({
+      success:true,
+      message:"Candidates fetched Successfully",
+      total,
+      currentPage: parseInt(page),
+      pageSize: parseInt(limit),
+      data: candidates,
+
+    })
+
+  }catch(error){
+    console.error("❌ Error fetching candidate list:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+
+  }
+}

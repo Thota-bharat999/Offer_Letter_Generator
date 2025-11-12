@@ -14,8 +14,8 @@ router.patch("/:id", verifyToken, updateCandidateSection);
 // GET /api/onboarding/:id - Get single candidate details
 router.get("/:id", verifyToken, getCandidateById);
 
-// // GET /api/onboarding - List all candidates (filter by status/search)
-// router.get("/", verifyToken, getAllCandidates);
+// GET /api/onboarding - List all candidates (filter by status/search)
+router.get("/all", verifyToken, getAllCandidates);
 
 // // DELETE /api/onboarding/:id - Delete candidate
 // router.delete("/:id", verifyToken, deleteCandidate);
