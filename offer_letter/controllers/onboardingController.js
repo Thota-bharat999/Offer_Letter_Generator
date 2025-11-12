@@ -34,6 +34,7 @@ exports.createOnboaringdingRecord=async(req,res)=>{
       return obj;
     };
     const normalizedBody = normalizeObject(req.body || {});
+    if (!normalizedBody.guardianName) normalizedBody.guardianName = 'Not Provided';
     const {qualifications, ...otherFields} = normalizedBody;
     const normalizedQualifications = (qualifications || []).map(qual => {
       const normalizedQual = normalizeObject(qual);
