@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createOnboaringdingRecord, updateCandidateSection,uploadDocument, getCandidateById } = require("../controllers/onboardingController");
+const { createOnboaringdingRecord, updateCandidateSection,uploadDocument, getCandidateById,getAllCandidates } = require("../controllers/onboardingController");
 
 const upload = multer({ storage: multer.memoryStorage() });
 // POST /api/onboarding - Create new candidate
