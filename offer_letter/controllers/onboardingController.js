@@ -209,7 +209,13 @@ exports.uploadDocument = async (req, res) => {
 exports.getCandidateById=async(req,res)=>{
   try{
     const {id}=req.params;
-    if(!id || !mongoose.Types.ObjectId.isValid(id)){
+    if(!id){
+      return res.status(400).json({
+        success:false,
+        message:"Candidate Id is Required",
+      })
+    }
+    if(!mongoose.Types.ObjectId.isValid(id)){
       return res.status(400).json({
         success:false,
         message:"Valid Candidate Id Is Required",
