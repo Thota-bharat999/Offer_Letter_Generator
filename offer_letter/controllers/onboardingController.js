@@ -33,7 +33,7 @@ exports.createOnboaringdingRecord=async(req,res)=>{
       }
       return obj;
     };
-    const normalizedBody = normalizeObject(req.body);
+    const normalizedBody = normalizeObject(req.body || {});
     const {qualifications, ...otherFields} = normalizedBody;
     const normalizedQualifications = (qualifications || []).map(qual => {
       const normalizedQual = normalizeObject(qual);
@@ -97,7 +97,7 @@ exports.updateCandidateSection=async(req,res)=>{
       }
       return obj;
     };
-    const normalizedUpdateData = normalizeObject(updateData);
+    const normalizedUpdateData = normalizeObject(updateData || {});
     // Normalize qualifications if present
     if (normalizedUpdateData.qualifications) {
       normalizedUpdateData.qualifications = normalizedUpdateData.qualifications.map(qual => {
