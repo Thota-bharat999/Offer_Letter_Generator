@@ -6,6 +6,7 @@ const mongoose=require('mongoose');
 // Create a new onboarding record
 exports.createOnboaringdingRecord = async (req, res) => {
   try {
+    // 🔐 Validate admin
     if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
@@ -13,32 +14,27 @@ exports.createOnboaringdingRecord = async (req, res) => {
       });
     }
 
-    // ✅ Safer normalization
+    // ✅ Universal normalization (recursively trims strings)
     const normalizeObject = (obj) => {
       if (typeof obj === "string") return obj.trim();
-      if (typeof obj === "object" && obj !== null) {
-        if (Array.isArray(obj)) {
-          return obj.map(normalizeObject);
-        } else {
-          const normalized = {};
-          for (const key in obj) {
-            normalized[key] = normalizeObject(obj[key]);
-          }
-          return normalized;
-        }
+      if (Array.isArray(obj)) return obj.map(normalizeObject);
+      if (obj && typeof obj === "object") {
+        const result = {};
+        for (const key in obj) result[key] = normalizeObject(obj[key]);
+        return result;
       }
       return obj;
     };
 
     const normalizedBody = normalizeObject(req.body || {});
 
-    // ✅ Fix typo and cleanup
+    // ✅ Fix typo key if exists
     if (normalizedBody.guadianName && !normalizedBody.guardianName) {
       normalizedBody.guardianName = normalizedBody.guadianName;
       delete normalizedBody.guadianName;
     }
 
-    // ✅ Only fill "Not Provided" if missing
+    // ✅ Fallback for missing optional fields
     const fieldsToCheck = ["guardianName", "phoneNumber", "panAttachment", "aadharAttachment"];
     fieldsToCheck.forEach((field) => {
       if (
@@ -52,15 +48,78 @@ exports.createOnboaringdingRecord = async (req, res) => {
       }
     });
 
+    // ✅ Education type mapper (ensures schema enum compatibility)
+    const mapEducationType = (value) => {
+      const normalized = String(value || "").trim();
+      const allowed = [
+        "SSC",
+        "Intermediate",
+        "Diploma",
+        "Graduation",
+        "Post-Graduation",
+        "Doctorate",
+        "Other",
+      ];
+      const map = {
+        "B.Tech": "Graduation",
+        "B.E": "Graduation",
+        "B.Sc": "Graduation",
+        "M.Tech": "Post-Graduation",
+        "M.Sc": "Post-Graduation",
+        "PhD": "Doctorate",
+        "PHD": "Doctorate",
+      };
+      if (!normalized) return "Other";
+      return allowed.includes(normalized)
+        ? normalized
+        : map[normalized] || "Other";
+    };
+
+    // ✅ Normalize qualifications array
     const { qualifications, ...otherFields } = normalizedBody;
 
     const normalizedQualifications = (qualifications || []).map((qual) => {
-      const normalizedQual = normalizeObject(qual);
-      if (!normalizedQual.educationType) normalizedQual.educationType = "Other";
-      if (!normalizedQual.institutionName) normalizedQual.institutionName = "Not Provided";
-      return normalizedQual;
+      const q = normalizeObject(qual);
+
+      q.educationType = mapEducationType(q.educationType);
+
+      q.institutionName =
+        q.institutionName && q.institutionName.trim() !== ""
+          ? q.institutionName
+          : "Not Provided";
+
+      q.universityOrBoard =
+        q.universityOrBoard && q.universityOrBoard.trim() !== ""
+          ? q.universityOrBoard
+          : "Not Provided";
+
+      q.subCourse =
+        q.subCourse && q.subCourse.trim() !== "" ? q.subCourse : "Not Provided";
+
+      q.specialization =
+        q.specialization && q.specialization.trim() !== ""
+          ? q.specialization
+          : "Not Provided";
+
+      q.yearOfPassing =
+        q.yearOfPassing && q.yearOfPassing.trim() !== ""
+          ? q.yearOfPassing
+          : "Not Provided";
+
+      q.percentageOrGPA =
+        q.percentageOrGPA && q.percentageOrGPA.trim() !== ""
+          ? q.percentageOrGPA
+          : "Not Provided";
+
+      q.certificateAttachment =
+        q.certificateAttachment && q.certificateAttachment.trim() !== ""
+          ? q.certificateAttachment
+          : "Not Provided";
+
+      return q;
     });
 
+    // ✅ Save new record
     const newCandidate = new CandidateOnboarding({
       ...otherFields,
       qualifications: normalizedQualifications,
@@ -69,6 +128,7 @@ exports.createOnboaringdingRecord = async (req, res) => {
 
     await newCandidate.save();
 
+    // ✅ Send response
     return res.status(201).json({
       success: true,
       message: "Onboarding Record Created Successfully",
