@@ -38,10 +38,13 @@ exports.createOnboaringdingRecord=async(req,res)=>{
     if (normalizedBody.guadianName && !normalizedBody.guardianName) {
       normalizedBody.guardianName = normalizedBody.guadianName;
     }
-    if (!normalizedBody.guardianName) normalizedBody.guardianName = 'Not Provided';
-    if (!normalizedBody.phoneNumber) normalizedBody.phoneNumber = 'Not Provided';
+    if (normalizedBody.guardianName == null || normalizedBody.guardianName === '') normalizedBody.guardianName = 'Not Provided';
+    else normalizedBody.guardianName = String(normalizedBody.guardianName);
+    if (normalizedBody.phoneNumber == null || normalizedBody.phoneNumber === '') normalizedBody.phoneNumber = 'Not Provided';
     else normalizedBody.phoneNumber = String(normalizedBody.phoneNumber);
-    if (!normalizedBody.aadharAttachment) normalizedBody.aadharAttachment = 'Not Provided';
+    if (normalizedBody.panAttachment == null || normalizedBody.panAttachment === '') normalizedBody.panAttachment = 'Not Provided';
+    else normalizedBody.panAttachment = String(normalizedBody.panAttachment);
+    if (normalizedBody.aadharAttachment == null || normalizedBody.aadharAttachment === '') normalizedBody.aadharAttachment = 'Not Provided';
     else normalizedBody.aadharAttachment = String(normalizedBody.aadharAttachment);
     const {qualifications, ...otherFields} = normalizedBody;
     const normalizedQualifications = (qualifications || []).map(qual => {
