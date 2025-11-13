@@ -73,31 +73,40 @@ exports.createOnboaringdingRecord = async (req, res) => {
     };
 
     // ✅ Normalize qualifications array (support object or array input)
-    const { qualifications, ...otherFields } = normalizedBody;
+   const { qualifications, ...otherFields } = normalizedBody;
 
-    const normalizedQualifications = Array.isArray(qualifications)
-      ? qualifications.map((qual) => {
-          const q = normalizeObject(qual);
+// Convert object-like qualifications (e.g., {0: {...}, 1: {...}}) into array
+let qualificationsArray = [];
+if (Array.isArray(qualifications)) {
+  qualificationsArray = qualifications;
+} else if (qualifications && typeof qualifications === "object") {
+  qualificationsArray = Object.values(qualifications);
+}
 
-          q.educationType = mapEducationType(q.educationType);
-          q.institutionName =
-            q.institutionName && q.institutionName.trim() !== ""
-              ? q.institutionName.trim()
-              : "Not Provided";
-          q.universityOrBoard =
-            q.universityOrBoard && q.universityOrBoard.trim() !== ""
-              ? q.universityOrBoard.trim()
-              : "Not Provided";
-          q.subCourse = q.subCourse?.trim() || "Not Provided";
-          q.specialization = q.specialization?.trim() || "Not Provided";
-          q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
-          q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
-          q.certificateAttachment =
-            q.certificateAttachment?.trim() || "Not Provided";
+const normalizedQualifications = qualificationsArray.map((qual) => {
+  const q = normalizeObject(qual);
 
-          return q;
-        })
-      : [];
+  // 🔹 Map B.Tech → Graduation, etc.
+  q.educationType = mapEducationType(q.educationType);
+
+  q.institutionName =
+    q.institutionName && q.institutionName.trim() !== ""
+      ? q.institutionName.trim()
+      : "Not Provided";
+  q.universityOrBoard =
+    q.universityOrBoard && q.universityOrBoard.trim() !== ""
+      ? q.universityOrBoard.trim()
+      : "Not Provided";
+  q.subCourse = q.subCourse?.trim() || "Not Provided";
+  q.specialization = q.specialization?.trim() || "Not Provided";
+  q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
+  q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
+  q.certificateAttachment =
+    q.certificateAttachment?.trim() || "Not Provided";
+
+  return q;
+});
+
 
     // ✅ Save new record
     const newCandidate = new CandidateOnboarding({
@@ -187,22 +196,33 @@ exports.updateCandidateSection = async (req, res) => {
     };
 
     // ✅ Normalize qualifications safely
-    if (normalizedUpdateData.qualifications) {
-      let quals = normalizedUpdateData.qualifications;
-      if (!Array.isArray(quals) && typeof quals === "object") {
-        // handle case: frontend sends object instead of array
-        quals = Object.values(quals);
-      }
-      normalizedUpdateData.qualifications = quals.map((qual) => {
-        const q = normalizeObject(qual);
-        q.educationType = mapEducationType(q.educationType);
-        q.institutionName =
-          q.institutionName && q.institutionName.trim() !== ""
-            ? q.institutionName.trim()
-            : "Not Provided";
-        return q;
-      });
-    }
+    // ✅ Always normalize qualifications (object or array)
+if (normalizedUpdateData.qualifications) {
+  let quals = normalizedUpdateData.qualifications;
+
+  // Convert object {0: {}, 1: {}} → array
+  if (!Array.isArray(quals) && typeof quals === "object") {
+    quals = Object.values(quals);
+  }
+
+  normalizedUpdateData.qualifications = quals.map((qual) => {
+    const q = normalizeObject(qual);
+
+    // Map B.Tech → Graduation etc.
+    q.educationType = mapEducationType(q.educationType);
+
+    q.institutionName =
+      q.institutionName && q.institutionName.trim() !== ""
+        ? q.institutionName.trim()
+        : "Not Provided";
+
+    q.subCourse = q.subCourse?.trim() || "Not Provided";
+    q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
+    q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
+    return q;
+  });
+}
+
 
     if (normalizedUpdateData.experienceType === "Experience") {
       normalizedUpdateData.experienceType = "Experienced";
