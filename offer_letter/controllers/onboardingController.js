@@ -46,46 +46,50 @@ exports.createOnboaringdingRecord = async (req, res) => {
     });
 
     // ✅ Education type mapper (case-insensitive, flexible)
-    const mapEducationType = (value) => {
-      if (!value) return "Other";
-      const normalized = String(value).trim().toLowerCase();
+    const normalizeEducationType = (value) => {
+  if (!value) return "Other";
+  let v = String(value).trim();
 
-      const allowed = [
-        "ssc",
-        "intermediate",
-        "diploma",
-        "graduation",
-        "post-graduation",
-        "doctorate",
-        "other",
-      ];
+  // Normalize common patterns (lower/upper/trailing spaces)
+  // try to keep common punctuation like "B.Tech"
+  const lowered = v.toLowerCase();
 
-      const map = {
-        "btech": "Graduation",
-        "b.tech": "Graduation",
-        "be": "Graduation",
-        "b.e": "Graduation",
-        "bsc": "Graduation",
-        "b.sc": "Graduation",
-        "bca": "Graduation",
-        "bcom": "Graduation",
-        "mtech": "Post-Graduation",
-        "m.tech": "Post-Graduation",
-        "me": "Post-Graduation",
-        "m.e": "Post-Graduation",
-        "msc": "Post-Graduation",
-        "m.sc": "Post-Graduation",
-        "mca": "Post-Graduation",
-        "mba": "Post-Graduation",
-        "phd": "Doctorate",
-        "p.hd": "Doctorate",
-      };
+  // canonical forms map (lowercase -> preferred case)
+  const canonical = {
+    "b.tech": "B.Tech",
+    "btech": "B.Tech",
+    "b.e": "B.E",
+    "be": "B.E",
+    "b.sc": "B.Sc",
+    "bsc": "B.Sc",
+    "bca": "BCA",
+    "b.com": "B.Com",
+    "bcom": "B.Com",
+    "m.tech": "M.Tech",
+    "mtech": "M.Tech",
+    "m.e": "M.E",
+    "me": "M.E",
+    "m.sc": "M.Sc",
+    "msc": "M.Sc",
+    "mca": "MCA",
+    "mba": "MBA",
+    "phd": "PhD",
+    "p.hd": "PhD",
+    "ssc": "SSC",
+    "intermediate": "Intermediate",
+    "diploma": "Diploma",
+    "graduation": "Graduation",
+    "post-graduation": "Post-Graduation",
+    "doctorate": "Doctorate",
+    "other": "Other",
+  };
 
-      if (allowed.includes(normalized)) {
-        return normalized[0].toUpperCase() + normalized.slice(1);
-      }
-      return map[normalized] || "Other";
-    };
+  if (canonical[lowered]) return canonical[lowered];
+
+  // If not in map, return the trimmed original (capitalized first letter)
+  return v;
+};
+
 
     // ✅ Normalize qualifications
     const { qualifications, ...otherFields } = normalizedBody;
@@ -184,46 +188,50 @@ exports.updateCandidateSection = async (req, res) => {
     const normalizedUpdateData = normalizeObject(updateData || {});
 
     // ✅ EducationType Mapper (same as create)
-    const mapEducationType = (value) => {
-      if (!value) return "Other";
-      const normalized = String(value).trim().toLowerCase();
+    const normalizeEducationType = (value) => {
+  if (!value) return "Other";
+  let v = String(value).trim();
 
-      const allowed = [
-        "ssc",
-        "intermediate",
-        "diploma",
-        "graduation",
-        "post-graduation",
-        "doctorate",
-        "other",
-      ];
+  // Normalize common patterns (lower/upper/trailing spaces)
+  // try to keep common punctuation like "B.Tech"
+  const lowered = v.toLowerCase();
 
-      const map = {
-        "btech": "Graduation",
-        "b.tech": "Graduation",
-        "be": "Graduation",
-        "b.e": "Graduation",
-        "bsc": "Graduation",
-        "b.sc": "Graduation",
-        "bca": "Graduation",
-        "bcom": "Graduation",
-        "mtech": "Post-Graduation",
-        "m.tech": "Post-Graduation",
-        "me": "Post-Graduation",
-        "m.e": "Post-Graduation",
-        "msc": "Post-Graduation",
-        "m.sc": "Post-Graduation",
-        "mca": "Post-Graduation",
-        "mba": "Post-Graduation",
-        "phd": "Doctorate",
-        "p.hd": "Doctorate",
-      };
+  // canonical forms map (lowercase -> preferred case)
+  const canonical = {
+    "b.tech": "B.Tech",
+    "btech": "B.Tech",
+    "b.e": "B.E",
+    "be": "B.E",
+    "b.sc": "B.Sc",
+    "bsc": "B.Sc",
+    "bca": "BCA",
+    "b.com": "B.Com",
+    "bcom": "B.Com",
+    "m.tech": "M.Tech",
+    "mtech": "M.Tech",
+    "m.e": "M.E",
+    "me": "M.E",
+    "m.sc": "M.Sc",
+    "msc": "M.Sc",
+    "mca": "MCA",
+    "mba": "MBA",
+    "phd": "PhD",
+    "p.hd": "PhD",
+    "ssc": "SSC",
+    "intermediate": "Intermediate",
+    "diploma": "Diploma",
+    "graduation": "Graduation",
+    "post-graduation": "Post-Graduation",
+    "doctorate": "Doctorate",
+    "other": "Other",
+  };
 
-      if (allowed.includes(normalized)) {
-        return normalized[0].toUpperCase() + normalized.slice(1);
-      }
-      return map[normalized] || "Other";
-    };
+  if (canonical[lowered]) return canonical[lowered];
+
+  // If not in map, return the trimmed original (capitalized first letter)
+  return v;
+};
+
 
     // ✅ Normalize qualifications (object or array)
     if (normalizedUpdateData.qualifications) {

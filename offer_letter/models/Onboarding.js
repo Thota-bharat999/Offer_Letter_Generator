@@ -3,19 +3,32 @@ const mongoose = require("mongoose");
 // 🎓 Sub-schema for Qualification / Education
 const qualificationSchema = new mongoose.Schema(
   {
-    educationType: {
-      type: String,
-      enum: [
-        "SSC",
-        "Intermediate",
-        "Diploma",
-        "Graduation",
-        "Post-Graduation",
-        "Doctorate",
-        "Other",
-      ],
-      required: true,
-    },
+    // qualificationSchema snippet
+educationType: {
+  type: String,
+  enum: [
+    "SSC",
+    "Intermediate",
+    "Diploma",
+    "Graduation",
+    "Post-Graduation",
+    "Doctorate",
+    "B.Tech",
+    "B.E",
+    "B.Sc",
+    "BCA",
+    "B.Com",
+    "M.Tech",
+    "M.E",
+    "M.Sc",
+    "MCA",
+    "MBA",
+    "PhD",
+    "Other",
+  ],
+  required: true,
+},
+
     institutionName: { type: String, required: true },
     universityOrBoard: { type: String },
     subCourse: { type: String },
