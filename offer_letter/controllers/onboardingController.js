@@ -58,7 +58,7 @@ exports.createOnboaringdingRecord = async (req, res) => {
         "Other",
       ];
       const map = {
-        "B.Tech": "Graduation",
+        "B.Tech": "B.Tech",
         "B.E": "Graduation",
         "B.Sc": "Graduation",
         "M.Tech": "Post-Graduation",
