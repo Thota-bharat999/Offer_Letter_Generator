@@ -9,7 +9,7 @@ const qualificationSchema = new mongoose.Schema(
         "SSC",
         "Intermediate",
         "Diploma",
-        "Graduation",
+        "B.Tech",
         "Post-Graduation",
         "Doctorate",
         "Other",

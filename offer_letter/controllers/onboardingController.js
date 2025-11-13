@@ -47,30 +47,41 @@ exports.createOnboaringdingRecord = async (req, res) => {
 
     // ✅ Education type mapper (ensures schema enum compatibility)
     const mapEducationType = (value) => {
-      const normalized = String(value || "").trim();
-      const allowed = [
-        "SSC",
-        "Intermediate",
-        "Diploma",
-        "Graduation",
-        "Post-Graduation",
-        "Doctorate",
-        "Other",
-      ];
-      const map = {
-        "B.Tech": "B.Tech",
-        "B.E": "Graduation",
-        "B.Sc": "Graduation",
-        "M.Tech": "Post-Graduation",
-        "M.Sc": "Post-Graduation",
-        "PhD": "Doctorate",
-        "PHD": "Doctorate",
-      };
-      if (!normalized) return "Other";
-      return allowed.includes(normalized)
-        ? normalized
-        : map[normalized] || "Other";
-    };
+  if (!value) return "Other";
+  const normalized = String(value).trim().toLowerCase();
+
+  const allowed = [
+    "ssc",
+    "intermediate",
+    "diploma",
+    "graduation",
+    "post-graduation",
+    "doctorate",
+    "other",
+  ];
+
+  const map = {
+    "b.tech": "Graduation",
+    "b.e": "Graduation",
+    "b.sc": "Graduation",
+    "bca": "Graduation",
+    "bcom": "Graduation",
+    "m.tech": "Post-Graduation",
+    "m.e": "Post-Graduation",
+    "m.sc": "Post-Graduation",
+    "mca": "Post-Graduation",
+    "mba": "Post-Graduation",
+    "phd": "Doctorate",
+    "p.hd": "Doctorate",
+  };
+
+  // Direct match or mapped value
+  if (allowed.includes(normalized)) {
+    return normalized[0].toUpperCase() + normalized.slice(1); // Capitalize first letter
+  }
+  return map[normalized] || "Other";
+};
+
 
     // ✅ Normalize qualifications array (support object or array input)
    const { qualifications, ...otherFields } = normalizedBody;
@@ -171,29 +182,40 @@ exports.updateCandidateSection = async (req, res) => {
 
     // ✅ EducationType Mapper (same as above)
     const mapEducationType = (value) => {
-      const normalized = String(value || "").trim();
-      const allowed = [
-        "SSC",
-        "Intermediate",
-        "Diploma",
-        "Graduation",
-        "Post-Graduation",
-        "Doctorate",
-        "Other",
-      ];
-      const map = {
-        "B.Tech": "Graduation",
-        "B.E": "Graduation",
-        "B.Sc": "Graduation",
-        "M.Tech": "Post-Graduation",
-        "M.Sc": "Post-Graduation",
-        "PhD": "Doctorate",
-      };
-      if (!normalized) return "Other";
-      return allowed.includes(normalized)
-        ? normalized
-        : map[normalized] || "Other";
-    };
+  if (!value) return "Other";
+  const normalized = String(value).trim().toLowerCase();
+
+  const allowed = [
+    "ssc",
+    "intermediate",
+    "diploma",
+    "graduation",
+    "post-graduation",
+    "doctorate",
+    "other",
+  ];
+
+  const map = {
+    "b.tech": "Graduation",
+    "b.e": "Graduation",
+    "b.sc": "Graduation",
+    "bca": "Graduation",
+    "bcom": "Graduation",
+    "m.tech": "Post-Graduation",
+    "m.e": "Post-Graduation",
+    "m.sc": "Post-Graduation",
+    "mca": "Post-Graduation",
+    "mba": "Post-Graduation",
+    "phd": "Doctorate",
+    "p.hd": "Doctorate",
+  };
+
+  // Direct match or mapped value
+  if (allowed.includes(normalized)) {
+    return normalized[0].toUpperCase() + normalized.slice(1); // Capitalize first letter
+  }
+  return map[normalized] || "Other";
+};
 
     // ✅ Normalize qualifications safely
     // ✅ Always normalize qualifications (object or array)
