@@ -274,29 +274,23 @@ exports.updateCandidateSection = async (req, res) => {
     });
   }
 };
-
-
-
-
-
-exports.uploadDocument = async (req, res) => {
+// uploadeDocument 
+exports.uploadAllDocuments = async (req, res) => {
   try {
     const userId = req.params.id;
-    const fileType = req.params.type?.toLowerCase(); // ✅ get type from URL instead of body
-    const file = req.files?.file?.[0];
+    const files = req.files; // Multer gives { pan: [..], aadhar: [..], ... }
 
-    const allowedTypes = ["pan", "aadhar", "offer", "bank", "payslip", "certificate"];
-    if (!allowedTypes.includes(fileType)) {
+    if (!userId) {
       return res.status(400).json({
         success: false,
-        message: `Invalid upload type. Must be one of: ${allowedTypes.join(", ")}.`,
+        message: "Candidate ID is required.",
       });
     }
 
-    if (!file) {
+    if (!files || Object.keys(files).length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No file uploaded.",
+        message: "No files uploaded.",
       });
     }
 
@@ -304,52 +298,55 @@ exports.uploadDocument = async (req, res) => {
     const uploadDir = path.join(__dirname, "../uploads/onboarding");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // ✅ Generate safe filename
-    const fileExt = path.extname(file.originalname) || ".jpg";
-    const fileName = `${userId}_${fileType}_${Date.now()}${fileExt}`;
-    const filePath = path.join(uploadDir, fileName);
+    // ✅ Define allowed file fields and their DB mapping
+    const fileMappings = {
+      pan: "panAttachment",
+      aadhar: "aadharAttachment",
+      marksheet: "marksheetAttachment",
+      od: "odAttachment",
+      offer_letter: "offerLetterAttachment",
+      bank_proof: "bankProofAttachment",
+    };
 
-    // ✅ Save file to disk
-    fs.writeFileSync(filePath, file.buffer);
-    const relativePath = `uploads/onboarding/${fileName}`;
+    const updateFields = {};
 
-    console.log(`✅ File saved at: ${relativePath}`);
+    // ✅ Loop through allowed fields
+    for (const key in fileMappings) {
+      if (files[key] && files[key][0]) {
+        const file = files[key][0];
+        const ext = path.extname(file.originalname) || ".jpg";
+        const fileName = `${userId}_${key}_${Date.now()}${ext}`;
+        const filePath = path.join(uploadDir, fileName);
 
-    // ✅ Update database immediately (panAttachment, aadharAttachment, etc.)
-    const updateField =
-      fileType === "pan"
-        ? { panAttachment: relativePath }
-        : fileType === "aadhar"
-        ? { aadharAttachment: relativePath }
-        : fileType === "offer"
-        ? { "offerDetails.offerAttachment": relativePath }
-        : fileType === "bank"
-        ? { "bankDetails.bankAttachment": relativePath }
-        : fileType === "payslip"
-        ? { "experiences.$[].payslipAttachment": relativePath }
-        : fileType === "certificate"
-        ? { "qualifications.$[].certificateAttachment": relativePath }
-        : null;
+        // Save file to disk
+        fs.writeFileSync(filePath, file.buffer);
 
-    if (updateField) {
-      await CandidateOnboarding.findByIdAndUpdate(
-        userId,
-        { $set: updateField },
-        { new: true }
-      );
+        // Store relative path for DB
+        updateFields[fileMappings[key]] = `uploads/onboarding/${fileName}`;
+      }
+    }
+
+    // ✅ Update the candidate record in DB
+    if (Object.keys(updateFields).length > 0) {
+      await CandidateOnboarding.findByIdAndUpdate(userId, { $set: updateFields });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "No valid files found to upload.",
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: "File uploaded and saved successfully.",
-      filePath: relativePath,
+      message: "All files uploaded and linked successfully.",
+      uploadedFiles: updateFields,
     });
-  } catch (err) {
-    console.error("❌ Upload Error:", err);
+  } catch (error) {
+    console.error("❌ Upload Error:", error);
     return res.status(500).json({
       success: false,
       message: "File upload failed.",
-      error: err.message,
+      error: error.message,
     });
   }
 };

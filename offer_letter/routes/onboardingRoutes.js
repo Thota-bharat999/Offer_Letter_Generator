@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { createOnboaringdingRecord, updateCandidateSection,uploadDocument, getCandidateById,getAllCandidates, deleteCandidateById,getOnboardingDashboardSummary} = require("../controllers/onboardingController");
+const { createOnboaringdingRecord, updateCandidateSection, uploadAllDocuments, getCandidateById,getAllCandidates, deleteCandidateById,getOnboardingDashboardSummary} = require("../controllers/onboardingController");
 
 const upload = multer({ storage: multer.memoryStorage() });
 // POST /api/onboarding - Create new candidate
@@ -23,8 +23,18 @@ router.get("/:id", verifyToken, getCandidateById);
 router.delete("/:id", verifyToken, deleteCandidateById);
 
 // POST /api/onboarding/:id/upload - Upload document
-router.post("/upload/:id/:type", upload.fields([{ name: "file" }]), uploadDocument);
-
+router.post(
+  "/upload/:id",
+  upload.fields([
+    { name: "pan", maxCount: 1 },
+    { name: "aadhar", maxCount: 1 },
+    { name: "marksheet", maxCount: 3 },
+    { name: "od", maxCount: 1 },
+    { name: "offer_letter", maxCount: 1 },
+    { name: "bank_proof", maxCount: 1 },
+  ]),
+  uploadAllDocuments
+);
 // // POST /api/onboarding/:id/generate-offer - Generate Offer Letter PDF
 // router.post("/:id/generate-offer", verifyToken, generateOfferPDF);
 
