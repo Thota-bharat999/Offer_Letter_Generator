@@ -4,7 +4,7 @@ const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 
 // Create a new onboarding record
-
+// ✅ CREATE ONBOARDING CONTROLLER
 exports.createOnboaringdingRecord = async (req, res) => {
   try {
     // 🔐 Validate admin
@@ -29,13 +29,13 @@ exports.createOnboaringdingRecord = async (req, res) => {
 
     const normalizedBody = normalizeObject(req.body || {});
 
-    // ✅ Fix typo key
+    // ✅ Fix typo key if exists
     if (normalizedBody.guadianName && !normalizedBody.guardianName) {
       normalizedBody.guardianName = normalizedBody.guadianName;
       delete normalizedBody.guadianName;
     }
 
-    // ✅ Fallbacks for optional fields
+    // ✅ Fallback for missing optional fields
     const fieldsToCheck = ["guardianName", "phoneNumber", "panAttachment", "aadharAttachment"];
     fieldsToCheck.forEach((field) => {
       if (!normalizedBody[field] || normalizedBody[field].trim() === "") {
@@ -45,56 +45,47 @@ exports.createOnboaringdingRecord = async (req, res) => {
       }
     });
 
-    // ✅ Education type mapper (case-insensitive, flexible)
+    // ✅ Normalize educationType — keep exact input like "B.Tech"
     const normalizeEducationType = (value) => {
-  if (!value) return "Other";
-  let v = String(value).trim();
+      if (!value) return "Other";
+      const v = String(value).trim();
+      const lowered = v.toLowerCase();
 
-  // Normalize common patterns (lower/upper/trailing spaces)
-  // try to keep common punctuation like "B.Tech"
-  const lowered = v.toLowerCase();
+      // canonical forms
+      const canonical = {
+        "btech": "B.Tech",
+        "b.tech": "B.Tech",
+        "be": "B.E",
+        "b.e": "B.E",
+        "bsc": "B.Sc",
+        "b.sc": "B.Sc",
+        "bca": "BCA",
+        "bcom": "B.Com",
+        "b.com": "B.Com",
+        "mtech": "M.Tech",
+        "m.tech": "M.Tech",
+        "me": "M.E",
+        "m.e": "M.E",
+        "msc": "M.Sc",
+        "m.sc": "M.Sc",
+        "mca": "MCA",
+        "mba": "MBA",
+        "phd": "PhD",
+        "p.hd": "PhD",
+        "ssc": "SSC",
+        "intermediate": "Intermediate",
+        "diploma": "Diploma",
+        "graduation": "Graduation",
+        "post-graduation": "Post-Graduation",
+        "doctorate": "Doctorate",
+        "other": "Other",
+      };
 
-  // canonical forms map (lowercase -> preferred case)
-  const canonical = {
-    "b.tech": "B.Tech",
-    "btech": "B.Tech",
-    "b.e": "B.E",
-    "be": "B.E",
-    "b.sc": "B.Sc",
-    "bsc": "B.Sc",
-    "bca": "BCA",
-    "b.com": "B.Com",
-    "bcom": "B.Com",
-    "m.tech": "M.Tech",
-    "mtech": "M.Tech",
-    "m.e": "M.E",
-    "me": "M.E",
-    "m.sc": "M.Sc",
-    "msc": "M.Sc",
-    "mca": "MCA",
-    "mba": "MBA",
-    "phd": "PhD",
-    "p.hd": "PhD",
-    "ssc": "SSC",
-    "intermediate": "Intermediate",
-    "diploma": "Diploma",
-    "graduation": "Graduation",
-    "post-graduation": "Post-Graduation",
-    "doctorate": "Doctorate",
-    "other": "Other",
-  };
+      return canonical[lowered] || v;
+    };
 
-  if (canonical[lowered]) return canonical[lowered];
-
-  // If not in map, return the trimmed original (capitalized first letter)
-  return v;
-};
-
-
-    // ✅ Normalize qualifications
+    // ✅ Normalize qualifications array
     const { qualifications, ...otherFields } = normalizedBody;
-
-    // Convert object {0: {}, 1: {}} → array
     let qualificationsArray = [];
     if (Array.isArray(qualifications)) {
       qualificationsArray = qualifications;
@@ -104,10 +95,8 @@ exports.createOnboaringdingRecord = async (req, res) => {
 
     const normalizedQualifications = qualificationsArray.map((qual) => {
       const q = normalizeObject(qual);
-
-      // ✅ Support both "qualificationName" and "educationType"
       const eduValue = q.educationType || q.qualificationName;
-      q.educationType = mapEducationType(eduValue);
+      q.educationType = normalizeEducationType(eduValue);
       delete q.qualificationName;
 
       q.institutionName =
@@ -127,7 +116,6 @@ exports.createOnboaringdingRecord = async (req, res) => {
       return q;
     });
 
-    // ✅ Save record
     const newCandidate = new CandidateOnboarding({
       ...otherFields,
       qualifications: normalizedQualifications,
@@ -173,7 +161,6 @@ exports.updateCandidateSection = async (req, res) => {
       return res.status(400).json({ success: false, message: "No data provided for update." });
     }
 
-    // ✅ Normalize safely
     const normalizeObject = (obj) => {
       if (typeof obj === "string") return obj.trim();
       if (Array.isArray(obj)) return obj.map(normalizeObject);
@@ -187,53 +174,45 @@ exports.updateCandidateSection = async (req, res) => {
 
     const normalizedUpdateData = normalizeObject(updateData || {});
 
-    // ✅ EducationType Mapper (same as create)
+    // ✅ Use same normalizeEducationType here
     const normalizeEducationType = (value) => {
-  if (!value) return "Other";
-  let v = String(value).trim();
+      if (!value) return "Other";
+      const v = String(value).trim();
+      const lowered = v.toLowerCase();
 
-  // Normalize common patterns (lower/upper/trailing spaces)
-  // try to keep common punctuation like "B.Tech"
-  const lowered = v.toLowerCase();
+      const canonical = {
+        "btech": "B.Tech",
+        "b.tech": "B.Tech",
+        "be": "B.E",
+        "b.e": "B.E",
+        "bsc": "B.Sc",
+        "b.sc": "B.Sc",
+        "bca": "BCA",
+        "bcom": "B.Com",
+        "b.com": "B.Com",
+        "mtech": "M.Tech",
+        "m.tech": "M.Tech",
+        "me": "M.E",
+        "m.e": "M.E",
+        "msc": "M.Sc",
+        "m.sc": "M.Sc",
+        "mca": "MCA",
+        "mba": "MBA",
+        "phd": "PhD",
+        "p.hd": "PhD",
+        "ssc": "SSC",
+        "intermediate": "Intermediate",
+        "diploma": "Diploma",
+        "graduation": "Graduation",
+        "post-graduation": "Post-Graduation",
+        "doctorate": "Doctorate",
+        "other": "Other",
+      };
 
-  // canonical forms map (lowercase -> preferred case)
-  const canonical = {
-    "b.tech": "B.Tech",
-    "btech": "B.Tech",
-    "b.e": "B.E",
-    "be": "B.E",
-    "b.sc": "B.Sc",
-    "bsc": "B.Sc",
-    "bca": "BCA",
-    "b.com": "B.Com",
-    "bcom": "B.Com",
-    "m.tech": "M.Tech",
-    "mtech": "M.Tech",
-    "m.e": "M.E",
-    "me": "M.E",
-    "m.sc": "M.Sc",
-    "msc": "M.Sc",
-    "mca": "MCA",
-    "mba": "MBA",
-    "phd": "PhD",
-    "p.hd": "PhD",
-    "ssc": "SSC",
-    "intermediate": "Intermediate",
-    "diploma": "Diploma",
-    "graduation": "Graduation",
-    "post-graduation": "Post-Graduation",
-    "doctorate": "Doctorate",
-    "other": "Other",
-  };
+      return canonical[lowered] || v;
+    };
 
-  if (canonical[lowered]) return canonical[lowered];
-
-  // If not in map, return the trimmed original (capitalized first letter)
-  return v;
-};
-
-
-    // ✅ Normalize qualifications (object or array)
+    // ✅ Normalize qualifications (array or object)
     if (normalizedUpdateData.qualifications) {
       let quals = normalizedUpdateData.qualifications;
       if (!Array.isArray(quals) && typeof quals === "object") {
@@ -243,7 +222,7 @@ exports.updateCandidateSection = async (req, res) => {
       normalizedUpdateData.qualifications = quals.map((qual) => {
         const q = normalizeObject(qual);
         const eduValue = q.educationType || q.qualificationName;
-        q.educationType = mapEducationType(eduValue);
+        q.educationType = normalizeEducationType(eduValue);
         delete q.qualificationName;
 
         q.institutionName =
@@ -261,13 +240,11 @@ exports.updateCandidateSection = async (req, res) => {
       normalizedUpdateData.experienceType = "Experienced";
     }
 
-    // ✅ Fetch candidate
     const candidate = await CandidateOnboarding.findById(id);
     if (!candidate) {
       return res.status(404).json({ success: false, message: "Candidate not found." });
     }
 
-    // ✅ Merge safely
     for (const key in normalizedUpdateData) {
       const value = normalizedUpdateData[key];
       if (
