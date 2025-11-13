@@ -4,7 +4,7 @@ const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 
 // Create a new onboarding record
-// ✅ CREATE ONBOARDING CONTROLLER
+
 exports.createOnboaringdingRecord = async (req, res) => {
   try {
     // 🔐 Validate admin
@@ -15,7 +15,7 @@ exports.createOnboaringdingRecord = async (req, res) => {
       });
     }
 
-    // ✅ Universal normalization (recursively trims strings)
+    // ✅ Universal normalization
     const normalizeObject = (obj) => {
       if (typeof obj === "string") return obj.trim();
       if (Array.isArray(obj)) return obj.map(normalizeObject);
@@ -29,13 +29,13 @@ exports.createOnboaringdingRecord = async (req, res) => {
 
     const normalizedBody = normalizeObject(req.body || {});
 
-    // ✅ Fix typo key if exists
+    // ✅ Fix typo key
     if (normalizedBody.guadianName && !normalizedBody.guardianName) {
       normalizedBody.guardianName = normalizedBody.guadianName;
       delete normalizedBody.guadianName;
     }
 
-    // ✅ Fallback for missing optional fields
+    // ✅ Fallbacks for optional fields
     const fieldsToCheck = ["guardianName", "phoneNumber", "panAttachment", "aadharAttachment"];
     fieldsToCheck.forEach((field) => {
       if (!normalizedBody[field] || normalizedBody[field].trim() === "") {
@@ -45,81 +45,85 @@ exports.createOnboaringdingRecord = async (req, res) => {
       }
     });
 
-    // ✅ Education type mapper (ensures schema enum compatibility)
+    // ✅ Education type mapper (case-insensitive, flexible)
     const mapEducationType = (value) => {
-  if (!value) return "Other";
-  const normalized = String(value).trim().toLowerCase();
+      if (!value) return "Other";
+      const normalized = String(value).trim().toLowerCase();
 
-  const allowed = [
-    "ssc",
-    "intermediate",
-    "diploma",
-    "graduation",
-    "post-graduation",
-    "doctorate",
-    "other",
-  ];
+      const allowed = [
+        "ssc",
+        "intermediate",
+        "diploma",
+        "graduation",
+        "post-graduation",
+        "doctorate",
+        "other",
+      ];
 
-  const map = {
-    "b.tech": "Graduation",
-    "b.e": "Graduation",
-    "b.sc": "Graduation",
-    "bca": "Graduation",
-    "bcom": "Graduation",
-    "m.tech": "Post-Graduation",
-    "m.e": "Post-Graduation",
-    "m.sc": "Post-Graduation",
-    "mca": "Post-Graduation",
-    "mba": "Post-Graduation",
-    "phd": "Doctorate",
-    "p.hd": "Doctorate",
-  };
+      const map = {
+        "btech": "Graduation",
+        "b.tech": "Graduation",
+        "be": "Graduation",
+        "b.e": "Graduation",
+        "bsc": "Graduation",
+        "b.sc": "Graduation",
+        "bca": "Graduation",
+        "bcom": "Graduation",
+        "mtech": "Post-Graduation",
+        "m.tech": "Post-Graduation",
+        "me": "Post-Graduation",
+        "m.e": "Post-Graduation",
+        "msc": "Post-Graduation",
+        "m.sc": "Post-Graduation",
+        "mca": "Post-Graduation",
+        "mba": "Post-Graduation",
+        "phd": "Doctorate",
+        "p.hd": "Doctorate",
+      };
 
-  // Direct match or mapped value
-  if (allowed.includes(normalized)) {
-    return normalized[0].toUpperCase() + normalized.slice(1); // Capitalize first letter
-  }
-  return map[normalized] || "Other";
-};
+      if (allowed.includes(normalized)) {
+        return normalized[0].toUpperCase() + normalized.slice(1);
+      }
+      return map[normalized] || "Other";
+    };
 
+    // ✅ Normalize qualifications
+    const { qualifications, ...otherFields } = normalizedBody;
 
-    // ✅ Normalize qualifications array (support object or array input)
-   const { qualifications, ...otherFields } = normalizedBody;
+    // Convert object {0: {}, 1: {}} → array
+    let qualificationsArray = [];
+    if (Array.isArray(qualifications)) {
+      qualificationsArray = qualifications;
+    } else if (qualifications && typeof qualifications === "object") {
+      qualificationsArray = Object.values(qualifications);
+    }
 
-// Convert object-like qualifications (e.g., {0: {...}, 1: {...}}) into array
-let qualificationsArray = [];
-if (Array.isArray(qualifications)) {
-  qualificationsArray = qualifications;
-} else if (qualifications && typeof qualifications === "object") {
-  qualificationsArray = Object.values(qualifications);
-}
+    const normalizedQualifications = qualificationsArray.map((qual) => {
+      const q = normalizeObject(qual);
 
-const normalizedQualifications = qualificationsArray.map((qual) => {
-  const q = normalizeObject(qual);
+      // ✅ Support both "qualificationName" and "educationType"
+      const eduValue = q.educationType || q.qualificationName;
+      q.educationType = mapEducationType(eduValue);
+      delete q.qualificationName;
 
-  // 🔹 Map B.Tech → Graduation, etc.
-  q.educationType = mapEducationType(q.educationType);
+      q.institutionName =
+        q.institutionName && q.institutionName.trim() !== ""
+          ? q.institutionName.trim()
+          : "Not Provided";
+      q.universityOrBoard =
+        q.universityOrBoard && q.universityOrBoard.trim() !== ""
+          ? q.universityOrBoard.trim()
+          : "Not Provided";
+      q.subCourse = q.subCourse?.trim() || "Not Provided";
+      q.specialization = q.specialization?.trim() || "Not Provided";
+      q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
+      q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
+      q.certificateAttachment = q.certificateAttachment?.trim() || "Not Provided";
 
-  q.institutionName =
-    q.institutionName && q.institutionName.trim() !== ""
-      ? q.institutionName.trim()
-      : "Not Provided";
-  q.universityOrBoard =
-    q.universityOrBoard && q.universityOrBoard.trim() !== ""
-      ? q.universityOrBoard.trim()
-      : "Not Provided";
-  q.subCourse = q.subCourse?.trim() || "Not Provided";
-  q.specialization = q.specialization?.trim() || "Not Provided";
-  q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
-  q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
-  q.certificateAttachment =
-    q.certificateAttachment?.trim() || "Not Provided";
+      return q;
+    });
 
-  return q;
-});
-
-
-    // ✅ Save new record
+    // ✅ Save record
     const newCandidate = new CandidateOnboarding({
       ...otherFields,
       qualifications: normalizedQualifications,
@@ -128,7 +132,6 @@ const normalizedQualifications = qualificationsArray.map((qual) => {
 
     await newCandidate.save();
 
-    // ✅ Send response
     return res.status(201).json({
       success: true,
       message: "Onboarding Record Created Successfully",
@@ -180,71 +183,71 @@ exports.updateCandidateSection = async (req, res) => {
 
     const normalizedUpdateData = normalizeObject(updateData || {});
 
-    // ✅ EducationType Mapper (same as above)
+    // ✅ EducationType Mapper (same as create)
     const mapEducationType = (value) => {
-  if (!value) return "Other";
-  const normalized = String(value).trim().toLowerCase();
+      if (!value) return "Other";
+      const normalized = String(value).trim().toLowerCase();
 
-  const allowed = [
-    "ssc",
-    "intermediate",
-    "diploma",
-    "graduation",
-    "post-graduation",
-    "doctorate",
-    "other",
-  ];
+      const allowed = [
+        "ssc",
+        "intermediate",
+        "diploma",
+        "graduation",
+        "post-graduation",
+        "doctorate",
+        "other",
+      ];
 
-  const map = {
-    "b.tech": "Graduation",
-    "b.e": "Graduation",
-    "b.sc": "Graduation",
-    "bca": "Graduation",
-    "bcom": "Graduation",
-    "m.tech": "Post-Graduation",
-    "m.e": "Post-Graduation",
-    "m.sc": "Post-Graduation",
-    "mca": "Post-Graduation",
-    "mba": "Post-Graduation",
-    "phd": "Doctorate",
-    "p.hd": "Doctorate",
-  };
+      const map = {
+        "btech": "Graduation",
+        "b.tech": "Graduation",
+        "be": "Graduation",
+        "b.e": "Graduation",
+        "bsc": "Graduation",
+        "b.sc": "Graduation",
+        "bca": "Graduation",
+        "bcom": "Graduation",
+        "mtech": "Post-Graduation",
+        "m.tech": "Post-Graduation",
+        "me": "Post-Graduation",
+        "m.e": "Post-Graduation",
+        "msc": "Post-Graduation",
+        "m.sc": "Post-Graduation",
+        "mca": "Post-Graduation",
+        "mba": "Post-Graduation",
+        "phd": "Doctorate",
+        "p.hd": "Doctorate",
+      };
 
-  // Direct match or mapped value
-  if (allowed.includes(normalized)) {
-    return normalized[0].toUpperCase() + normalized.slice(1); // Capitalize first letter
-  }
-  return map[normalized] || "Other";
-};
+      if (allowed.includes(normalized)) {
+        return normalized[0].toUpperCase() + normalized.slice(1);
+      }
+      return map[normalized] || "Other";
+    };
 
-    // ✅ Normalize qualifications safely
-    // ✅ Always normalize qualifications (object or array)
-if (normalizedUpdateData.qualifications) {
-  let quals = normalizedUpdateData.qualifications;
+    // ✅ Normalize qualifications (object or array)
+    if (normalizedUpdateData.qualifications) {
+      let quals = normalizedUpdateData.qualifications;
+      if (!Array.isArray(quals) && typeof quals === "object") {
+        quals = Object.values(quals);
+      }
 
-  // Convert object {0: {}, 1: {}} → array
-  if (!Array.isArray(quals) && typeof quals === "object") {
-    quals = Object.values(quals);
-  }
+      normalizedUpdateData.qualifications = quals.map((qual) => {
+        const q = normalizeObject(qual);
+        const eduValue = q.educationType || q.qualificationName;
+        q.educationType = mapEducationType(eduValue);
+        delete q.qualificationName;
 
-  normalizedUpdateData.qualifications = quals.map((qual) => {
-    const q = normalizeObject(qual);
-
-    // Map B.Tech → Graduation etc.
-    q.educationType = mapEducationType(q.educationType);
-
-    q.institutionName =
-      q.institutionName && q.institutionName.trim() !== ""
-        ? q.institutionName.trim()
-        : "Not Provided";
-
-    q.subCourse = q.subCourse?.trim() || "Not Provided";
-    q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
-    q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
-    return q;
-  });
-}
-
+        q.institutionName =
+          q.institutionName && q.institutionName.trim() !== ""
+            ? q.institutionName.trim()
+            : "Not Provided";
+        q.subCourse = q.subCourse?.trim() || "Not Provided";
+        q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
+        q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
+        return q;
+      });
+    }
 
     if (normalizedUpdateData.experienceType === "Experience") {
       normalizedUpdateData.experienceType = "Experienced";
