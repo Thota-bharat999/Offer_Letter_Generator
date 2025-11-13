@@ -277,12 +277,13 @@ exports.updateCandidateSection = async (req, res) => {
 
 
 
-// upload Document Functionality 
+
+
 exports.uploadDocument = async (req, res) => {
   try {
     const userId = req.params.id;
+    const fileType = req.params.type?.toLowerCase(); // ✅ get type from URL instead of body
     const file = req.files?.file?.[0];
-    const fileType = req.body.type?.toLowerCase();
 
     const allowedTypes = ["pan", "aadhar", "offer", "bank", "payslip", "certificate"];
     if (!allowedTypes.includes(fileType)) {
@@ -293,40 +294,66 @@ exports.uploadDocument = async (req, res) => {
     }
 
     if (!file) {
-      return res.status(400).json({ success: false, message: "No file uploaded." });
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded.",
+      });
     }
 
-    // ✅ Ensure folder exists
+    // ✅ Ensure upload directory exists
     const uploadDir = path.join(__dirname, "../uploads/onboarding");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // ✅ Construct safe file path
+    // ✅ Generate safe filename
     const fileExt = path.extname(file.originalname) || ".jpg";
     const fileName = `${userId}_${fileType}_${Date.now()}${fileExt}`;
     const filePath = path.join(uploadDir, fileName);
 
     // ✅ Save file to disk
     fs.writeFileSync(filePath, file.buffer);
-
-    console.log("✅ File saved at:", filePath);
-
-    // ✅ Store relative path (for DB or response)
     const relativePath = `uploads/onboarding/${fileName}`;
 
-    // Example: save to DB if needed
-    // await Candidate.findByIdAndUpdate(userId, { $set: { [`documents.${fileType}`]: relativePath } });
+    console.log(`✅ File saved at: ${relativePath}`);
+
+    // ✅ Update database immediately (panAttachment, aadharAttachment, etc.)
+    const updateField =
+      fileType === "pan"
+        ? { panAttachment: relativePath }
+        : fileType === "aadhar"
+        ? { aadharAttachment: relativePath }
+        : fileType === "offer"
+        ? { "offerDetails.offerAttachment": relativePath }
+        : fileType === "bank"
+        ? { "bankDetails.bankAttachment": relativePath }
+        : fileType === "payslip"
+        ? { "experiences.$[].payslipAttachment": relativePath }
+        : fileType === "certificate"
+        ? { "qualifications.$[].certificateAttachment": relativePath }
+        : null;
+
+    if (updateField) {
+      await CandidateOnboarding.findByIdAndUpdate(
+        userId,
+        { $set: updateField },
+        { new: true }
+      );
+    }
 
     return res.status(200).json({
       success: true,
-      message: "File uploaded successfully.",
+      message: "File uploaded and saved successfully.",
       filePath: relativePath,
     });
-
   } catch (err) {
     console.error("❌ Upload Error:", err);
-    return res.status(500).json({ success: false, message: "File upload failed.", error: err.message });
+    return res.status(500).json({
+      success: false,
+      message: "File upload failed.",
+      error: err.message,
+    });
   }
 };
+
 
 // get Candidate Details By Id
 exports.getCandidateById=async(req,res)=>{

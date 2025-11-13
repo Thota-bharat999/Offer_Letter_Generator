@@ -23,7 +23,7 @@ router.get("/:id", verifyToken, getCandidateById);
 router.delete("/:id", verifyToken, deleteCandidateById);
 
 // POST /api/onboarding/:id/upload - Upload document
-router.post("/:id/upload", verifyToken, upload.fields([{ name: 'file', maxCount: 1 }, { name: 'type', maxCount: 1 }]), uploadDocument);
+router.post("/upload/:id/:type", upload.fields([{ name: "file" }]), uploadDocument);
 
 // // POST /api/onboarding/:id/generate-offer - Generate Offer Letter PDF
 // router.post("/:id/generate-offer", verifyToken, generateOfferPDF);
