@@ -136,7 +136,6 @@ const generateOfferPDF = async (offerData) => {
     "--no-zygote",
     "--single-process",
   ],
-  executablePath: puppeteer.executablePath(), // ✅ uses internal Chromium
 });
 
 
