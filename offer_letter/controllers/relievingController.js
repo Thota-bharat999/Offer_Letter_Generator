@@ -9,9 +9,9 @@ const mongoose=require('mongoose');
 
 exports.createRelivingLetter=async(req,res)=>{
     try{
-        const {employeeName,designation,employeeId,joiningDate,relievingDate}=req.body;
+        const {employeeName,designation,employeeId,joiningDate,resignationDate,relievingDate}=req.body;
 
-        if(!employeeName || !designation || !employeeId || !joiningDate || !relievingDate){
+        if(!employeeName || !designation || !employeeId || !joiningDate || !resignationDate || !relievingDate){
             return res.status(400).json({message:"All fields are required"});
         }
 
@@ -25,8 +25,9 @@ exports.createRelivingLetter=async(req,res)=>{
             employeeName,
             designation,
             employeeId,
-            joiningDate,
-            relievingDate,
+            joiningDate: new Date(joiningDate),
+            resignationDate: new Date(resignationDate),
+            relievingDate: new Date(relievingDate),
 
         });
         await newRelievingLetter.save();
@@ -90,6 +91,7 @@ try{
             designation:letter.designation,
             employeeId:letter.employeeId,
             joiningDate:letter.joiningDate,
+            resignationDate:letter.resignationDate,
             relievingDate:letter.relievingDate,
         });
 
@@ -111,13 +113,14 @@ exports.updateRelievingLetter=async(req,res)=>{
         if(!id){
             return res.status(400).json({message:"Relieving letter ID is required"});
         }
-        const{employeeName,designation,employeeId,joiningDate,relievingDate}=req.body;
+        const{employeeName,designation,employeeId,joiningDate,resignationDate,relievingDate}=req.body;
         const updates={
             ...(employeeName &&{employeeName}),
             ...(designation &&{designation}),
             ...(employeeId &&{employeeId}),
-            ...(joiningDate &&{joiningDate}),
-            ...(relievingDate &&{relievingDate}),
+            ...(joiningDate &&{joiningDate: new Date(joiningDate)}),
+            ...(resignationDate &&{resignationDate: new Date(resignationDate)}),
+            ...(relievingDate &&{relievingDate: new Date(relievingDate)}),
         };
         const updateLetter=await RelievingLetter.findByIdAndUpdate(id,updates,{
             new:true,

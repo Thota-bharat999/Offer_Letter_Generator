@@ -1,7 +1,7 @@
 const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
-// const { install, getInstalledBrowsers } = require("@puppeteer/browsers");
+
 const fs = require("fs");
 
 const generateOfferPDF = async (offerData) => {
@@ -127,16 +127,6 @@ const generateOfferPDF = async (offerData) => {
     // === LAUNCH PUPPETEER (Render-safe) ===
     console.log("🟩 [10] Launching Puppeteer...");
 
-    // Ensure browser is installed
-    // const installedBrowsers = await getInstalledBrowsers();
-    // if (!installedBrowsers.length) {
-    //   console.log("🟩 Installing browser...");
-    //   await install({
-    //     browser: 'chrome',
-    //     buildId: 'latest',
-    //   });
-    //   console.log("✅ Browser installed");
-    // }
 
     const browser = await puppeteer.launch({
       headless: true,
