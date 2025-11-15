@@ -6,6 +6,17 @@ const sendEmail=require('../services/emailService')
 
 const mongoose=require('mongoose');
 
+// Helper function to parse DD-MM-YYYY date format
+const parseDate = (dateString) => {
+    if (!dateString) return null;
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+        const [day, month, year] = parts;
+        return new Date(`${year}-${month}-${day}`);
+    }
+    return new Date(dateString);
+};
+
 
 exports.createRelivingLetter=async(req,res)=>{
     try{
@@ -25,9 +36,9 @@ exports.createRelivingLetter=async(req,res)=>{
             employeeName,
             designation,
             employeeId,
-            joiningDate: new Date(joiningDate),
-            resignationDate: new Date(resignationDate),
-            relievingDate: new Date(relievingDate),
+            joiningDate: parseDate(joiningDate),
+            resignationDate: parseDate(resignationDate),
+            relievingDate: parseDate(relievingDate),
 
         });
         await newRelievingLetter.save();
@@ -118,9 +129,9 @@ exports.updateRelievingLetter=async(req,res)=>{
             ...(employeeName &&{employeeName}),
             ...(designation &&{designation}),
             ...(employeeId &&{employeeId}),
-            ...(joiningDate &&{joiningDate: new Date(joiningDate)}),
-            ...(resignationDate &&{resignationDate: new Date(resignationDate)}),
-            ...(relievingDate &&{relievingDate: new Date(relievingDate)}),
+            ...(joiningDate &&{joiningDate: parseDate(joiningDate)}),
+            ...(resignationDate &&{resignationDate: parseDate(resignationDate)}),
+            ...(relievingDate &&{relievingDate: parseDate(relievingDate)}),
         };
         const updateLetter=await RelievingLetter.findByIdAndUpdate(id,updates,{
             new:true,
