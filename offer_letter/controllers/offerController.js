@@ -149,13 +149,8 @@ exports.createOfferLetter = async (req, res) => {
     };
 
     // ✅ Pass logo to EJS PDF generator
-    const pdfPath = await generateOfferPDF({
-      ...offerData,
-      companyName: "Amazon IT Solutions",
-      companyAddress: "Hyderabad, Telangana, India",
-    });
+    const pdfPath = await generateOfferPDF(offerData);
 
-    // ✅ Create offer letter document with pdfPath
     const offerLetter = new OfferLetter({
       ...offerData,
       pdfPath,
@@ -192,8 +187,8 @@ exports.updateOfferLetter = async (req, res) => {
         // }
         
         const { id } = req.params;
-        const adminId = req.admin.id;
-        const adminRole = req.admin.role;
+        // const adminId = req.admin.id;
+        // const adminRole = req.admin.role;
 
         // ✅ Only allow specific fields to be updated
         const allowedUpdates = [
@@ -312,31 +307,26 @@ exports.deleteOfferLetter = async (req, res) => {
 //
 exports.getAllOffers = async (req, res) => {
     try {
-        // 🔥 Admin Safety Check (FIX)
-        // if (!req.admin || !req.admin.id || !req.admin.role) {
-        //     return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
-        // }
+        const offers = await OfferLetter.find().sort({ createdAt: -1 });
 
-        const filter = {};
-
-        const offers = await OfferLetter.find(filter)
-            .populate("createdBy", "name email role")
-            .sort({ createdAt: -1 });
-
-        const totalCount = await OfferLetter.countDocuments(filter);
+        const totalCount = await OfferLetter.countDocuments();
 
         res.status(200).json({
             success: true,
-            message: offers.length === 0 ? "No offer letters found" : "Offers retrieved successfully",
+            message: offers.length === 0 
+                ? "No offer letters found" 
+                : "Offers retrieved successfully",
             count: offers.length,
-            totalCount: totalCount,
+            totalCount,
             data: offers,
         });
+
     } catch (error) {
         console.error("❌ Error fetching offers:", error);
         res.status(500).json({ message: "Server error while fetching offers" });
     }
 };
+
 
 //
 // ======================== GET OFFER BY ID ========================
@@ -371,43 +361,35 @@ exports.getOfferById = async (req, res) => {
 // offer Letter Download
 exports.downloadOfferLetter = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // ✅ Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid offer letter ID" });
-    }
-
-    // ✅ Find offer
-    const offer = await OfferLetter.findById(id).populate("createdBy", "name email");
-    if (!offer) {
+    const offer = await OfferLetter.findById(req.params.id);
+    if (!offer)
       return res.status(404).json({ message: "Offer letter not found" });
+
+    let pdfPath = offer.pdfPath;
+
+    if (!pdfPath || !fs.existsSync(pdfPath)) {
+      pdfPath = await generateOfferPDF(offer);
+      offer.pdfPath = pdfPath;
+      await offer.save();
     }
 
-    // ✅ Define PDF path
-    const pdfPath = path.join(
-      __dirname,
-      `../uploads/OfferLetter_${offer.candidateName.replace(/\s+/g, "_")}.pdf`
-    );
-
-    // ✅ Generate if missing
-    if (!fs.existsSync(pdfPath)) {
-      console.log("⚠️ PDF not found, regenerating...");
-      await generateOfferPDF(offer);
-    }
-
-    // ✅ Stream download
-    res.download(pdfPath, `OfferLetter_${offer.candidateName}.pdf`, (err) => {
-      if (err) {
-        console.error("❌ Error sending file:", err);
-        res.status(500).json({ message: "Error while downloading offer letter" });
+    return res.download(
+      pdfPath,
+      `OfferLetter_${offer.candidateName}.pdf`,
+      (err) => {
+        if (err)
+          return res
+            .status(500)
+            .json({ message: "Error while downloading PDF" });
       }
-    });
+    );
   } catch (error) {
-    console.error("❌ Error downloading offer letter:", error);
-    res.status(500).json({ message: "Server error while downloading offer letter" });
+    console.error("❌ Download error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 //send-email
 exports.sendOfferLetterEmail=async(req,res)=>{
