@@ -279,70 +279,82 @@ exports.updateCandidateSection = async (req, res) => {
 exports.uploadAllDocuments = async (req, res) => {
   try {
     const userId = req.params.id;
-    const files = req.files;   // ALWAYS an array
+    const files = req.files;
 
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "Candidate ID is required.",
-      });
-    }
+    if (!userId) return res.status(400).json({ success: false, message: "Candidate ID required" });
+    if (!files || files.length === 0)
+      return res.status(400).json({ success: false, message: "No files uploaded" });
 
-    if (!files || files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No files uploaded.",
-      });
-    }
-
-    // Create upload folder
     const uploadDir = path.join(__dirname, "../uploads/onboarding");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    let uploadedFiles = [];
+    const candidate = await CandidateOnboarding.findById(userId);
+    if (!candidate) return res.status(404).json({ success: false, message: "Candidate not found" });
 
-    // Loop through ALL uploaded files
+    const uploadedFiles = [];
+
     for (const file of files) {
       const ext = path.extname(file.originalname) || ".jpg";
       const fileName = `${userId}_${file.fieldname}_${Date.now()}${ext}`;
       const filePath = path.join(uploadDir, fileName);
+      const dbPath = `uploads/onboarding/${fileName}`;
 
-      // Save file
       fs.writeFileSync(filePath, file.buffer);
 
-      uploadedFiles.push({
-        field: file.fieldname,
-        path: `uploads/onboarding/${fileName}`
-      });
+      uploadedFiles.push({ field: file.fieldname, path: dbPath });
+
+      // 🎯 MAP FILE TO CORRECT DB FIELD
+      switch (file.fieldname) {
+        case "pan":
+          candidate.panAttachment = dbPath;
+          break;
+
+        case "aadhar":
+          candidate.aadharAttachment = dbPath;
+          break;
+
+        case "offer_letter":
+          candidate.offerDetails.offerLetterAttachment = dbPath;
+          break;
+
+        case "bank_proof":
+          candidate.bankDetails.bankAttachment = dbPath;
+          break;
+
+        case "marksheet":
+          // store a single latest certificate in qualification[0]
+          if (candidate.qualifications?.length > 0) {
+            candidate.qualifications[0].certificateAttachment = dbPath;
+          }
+          break;
+
+        case "od":
+          // OD = experience payslips
+          if (!candidate.experiences[0].payslipAttachment) {
+            candidate.experiences[0].payslipAttachment = [];
+          }
+          candidate.experiences[0].payslipAttachment.push(dbPath);
+          break;
+
+        default:
+          console.log(`⚠️ Unmapped field: ${file.fieldname}`);
+      }
     }
 
-    // Update DB → Save unlimited files
-    await CandidateOnboarding.findByIdAndUpdate(
-      userId,
-      {
-        $push: { documents: { $each: uploadedFiles } }   // Add unlimited attachments
-      }
-    );
+    await candidate.save();
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: "Files uploaded successfully.",
-      uploaded: uploadedFiles
+      message: "Files uploaded & saved to database successfully.",
+      uploaded: uploadedFiles,
+      candidate
     });
 
   } catch (err) {
     console.error("❌ Upload Error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "File upload failed.",
-      error: err.message,
-    });
+    res.status(500).json({ success: false, message: "File upload failed.", error: err.message });
   }
 };
-
-
-
-
 
 // get Candidate Details By Id
 exports.getCandidateById=async(req,res)=>{
