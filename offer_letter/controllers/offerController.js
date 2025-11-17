@@ -85,12 +85,12 @@ const generateSalaryBreakdown = (ctcAmount) => {
 exports.createOfferLetter = async (req, res) => {
   try {
     // 🔥 Admin Safety Check
-    if (!req.admin || !req.admin.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized: Admin credentials missing.",
-      });
-    }
+    // if (!req.admin || !req.admin.id) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: "Unauthorized: Admin credentials missing.",
+    //   });
+    // }
 
     const {
       candidateName,
@@ -187,9 +187,9 @@ exports.createOfferLetter = async (req, res) => {
 exports.updateOfferLetter = async (req, res) => {
     try {
         // 🔥 Admin Safety Check (FIX)
-        if (!req.admin || !req.admin.id || !req.admin.role) {
-            return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
-        }
+        // if (!req.admin || !req.admin.id || !req.admin.role) {
+        //     return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
+        // }
         
         const { id } = req.params;
         const adminId = req.admin.id;
@@ -313,9 +313,9 @@ exports.deleteOfferLetter = async (req, res) => {
 exports.getAllOffers = async (req, res) => {
     try {
         // 🔥 Admin Safety Check (FIX)
-        if (!req.admin || !req.admin.id || !req.admin.role) {
-            return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
-        }
+        // if (!req.admin || !req.admin.id || !req.admin.role) {
+        //     return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
+        // }
 
         const filter = {};
 
