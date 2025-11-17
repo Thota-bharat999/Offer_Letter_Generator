@@ -218,11 +218,12 @@ exports.downloadRelievingLetter = async (req, res) => {
     }
 
     //Resolve stored PDF path (example field: pdfPath)
-    const pdfPath = path.resolve(__dirname, "../generated_pdfs", `Relieving_${letter.employeeName.replace(/\s+/g, "_")}.pdf`);
+    let pdfPath = path.resolve(__dirname, "../generated_pdfs", `Relieving_${letter.employeeName.replace(/\s+/g, "_")}.pdf`);
 
-    // Check if file exists
+    // Check if file exists, if not generate it
     if (!fs.existsSync(pdfPath)) {
-      return res.status(404).json({ message: "PDF file not found on server" });
+      console.log("📄 PDF not found — generating now...");
+      pdfPath = await generateRelievingPDFUtil(letter);
     }
 
     // Set response headers for download
