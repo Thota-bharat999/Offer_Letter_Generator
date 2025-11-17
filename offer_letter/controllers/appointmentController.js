@@ -439,14 +439,18 @@ exports.downloadAppointmentPDF = async (req, res) => {
       });
     }
 
-    const pdfPath = path.resolve(appointment.pdfPath);
+    let pdfPath = path.resolve(appointment.pdfPath);
 
-    // ✅ Check file existence
+    // ✅ Check file existence, if not generate it
     if (!fs.existsSync(pdfPath)) {
-      return res.status(404).json({
-        success: false,
-        message: "PDF file not found on the server.",
+      console.log("📄 PDF not found — generating now...");
+      pdfPath = await generateAppointmentPDF({
+        ...appointment.toObject(),
+        companyName: "Amazon IT Solutions",
+        companyAddress: "Hyderabad, Telangana, India",
       });
+      appointment.pdfPath = pdfPath;
+      await appointment.save();
     }
 
     // ✅ Send PDF as download
