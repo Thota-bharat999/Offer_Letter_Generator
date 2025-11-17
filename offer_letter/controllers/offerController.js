@@ -266,62 +266,44 @@ exports.updateOfferLetter = async (req, res) => {
 // ======================== DELETE OFFER ========================
 //
 exports.deleteOfferLetter = async (req, res) => {
-    try {
-        // 🔥 Admin Safety Check (FIX)
-        if (!req.admin || !req.admin.id || !req.admin.role) {
-            return res.status(401).json({ success: false, message: "Unauthorized: Admin credentials missing." });
-        }
+  try {
+    const { id } = req.params;
 
-        const { id } = req.params;
-        const adminId = req.admin.id;
-        const adminRole = req.admin.role;
+    // 1. Check if offer exists
+    const offer = await OfferLetter.findById(id);
 
-        // 1. Define the query filter based on the user's role
-        const filter = {
-            _id: id,
-            // Non-superAdmins can only delete offers they created
-            ...(adminRole !== "superAdmin" && { createdBy: adminId })
-        };
-        
-        // 2. Attempt to find and delete the offer letter using the combined filter
-        const deletedOffer = await OfferLetter.findOneAndDelete(filter);
-
-        // 3. Handle deletion failure (Not Found or Access Denied)
-        if (!deletedOffer) {
-            
-            // Check if the document exists at all to differentiate between 404 and 403
-            const exists = await OfferLetter.exists({ _id: id });
-
-            if (!exists) {
-                // If the ID is completely invalid or not found
-                return res.status(404).json({ success: false, message: "Offer letter not found" });
-            } else {
-                // The offer exists, but the user failed the authorization check
-                return res.status(403).json({ success: false, message: "Access denied: You can only delete offers you created." });
-            }
-        }
-
-        // 4. Successful deletion
-        res.status(200).json({
-            success: true,
-            message: "Offer letter deleted successfully",
-            data: deletedOffer,
-        });
-
-    } catch (error) {
-        console.error("❌ Error deleting offer letter:", error.message);
-        
-        // Handle potential invalid ID format error (e.g., CastError from Mongoose)
-        if (error.name === 'CastError' && error.path === '_id') {
-             return res.status(400).json({ success: false, message: "Invalid Offer ID format" });
-        }
-        
-        res.status(500).json({
-            success: false,
-            message: "Server error while deleting offer letter",
-            error: error.message,
-        });
+    if (!offer) {
+      return res.status(404).json({
+        success: false,
+        message: "Offer letter not found",
+      });
     }
+
+    // 2. Delete offer (no admin restrictions)
+    await OfferLetter.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Offer letter deleted successfully",
+      data: offer,
+    });
+    
+  } catch (error) {
+    console.error("❌ Error deleting offer letter:", error.message);
+
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Offer ID format",
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting offer letter",
+      error: error.message,
+    });
+  }
 };
 
 

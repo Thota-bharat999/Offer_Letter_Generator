@@ -94,11 +94,11 @@ const OfferLetterSchema = new mongoose.Schema(
 
 
     // ✅ Linked Admin (Creator)
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "HrAdmin",
-      required: [true, "Offer must be created by an admin"],
-    },
+    // createdBy: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "HrAdmin",
+    //   required: [true, "Offer must be created by an admin"],
+    // },
   },
   { timestamps: true }
 );
