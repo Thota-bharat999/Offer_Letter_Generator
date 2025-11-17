@@ -274,11 +274,12 @@ exports.updateCandidateSection = async (req, res) => {
     });
   }
 };
-// uploadeDocument 
+
+// UNLIMITED FILE UPLOAD CONTROLLER
 exports.uploadAllDocuments = async (req, res) => {
   try {
     const userId = req.params.id;
-    const files = req.files;
+    const files = req.files; // Multer returns field-wise groups: { pan:[], certificate_0:[], payslip_1:[] ... }
 
     if (!userId) {
       return res.status(400).json({
@@ -298,51 +299,136 @@ exports.uploadAllDocuments = async (req, res) => {
     const uploadDir = path.join(__dirname, "../uploads/onboarding");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // Field → DB Mapping
-    const fileMappings = {
+    // Fetch candidate record
+    const candidate = await CandidateOnboarding.findById(userId);
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found.",
+      });
+    }
+
+    // TRACK CHANGES FOR DB UPDATE
+    const updates = {};
+
+    //
+    // =========== SINGLE FILE FIELDS ============
+    //
+    const singleUploads = {
       pan: "panAttachment",
       aadhar: "aadharAttachment",
-      marksheet: "marksheetAttachment",
-      od: "odAttachment",
-      offer_letter: "offerLetterAttachment",
-      bank_proof: "bankProofAttachment",
+      offer_letter: "offerDetails.offerLetterAttachment",
+      bank_proof: "bankDetails.bankAttachment",
     };
 
-    const updateFields = {};
+    //
+    // =========== MULTIPLE GLOBAL ATTACHMENTS ============
+    //
+    const multiUploads = {
+      offer_docs: "offerDetails.additionalOfferDocs",
+      bank_docs: "bankDetails.bankAdditionalDocs",
+      other: "otherAttachments",
+    };
 
-    for (const key in fileMappings) {
-      if (files[key] && files[key].length > 0) {
-        
-        const savedFiles = [];
+    //
+    // CATEGORY FIELD RULES:
+    // → certificate_<index>
+    // → payslip_<index>
+    // → training_certificate_<index>
+    //
+    // Example:
+    // certificate_0 → qualifications[0].certificateAttachments[]
+    // payslip_1 → experiences[1].payslipAttachments[]
+    //
 
-        for (const file of files[key]) {
-          const ext = path.extname(file.originalname) || ".jpg";
-          const fileName = `${userId}_${key}_${Date.now()}_${Math.random()
-            .toString(36)
-            .substring(7)}${ext}`;
-          const filePath = path.join(uploadDir, fileName);
+    for (const fieldName in files) {
+      const fileArray = files[fieldName];
 
-          fs.writeFileSync(filePath, file.buffer);
+      for (const file of fileArray) {
+        const ext = path.extname(file.originalname) || ".jpg";
+        const fileName = `${userId}_${fieldName}_${Date.now()}${ext}`;
+        const filePath = path.join(uploadDir, fileName);
 
-          savedFiles.push(`uploads/onboarding/${fileName}`);
+        // Save to disk
+        fs.writeFileSync(filePath, file.buffer);
+
+        const dbPath = `uploads/onboarding/${fileName}`;
+
+        //
+        // 1️⃣ SINGLE UPLOAD FIELDS
+        //
+        if (singleUploads[fieldName]) {
+          updates[singleUploads[fieldName]] = dbPath;
+          continue;
         }
 
-        // Store array for multi-upload fields (like marksheet)
-        // And single string for single-file fields
-        updateFields[fileMappings[key]] =
-          savedFiles.length === 1 ? savedFiles[0] : savedFiles;
+        //
+        // 2️⃣ GLOBAL MULTIPLE ATTACHMENTS
+        //
+        if (multiUploads[fieldName]) {
+          const arrPath = multiUploads[fieldName];
+          const arr = arrPath.split(".").reduce((o, k) => o[k], candidate);
+
+          arr.push(dbPath);
+          continue;
+        }
+
+        //
+        // 3️⃣ QUALIFICATION CERTIFICATES  (certificate_0, certificate_1...)
+        //
+        if (fieldName.startsWith("certificate_")) {
+          const index = Number(fieldName.split("_")[1]);
+
+          if (candidate.qualifications[index]) {
+            candidate.qualifications[index].certificateAttachments.push(dbPath);
+          }
+          continue;
+        }
+
+        //
+        // 4️⃣ EXPERIENCE PAYSLIPS (payslip_0, payslip_1...)
+        //
+        if (fieldName.startsWith("payslip_")) {
+          const index = Number(fieldName.split("_")[1]);
+
+          if (candidate.experiences[index]) {
+            candidate.experiences[index].payslipAttachments.push(dbPath);
+          }
+          continue;
+        }
+
+        //
+        // 5️⃣ FRESHER TRAINING CERTIFICATES (training_certificate_0...)
+        //
+        if (fieldName.startsWith("training_certificate")) {
+          if (!candidate.fresherDetails.trainingCertificates) {
+            candidate.fresherDetails.trainingCertificates = [];
+          }
+
+          candidate.fresherDetails.trainingCertificates.push(dbPath);
+          continue;
+        }
+
+        //
+        // 6️⃣ OTHERWISE → STORE IN OTHER ATTACHMENTS
+        //
+        candidate.otherAttachments.push(dbPath);
       }
     }
 
-    // Update DB
-    await CandidateOnboarding.findByIdAndUpdate(userId, {
-      $set: updateFields,
-    });
+    // APPLY SINGLE UPDATES (if any)
+    if (Object.keys(updates).length > 0) {
+      await CandidateOnboarding.findByIdAndUpdate(userId, { $set: updates });
+    }
+
+    // SAVE array updates (qualifications, experiences, fresher)
+    await candidate.save();
 
     return res.status(200).json({
       success: true,
-      message: "All documents uploaded successfully.",
-      uploadedFiles: updateFields,
+      message: "Files uploaded successfully.",
+      uploaded: updates,
     });
   } catch (error) {
     console.error("❌ Upload Error:", error);
@@ -353,6 +439,8 @@ exports.uploadAllDocuments = async (req, res) => {
     });
   }
 };
+
+
 
 
 // get Candidate Details By Id

@@ -4,17 +4,7 @@ const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
 const { createOnboaringdingRecord, updateCandidateSection, uploadAllDocuments, getCandidateById,getAllCandidates, deleteCandidateById,getOnboardingDashboardSummary} = require("../controllers/onboardingController");
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-const upload = multer({ storage: storage });
-
+const upload = multer({ storage: multer.memoryStorage() });
 // POST /api/onboarding - Create new candidate
 router.post("/create", verifyToken, createOnboaringdingRecord);
 
@@ -33,18 +23,7 @@ router.get("/:id", verifyToken, getCandidateById);
 router.delete("/:id", verifyToken, deleteCandidateById);
 
 // POST /api/onboarding/:id/upload - Upload document
-router.post(
-  "/upload/:id",
-  upload.fields([
-    { name: "pan", maxCount: 1 },
-    { name: "aadhar", maxCount: 1 },
-    { name: "marksheet", maxCount: 3 },
-    { name: "od", maxCount: 1 },
-    { name: "offer_letter", maxCount: 1 },
-    { name: "bank_proof", maxCount: 1 },
-  ]),
-  uploadAllDocuments
-);
+router.post("/upload/:id", upload.any(), uploadAllDocuments);
 // // POST /api/onboarding/:id/generate-offer - Generate Offer Letter PDF
 // router.post("/:id/generate-offer", verifyToken, generateOfferPDF);
 

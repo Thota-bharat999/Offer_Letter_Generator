@@ -37,8 +37,8 @@ const qualificationSchema = new mongoose.Schema(
     yearOfPassing: { type: String },
     percentageOrGPA: { type: String },
 
-    // ✔ Single certificate file per qualification
-    certificateAttachment: { type: String, default: null },
+    // ✔ UNLIMITED certificate uploads for each qualification
+    certificateAttachments: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -55,8 +55,8 @@ const experienceSchema = new mongoose.Schema(
     joinedCTC: Number,
     finalCTC: Number,
 
-    // ✔ MULTIPLE PAYSLIPS
-    payslipAttachment: [String],
+    // ✔ Unlimited payslips allowed
+    payslipAttachments: { type: [String], default: [] },
 
     consentForBackgroundCheck: { type: Boolean, default: false },
     generalRemarks: String,
@@ -73,8 +73,8 @@ const fresherDetailsSchema = new mongoose.Schema(
     internshipCompany: { type: String },
     internshipDuration: { type: String },
 
-    // ✔ SINGLE training certificate upload
-    trainingCertificate: { type: String, default: null },
+    // ✔ UNLIMITED training certificates
+    trainingCertificates: { type: [String], default: [] },
 
     collegeName: { type: String },
     projectTitle: { type: String },
@@ -95,8 +95,11 @@ const offerDetailsSchema = new mongoose.Schema(
     ctcWords: String,
     interviewRemarks: String,
 
-    // ✔ Single offer letter PDF upload
+    // ✔ SINGLE offer letter PDF
     offerLetterAttachment: { type: String, default: null },
+
+    // ✔ MULTIPLE OFFER-RELATED DOCUMENTS (optional)
+    additionalOfferDocs: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -110,8 +113,11 @@ const bankDetailsSchema = new mongoose.Schema(
     ifscCode: String,
     branchName: String,
 
-    // ✔ Bank proof image/pdf
+    // ✔ SINGLE bank proof upload
     bankAttachment: { type: String, default: null },
+
+    // ✔ UNLIMITED supporting bank documents
+    bankAdditionalDocs: { type: [String], default: [] },
   },
   { _id: false }
 );
@@ -132,11 +138,11 @@ const OnboardingSchema = new mongoose.Schema(
     panNumber: { type: String },
     aadharNumber: { type: String },
 
-    // ✔ Updated for single uploads
+    // ✔ Single uploads
     panAttachment: { type: String, default: null },
     aadharAttachment: { type: String, default: null },
 
-    // ================== 2️⃣ Multiple Qualifications ==================
+    // ================== 2️⃣ Unlimited Qualifications ==================
     qualifications: { type: [qualificationSchema], default: [] },
 
     // ================== 3️⃣ Offer Details ==================
@@ -145,14 +151,13 @@ const OnboardingSchema = new mongoose.Schema(
     // ================== 4️⃣ Bank Details ==================
     bankDetails: bankDetailsSchema,
 
-    // ================== 5️⃣ Experience (Fresher / Experienced) ==================
+    // ================== 5️⃣ Experience (Unlimited) ==================
     experienceType: {
       type: String,
       enum: ["Fresher", "Experienced"],
       default: "Fresher",
     },
 
-    // ✔ Now supports multiple payslips per company
     experiences: { type: [experienceSchema], default: [] },
 
     // ================== 6️⃣ Fresher Details ==================
@@ -167,6 +172,10 @@ const OnboardingSchema = new mongoose.Schema(
 
     createdBy: String,
     updatedBy: String,
+
+    // ================== 8️⃣ GLOBAL ATTACHMENT BUCKET (optional) ==================
+    // For files not belonging to any category
+    otherAttachments: { type: [String], default: [] },
   },
   { timestamps: true }
 );
