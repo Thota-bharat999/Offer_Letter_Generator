@@ -170,7 +170,20 @@
     <% } %>
 
     <div class="content">
-      <p class="date"><% const dateStr = appointment.issueDate || appointment.appointmentDate || ""; if (dateStr) { const [year, month, day] = dateStr.split('-'); %><%= `${day}-${month}-${year}` %><% } %></p>
+      <p class="date"><% 
+        const dateStr = appointment.issueDate || appointment.appointmentDate || ""; 
+        if (dateStr) { 
+          let formattedDate = '';
+          if (dateStr instanceof Date) {
+            const day = String(dateStr.getDate()).padStart(2, '0');
+            const month = String(dateStr.getMonth() + 1).padStart(2, '0');
+            const year = dateStr.getFullYear();
+            formattedDate = `${day}-${month}-${year}`;
+          } else if (typeof dateStr === 'string') {
+            const [year, month, day] = dateStr.split('-');
+            formattedDate = `${day}-${month}-${year}`;
+          }
+      %><%= formattedDate %><% } %></p>
 
       <p class="title">Letter of Appointment</p>
 
@@ -202,7 +215,20 @@
 
       <p>We are immensely pleased to appoint you as a <strong><%= appointment.position || appointment.designation || "" %></strong>, and have you as a part of Amazon IT Solutions Family. We believe your potential skills will be a valuable contribution to our company.</p>
 
-      <p><strong> Effective Date of Appointment:</strong> Your Date of Joining at <strong>“Amazon IT Solutions”</strong> is <% const joiningDateStr = appointment.joiningDate || ""; if (joiningDateStr) { const [year, month, day] = joiningDateStr.split('-'); %><%= `${day}-${month}-${year}` %><% } %> and following are the terms and conditions:</p>
+      <p><strong> Effective Date of Appointment:</strong> Your Date of Joining at <strong>"Amazon IT Solutions"</strong> is <% 
+        const joiningDateStr = appointment.joiningDate || ""; 
+        if (joiningDateStr) { 
+          let formattedJoiningDate = '';
+          if (joiningDateStr instanceof Date) {
+            const day = String(joiningDateStr.getDate()).padStart(2, '0');
+            const month = String(joiningDateStr.getMonth() + 1).padStart(2, '0');
+            const year = joiningDateStr.getFullYear();
+            formattedJoiningDate = `${day}-${month}-${year}`;
+          } else if (typeof joiningDateStr === 'string') {
+            const [year, month, day] = joiningDateStr.split('-');
+            formattedJoiningDate = `${day}-${month}-${year}`;
+          }
+      %><%= formattedJoiningDate %><% } %> and following are the terms and conditions:</p>
 
       <ol>
         <li><strong> Job Assignment:</strong>In your assignment, you will be required to perform duties as laid down in the Job Description for your position.</li>
@@ -246,7 +272,7 @@ Management of the Company. You will also not seek membership of any local or pub
 without first obtaining specific permission from the Management.</li>
         <li><strong>Confidentiality:</strong> You will not, at any time, during the employment or after, without the 
 consent of the Management disclose or divulge or make public, except on legal obligations, any 
-information regarding the Company’s affairs or administration or research carried out, whether the 
+information regarding the Company's affairs or administration or research carried out, whether the 
 same is confided to you or becomes known to you in the course of your service or otherwise. </li>
         <li><strong>Intellectual Property:</strong> If you conceive any new or advanced method of improving designs/ 
 processes/ formulae/ systems, etc. in relation to the business/ operations of the Company, such 
@@ -267,7 +293,7 @@ cases, you will be liable to removal from services without any notice.</li>
 </p>
 <p style="margin-left: 20px; text-align: justify;">
   13.1 During the probationary period and any extension thereof, services can be terminated by either party
-  by giving two months’ notice in writing or gross salary in lieu thereof, only by the employer and this does
+  by giving two months' notice in writing or gross salary in lieu thereof, only by the employer and this does
   not apply for the employee. However, on confirmation the services can be terminated by either party by giving
   Ninety Days (90 days) notice in writing or gross salary in lieu thereof, only by the employer and this does not
   apply for the employee. Buying out of notice period is up to the sole discretion of the management.
