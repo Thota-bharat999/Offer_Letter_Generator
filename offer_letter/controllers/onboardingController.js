@@ -252,7 +252,7 @@ exports.updateCandidateSection = async (req, res) => {
         !Array.isArray(value) &&
         Object.keys(value).length > 0
       ) {
-        candidate[key] = { ...candidate[key]._doc, ...value };
+        candidate[key] = { ...(candidate[key]?._doc || candidate[key] || {}), ...value };
       } else if (value !== undefined && value !== null && value !== "") {
         candidate[key] = value;
       }
