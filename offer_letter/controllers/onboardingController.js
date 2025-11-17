@@ -278,7 +278,7 @@ exports.updateCandidateSection = async (req, res) => {
 exports.uploadAllDocuments = async (req, res) => {
   try {
     const userId = req.params.id;
-    const files = req.files; // Multer gives { pan: [..], aadhar: [..], ... }
+    const files = req.files;
 
     if (!userId) {
       return res.status(400).json({
@@ -294,11 +294,11 @@ exports.uploadAllDocuments = async (req, res) => {
       });
     }
 
-    // ✅ Ensure upload directory exists
+    // Ensure upload directory exists
     const uploadDir = path.join(__dirname, "../uploads/onboarding");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-    // ✅ Define allowed file fields and their DB mapping
+    // Field → DB Mapping
     const fileMappings = {
       pan: "panAttachment",
       aadhar: "aadharAttachment",
@@ -310,35 +310,38 @@ exports.uploadAllDocuments = async (req, res) => {
 
     const updateFields = {};
 
-    // ✅ Loop through allowed fields
     for (const key in fileMappings) {
-      if (files[key] && files[key][0]) {
-        const file = files[key][0];
-        const ext = path.extname(file.originalname) || ".jpg";
-        const fileName = `${userId}_${key}_${Date.now()}${ext}`;
-        const filePath = path.join(uploadDir, fileName);
+      if (files[key] && files[key].length > 0) {
+        
+        const savedFiles = [];
 
-        // Save file to disk
-        fs.writeFileSync(filePath, file.buffer);
+        for (const file of files[key]) {
+          const ext = path.extname(file.originalname) || ".jpg";
+          const fileName = `${userId}_${key}_${Date.now()}_${Math.random()
+            .toString(36)
+            .substring(7)}${ext}`;
+          const filePath = path.join(uploadDir, fileName);
 
-        // Store relative path for DB
-        updateFields[fileMappings[key]] = `uploads/onboarding/${fileName}`;
+          fs.writeFileSync(filePath, file.buffer);
+
+          savedFiles.push(`uploads/onboarding/${fileName}`);
+        }
+
+        // Store array for multi-upload fields (like marksheet)
+        // And single string for single-file fields
+        updateFields[fileMappings[key]] =
+          savedFiles.length === 1 ? savedFiles[0] : savedFiles;
       }
     }
 
-    // ✅ Update the candidate record in DB
-    if (Object.keys(updateFields).length > 0) {
-      await CandidateOnboarding.findByIdAndUpdate(userId, { $set: updateFields });
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: "No valid files found to upload.",
-      });
-    }
+    // Update DB
+    await CandidateOnboarding.findByIdAndUpdate(userId, {
+      $set: updateFields,
+    });
 
     return res.status(200).json({
       success: true,
-      message: "All files uploaded and linked successfully.",
+      message: "All documents uploaded successfully.",
       uploadedFiles: updateFields,
     });
   } catch (error) {

@@ -4,7 +4,17 @@ const multer = require("multer");
 const { verifyToken } = require("../middleware/authMiddleware");
 const { createOnboaringdingRecord, updateCandidateSection, uploadAllDocuments, getCandidateById,getAllCandidates, deleteCandidateById,getOnboardingDashboardSummary} = require("../controllers/onboardingController");
 
-const upload = multer({ storage: multer.memoryStorage() });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
 // POST /api/onboarding - Create new candidate
 router.post("/create", verifyToken, createOnboaringdingRecord);
 
