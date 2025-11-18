@@ -94,7 +94,7 @@ exports.loginAdmin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // 4️⃣ Response
+    // 4️ Response
     res.status(200).json({
       message: Messages.SUCCESS.LOGIN,
       token,
@@ -126,16 +126,16 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ message: Messages.ERROR.ADMIN_NOT_FOUND });
     }
 
-    // ✅ Generate OTP
+    //  Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    // ✅ Save OTP using the same field names used in resetPasswordWithOtp
+    //  Save OTP using the same field names used in resetPasswordWithOtp
     admin.otpCode = hashedOtp;
     admin.otpExpire = Date.now() + 10 * 60 * 1000; // 10 mins
     await admin.save();
 
-    // ✅ Email content
+    //  Email content
     const subject = "Password Reset OTP - Offer Letter Generator";
     const html = `
       <div style="font-family:Arial, sans-serif; padding:10px;">
@@ -172,20 +172,20 @@ exports.resetPasswordWithOtp = async (req, res) => {
   try {
     const { otp, newPassword, confirmPassword } = req.body;
 
-    // ✅ 1. Validate inputs
+    //  1. Validate inputs
     if (!otp || !newPassword || !confirmPassword) {
       return res.status(400).json({ message:Messages.ERROR.MISSING_FIELDS });
     }
 
-    // ✅ 2. Confirm passwords match
+    //  2. Confirm passwords match
     if (newPassword !== confirmPassword) {
       return res.status(400).json({ message:Messages.ERROR.INVALID_PASSWORD });
     }
 
-    // ✅ 3. Hash entered OTP to compare with DB
+    //  3. Hash entered OTP to compare with DB
     const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex");
 
-    // ✅ 4. Find admin by OTP and expiry
+    //  4. Find admin by OTP and expiry
     const admin = await HrAdmin.findOne({
       otpCode: hashedOtp,
       otpExpire: { $gt: Date.now() }, // only valid OTPs
@@ -205,7 +205,7 @@ exports.resetPasswordWithOtp = async (req, res) => {
 
     await admin.save();
 
-    // ✅ 6. Respond success
+    // 6. Respond success
     res.status(200).json({
       success: true,
       message: Messages.SUCCESS.PASSWORD_RESET,
