@@ -1,6 +1,9 @@
 const logger = require("../logger/logger");
 
-module.exports = (req, res, next) => {
-  logger.info(`API Request: ${req.method} ${req.originalUrl}`);
+const loggerMiddleware = (req, res, next) => {
+  logger.info(`${req.method} ${req.originalUrl}`);
   next();
 };
+
+module.exports = loggerMiddleware;
+
