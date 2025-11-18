@@ -3,8 +3,11 @@ const path=require("path");
 const RelievingLetter=require('../models/RelievingLetter');
 const generateRelievingPDFUtil = require("../utils/relievingPdfGenerator")
 const sendEmail=require('../services/emailService')
+const logger = require('../logger/logger');
+const messages = require('../MsgConstants/messages');
 
 const mongoose=require('mongoose');
+const Messages = require('../MsgConstants/messages');
 
 // Helper function to parse DD-MM-YYYY date format
 const parseDate = (dateString) => {
@@ -23,13 +26,13 @@ exports.createRelivingLetter=async(req,res)=>{
         const {employeeName,designation,employeeId,joiningDate,resignationDate,relievingDate}=req.body;
 
         if(!employeeName || !designation || !employeeId || !joiningDate || !resignationDate || !relievingDate){
-            return res.status(400).json({message:"All fields are required"});
+            return res.status(400).json({message:Messages.RELIEVING_lETTER.MISSING_FIELDS_ERROR});
         }
 
         // Check if employeeId already exists
         const existingLetter = await RelievingLetter.findOne({ employeeId });
         if (existingLetter) {
-            return res.status(400).json({ message: "This employee ID already exists. Try for new." });
+            return res.status(400).json({ message:Messages.RELIEVING_lETTER.EMPLOYEE_ID_EXIST });
         }
 
         const newRelievingLetter=new RelievingLetter({
@@ -43,7 +46,7 @@ exports.createRelivingLetter=async(req,res)=>{
         });
         await newRelievingLetter.save();
         res.status(201).json({
-            message: "Relieving letter created successfully",
+            message:Messages.RELIEVING_lETTER.CREATE_SUCCESS,
       data: {
         _id: newRelievingLetter._id,
         employeeName: newRelievingLetter.employeeName
@@ -51,8 +54,8 @@ exports.createRelivingLetter=async(req,res)=>{
         });
 
     }catch(error){
-    console.error("❌ Error creating relieving letter:", error);
-    res.status(500).json({ message: "Server error while creating relieving letter", error: error.message });
+    logger.error("Error creating relieving letter:", error);
+    res.status(500).json({ message: Messages.ERROR.SERVER, error: error.message });
 
     }
 
@@ -63,7 +66,7 @@ exports.getAllRelievingLetters=async(req,res)=>{
     try{
         const letters=await RelievingLetter.find().sort({createdAt:-1});
         if(!letters || letters.length==0){
-            return res.status(404).json({message:"No Relieving Letters Found"});
+            return res.status(404).json({message:Messages.RELIEVING_lETTER.NO_RELIEVING_LETTER});
 
         }
         const result=letters.map((letter)=>({
@@ -75,9 +78,9 @@ exports.getAllRelievingLetters=async(req,res)=>{
         res.status(200).json(result);
 
     }catch(error){
-        console.error("Error fetching relieving letters:", error);
+        logger.error("Error fetching relieving letters:", error);
     res.status(500).json({
-      message: "Server error while fetching relieving letters",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });    
 
@@ -90,11 +93,11 @@ exports.getRelievingLetterById=async(req,res)=>{
 try{
     const {id}=req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
-          return res.status(400).json({ message: "Invalid offer ID" });
+          return res.status(400).json({ message:Messages.RELIEVING_lETTER.INVLAID_OFFER_ID });
         }
         const letter=await RelievingLetter.findById(id);
         if(!letter){
-            return res.status(404).json({message:"Relieving Letter Not Found"});
+            return res.status(404).json({message:Messages.RELIEVING_lETTER.NO_RELIEVING_LETTER});
         }
         res.status(200).json({
             _id:letter._id,
@@ -108,9 +111,9 @@ try{
 
 
 }catch(error){
-    console.error("❌ Error fetching relieving letter by ID:", error);
+    logger.error("Error fetching relieving letter by ID:", error);
     res.status(500).json({
-      message: "Server error while fetching relieving letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 }
@@ -122,7 +125,7 @@ exports.updateRelievingLetter=async(req,res)=>{
     try{
         const {id}=req.params;
         if(!id){
-            return res.status(400).json({message:"Relieving letter ID is required"});
+            return res.status(400).json({message:Messages.RELIEVING_lETTER.RELIEVING_LETTER_ID});
         }
         const{employeeName,designation,employeeId,joiningDate,resignationDate,relievingDate}=req.body;
         const updates={
@@ -139,17 +142,17 @@ exports.updateRelievingLetter=async(req,res)=>{
 
         });
         if(!updateLetter){
-            return res.status(404).json({message:"Relieving letter not found"});
+            return res.status(404).json({message:Messages.RELIEVING_lETTER.RELIEVING_lETTER_NOT_FOUND});
         }
         res.status(200).json({
-            message: "Relieving letter updated successfully",
+            message:Messages.RELIEVING_lETTER.UPDATE_SUCCESS,
             data: updateLetter,
         });
 
     }catch(error){
-        console.error("❌ Error updating relieving letter:", error);
+        logger.error("Error updating relieving letter:", error);
     res.status(500).json({
-      message: "Server error while updating relieving letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -163,20 +166,20 @@ exports.deleteRelievingLetter=async(req,res) => {
         const {id}=req.params;
 
         if(!id){
-            return res.status(400).json({message:"Relieving letter ID is required"});
+            return res.status(400).json({message:Messages.RELIEVING_lETTER.RELIEVING_LETTER_ID});
         }
         const deleteLetter=await RelievingLetter.findByIdAndDelete(id);
         if(!deleteLetter){
-            return res.status(404).json({message:"Relieving letter not found"})
+            return res.status(404).json({message:Messages.RELIEVING_lETTER.RELIEVING_lETTER_NOT_FOUND})
         }
         res.status(200).json({
-            message: "Relieving letter deleted successfully",
+            message:Messages.RELIEVING_lETTER.DELETE_SUCCESS,
         })
 
     }catch(error){
-        console.error("❌ Error deleting relieving letter:", error);
+        logger.error("Error deleting relieving letter:", error);
     return res.status(500).json({
-      message: "Server error while deleting relieving letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     })
     }
@@ -188,18 +191,18 @@ exports.generateRelievingPDF = async (req, res) => {
     const { id } = req.params;
     const letter = await RelievingLetter.findById(id);
     if (!letter) {
-      return res.status(404).json({ message: "Relieving letter not found" });
+      return res.status(404).json({ message:Messages.RELIEVING_lETTER.RELIEVING_lETTER_NOT_FOUND });
     }
 
     const pdfPath = await generateRelievingPDFUtil(letter);
 
     res.status(200).json({
-      message: "Relieving PDF generated successfully",
+      message: Messages.RELIEVING_lETTER.GENERATE_PDF,
       pdfPath,
     });
   } catch (error) {
     res.status(500).json({
-      message: "Server error while generating relieving PDF",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -214,7 +217,7 @@ exports.downloadRelievingLetter = async (req, res) => {
     
     const letter = await RelievingLetter.findById(id);
     if (!letter) {
-      return res.status(404).json({ message: "Relieving letter not found" });
+      return res.status(404).json({ message: Messages.RELIEVING_lETTER.RELIEVING_lETTER_NOT_FOUND});
     }
 
     //Resolve stored PDF path (example field: pdfPath)
@@ -222,7 +225,7 @@ exports.downloadRelievingLetter = async (req, res) => {
 
     // Check if file exists, if not generate it
     if (!fs.existsSync(pdfPath)) {
-      console.log("📄 PDF not found — generating now...");
+      logger.info("PDF not found — generating now...");
       pdfPath = await generateRelievingPDFUtil(letter);
     }
 
@@ -234,11 +237,11 @@ exports.downloadRelievingLetter = async (req, res) => {
     const fileStream = fs.createReadStream(pdfPath);
     fileStream.pipe(res);
 
-    console.log(`✅ Downloaded: ${pdfPath}`);
+    logger.info(`Downloaded: ${pdfPath}`);
   } catch (error) {
-    console.error("❌ Error downloading PDF:", error);
+    logger.error("Error downloading PDF:", error);
     res.status(500).json({
-      message: "Server error while downloading PDF",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -251,13 +254,13 @@ exports.sendRelievingEmail = async (req, res) => {
 
     // ✅ Validate required fields
     if (!relievingId || !email) {
-      return res.status(400).json({ message: "Relieving ID and email are required" });
+      return res.status(400).json({ message: Messages.RELIEVING_lETTER.EMAIL_AND_RELIEVING_ID });
     }
 
     // ✅ Fetch relieving letter from DB
     const letter = await RelievingLetter.findById(relievingId);
     if (!letter) {
-      return res.status(404).json({ message: "Relieving letter not found" });
+      return res.status(404).json({ message:Messages.RELIEVING_lETTER.RELIEVING_lETTER_NOT_FOUND });
     }
 
     // ✅ Construct PDF path
@@ -268,12 +271,12 @@ exports.sendRelievingEmail = async (req, res) => {
 
     // ✅ Check if PDF already exists — if not, generate it
     if (!fs.existsSync(pdfPath)) {
-      console.log("📄 PDF not found — generating now...");
+      logger.info("PDF not found — generating now...");
       await generateRelievingPDFUtil(letter);
     }
 
-    console.log("✅ PDF Path:", pdfPath);
-    console.log("✅ File Exists:", fs.existsSync(pdfPath));
+    logger.info("PDF Path:", pdfPath);
+    logger.info("File Exists:", fs.existsSync(pdfPath));
 
     // ✅ Compose email
     const subject = `Relieving and Experience Letter - ${letter.employeeName} | Amazon IT Solutions`;
@@ -305,12 +308,12 @@ exports.sendRelievingEmail = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Relieving letter sent successfully to ${email}`,
+      message: `Messages.RELIEVING_lETTER.RELIEVING_SENT ${email}`,
     });
   } catch (err) {
-    console.error("❌ Error sending relieving letter email:", err);
+    logger.error("Error sending relieving letter email:", err);
     res.status(500).json({
-      message: "Server error while sending relieving letter email",
+      message: Messages.ERROR.SERVER,
       error: err.message,
     });
   }

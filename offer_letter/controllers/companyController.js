@@ -1,7 +1,8 @@
 const Company = require("../models/Company");
 const fs = require('fs');
 const path = require('path');
-// Assuming you have 'Company' model and utility functions defined here
+const logger = require('../logger/logger');
+const messages = require('../MsgConstants/messages');
 
 exports.updateCompany = async (req, res) => {
     try {
@@ -55,7 +56,7 @@ exports.updateCompany = async (req, res) => {
         if (req.file && oldLogoPath && fs.existsSync(oldLogoPath)) {
              // Optional: Add a check to ensure it's not a default/placeholder path
              fs.unlink(oldLogoPath, (err) => {
-                 if (err) console.error("Could not delete old company logo:", err);
+                 if (err) logger.error("Could not delete old company logo:", err);
              });
         }
         
@@ -71,8 +72,8 @@ exports.updateCompany = async (req, res) => {
         if (error.message === "Only .png, .jpg, and .jpeg files allowed!") {
              return res.status(400).json({ message: error.message });
         }
-        console.error("❌ Error updating company info:", error);
-        res.status(500).json({ message: "Server error while updating company info" });
+        logger.error("Error updating company info:", error);
+        res.status(500).json({ message: messages.ERROR.SERVER });
     }
 };
 
@@ -91,7 +92,7 @@ exports.getCompanyInfo = async (req, res) => {
       data: company,
     });
   } catch (error) {
-    console.error("❌ Error fetching company info:", error);
-    res.status(500).json({ message: "Server error while fetching company info" });
+    logger.error("Error fetching company info:", error);
+    res.status(500).json({ message: messages.ERROR.SERVER });
   }
 };

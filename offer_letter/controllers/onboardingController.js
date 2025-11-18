@@ -2,6 +2,9 @@ const path=require('path');
 const fs=require('fs');
 const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
+const logger = require('../logger/logger');
+const messages = require('../MsgConstants/messages');
+const Messages = require('../MsgConstants/messages');
 
 // Create a new onboarding record
 // ✅ CREATE ONBOARDING CONTROLLER
@@ -11,7 +14,7 @@ exports.createOnboaringdingRecord = async (req, res) => {
     if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Admin credentials missing.",
+        message:Messages.ERROR.UNAUTHORIZED,
       });
     }
 
@@ -126,7 +129,7 @@ exports.createOnboaringdingRecord = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Onboarding Record Created Successfully",
+      message: Messages.ONBOARDING.CREATE_SUCCESS,
       data: {
         _id: newCandidate._id,
         firstName: newCandidate.firstName,
@@ -139,10 +142,10 @@ exports.createOnboaringdingRecord = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error creating candidate:", error);
+    logger.error("Error creating candidate:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -155,10 +158,10 @@ exports.updateCandidateSection = async (req, res) => {
     const updateData = req.body;
 
     if (!id) {
-      return res.status(400).json({ success: false, message: "Candidate ID is required." });
+      return res.status(400).json({ success: false, message:Messages.ONBOARDING.CANDIDATE_ID });
     }
     if (!updateData || Object.keys(updateData).length === 0) {
-      return res.status(400).json({ success: false, message: "No data provided for update." });
+      return res.status(400).json({ success: false, message:Messages.ONBOARDING.NO_DATA });
     }
 
     const normalizeObject = (obj) => {
@@ -242,7 +245,7 @@ exports.updateCandidateSection = async (req, res) => {
 
     const candidate = await CandidateOnboarding.findById(id);
     if (!candidate) {
-      return res.status(404).json({ success: false, message: "Candidate not found." });
+      return res.status(404).json({ success: false, message:Messages.ONBOARDING.CANDIDATE_NOT_FOUND });
     }
 
     for (const key in normalizedUpdateData) {
@@ -262,14 +265,14 @@ exports.updateCandidateSection = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Candidate section updated successfully",
+      message: Messages.ONBOARDING.UPDATE_SUCCESS,
       data: candidate,
     });
   } catch (error) {
-    console.error("❌ Error updating candidate section:", error);
+    logger.error("Error updating candidate section:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -281,15 +284,15 @@ exports.uploadAllDocuments = async (req, res) => {
     const userId = req.params.id;
     const files = req.files;
 
-    if (!userId) return res.status(400).json({ success: false, message: "Candidate ID required" });
+    if (!userId) return res.status(400).json({ success: false, message:Messages.ONBOARDING.CANDIDATE_ID });
     if (!files || files.length === 0)
-      return res.status(400).json({ success: false, message: "No files uploaded" });
+      return res.status(400).json({ success: false, message: Messages.ONBOARDING.NO_FILE });
 
     const uploadDir = path.join(__dirname, "../uploads/onboarding");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
     const candidate = await CandidateOnboarding.findById(userId);
-    if (!candidate) return res.status(404).json({ success: false, message: "Candidate not found" });
+    if (!candidate) return res.status(404).json({ success: false, message: Messages.ONBOARDING.CANDIDATE_NOT_FOUND });
 
     const uploadedFiles = [];
 
@@ -337,7 +340,7 @@ exports.uploadAllDocuments = async (req, res) => {
           break;
 
         default:
-          console.log(`⚠️ Unmapped field: ${file.fieldname}`);
+          logger.warn(`Unmapped field: ${file.fieldname}`);
       }
     }
 
@@ -345,14 +348,14 @@ exports.uploadAllDocuments = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Files uploaded & saved to database successfully.",
+      message:Messages.ONBOARDING.FILE_UPLOAD_SUCCESS,
       uploaded: uploadedFiles,
       candidate
     });
 
   } catch (err) {
-    console.error("❌ Upload Error:", err);
-    res.status(500).json({ success: false, message: "File upload failed.", error: err.message });
+    logger.error("Upload Error:", err);
+    res.status(500).json({ success: false, message:Messages.ONBOARDING.FILE_UPLOAD_FAILED, error: err.message });
   }
 };
 
@@ -363,32 +366,32 @@ exports.getCandidateById=async(req,res)=>{
     if(!id){
       return res.status(400).json({
         success:false,
-        message:"Candidate Id is Required",
+        message:Messages.ONBOARDING.CANDIDATE_ID,
       })
     }
     if(!mongoose.Types.ObjectId.isValid(id)){
       return res.status(400).json({
         success:false,
-        message:"Valid Candidate Id Is Required",
+        message:Messages.ONBOARDING.CANDIDATE_VALID_ID,
       })
     }
     const candidate=await CandidateOnboarding.findById(id).lean();
     if(!candidate){
       return res.status(404).json({
         success:false,
-        message:"Candidate Not Found",
+        message:Messages.ONBOARDING.CANDIDATE_NOT_FOUND,
       })
     }
     return res.status(200).json({
       success:true,
-      message:"Candidate Details Fetched Successfully",
+      message:Messages.ONBOARDING.FETCHED_DETAILS,
       data:candidate,
     })
   }catch(error){
-    console.error("❌ Error fetching candidate:", error);
+    logger.error("Error fetching candidate:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -423,7 +426,7 @@ exports.getAllCandidates=async(req,res)=>{
     ]);
     return res.status(200).json({
       success:true,
-      message:"Candidates fetched Successfully",
+      message:Messages.ONBOARDING.FETCHED_DETAILS,
       total,
       currentPage: parseInt(page),
       pageSize: parseInt(limit),
@@ -432,10 +435,10 @@ exports.getAllCandidates=async(req,res)=>{
     })
 
   }catch(error){
-    console.error("❌ Error fetching candidate list:", error);
+    logger.error("Error fetching candidate list:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -449,26 +452,26 @@ exports.deleteCandidateById=async(req,res)=>{
     if(!id || !mongoose.Types.ObjectId.isValid(id)){
       return res.status(400).json({
         success:false,
-        message:"Invalid or missing Candidate ID",
+        message:Messages.ONBOARDING.CANDIDATE_ID,
       })
     }
     const deleteCandidate=await CandidateOnboarding.findByIdAndDelete(id);
     if(!deleteCandidate){
       return res.status(404).json({
         success:false,
-        message:"Candidate not found",
+        message:Messages.ONBOARDING.CANDIDATE_NOT_FOUND,
       })
     }
     return res.status(200).json({
       success:true,
-      message:"Candidate deleted successfully"
+      message:Messages.ONBOARDING.DELETE_SUCCESS,
     })
 
   }catch(error){
-    console.error("❌ Error deleting candidate:", error);
+    logger.error("Error deleting candidate:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -511,10 +514,10 @@ exports.getOnboardingDashboardSummary = async (req, res) => {
       summary: result,
     });
   } catch (error) {
-    console.error("❌ Error fetching dashboard summary:", error);
+    logger.error("Error fetching dashboard summary:", error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }

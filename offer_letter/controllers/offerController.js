@@ -4,6 +4,8 @@ const fs=require("fs");
 const path=require("path");
 const mongoose=require("mongoose")
 const sendEmail=require("../services/emailService")
+const logger = require('../logger/logger');
+const messages = require('../MsgConstants/messages');
 
 const {
   BASIC_WAGE_PERCENT,
@@ -12,6 +14,7 @@ const {
   TRAVEL_ALLOWANCES_PERCENT,
   OTHER_ALLOWANCES_PERCENT,
 } = require("../constants/salaryStructure");
+const Messages = require("../MsgConstants/messages");
 
 //
 // ======================== HELPER FUNCTION ========================
@@ -114,7 +117,7 @@ exports.createOfferLetter = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "All required fields must be provided",
+        message:Messages.OFFER.MISSING_FIELDS_ERROR,
       });
     }
 
@@ -126,7 +129,7 @@ exports.createOfferLetter = async (req, res) => {
     if (isNaN(totalCTC) || totalCTC <= 0) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid CTC amount" });
+        .json({ success: false, message:Messages.OFFER.INVALID_CTC });
     }
 
     // ✅ Salary breakdown
@@ -160,15 +163,14 @@ exports.createOfferLetter = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message:
-        "Offer letter created successfully with company logo and salary breakdown",
+      message:Messages.OFFER.CREATE_SUCCESS,
       data: offerLetter,
       pdfFile: offerLetter.pdfPath,
     });
   } catch (error) {
-  console.error("❌ Error creating offer letter:", error);
+  logger.error("Error creating offer letter:", error);
   res.status(500).json({
-    message: "Server error while creating offer letter",
+    message: Messages.ERROR.SERVER,
     error: error.message,
     stack: error.stack,
   });
@@ -211,7 +213,7 @@ exports.updateOfferLetter = async (req, res) => {
         if (updates.ctcAmount) {
             const newCTC = Number(updates.ctcAmount);
             if (isNaN(newCTC) || newCTC <= 0) {
-                return res.status(400).json({ success: false, message: "Invalid updated CTC value" });
+                return res.status(400).json({ success: false, message: Messages.OFFER.INVALID_CTC });
             }
             updates.ctcAmount = Math.round(newCTC);
             updates.salaryBreakdown = generateSalaryBreakdown(newCTC);
@@ -232,25 +234,25 @@ exports.updateOfferLetter = async (req, res) => {
             const exists = await OfferLetter.exists({ _id: id });
 
             if (!exists) {
-                return res.status(404).json({ success: false, message: "Offer letter not found" });
+                return res.status(404).json({ success: false, message:Messages.OFFER.OFFER_NOT_FOUND });
             } else {
-                return res.status(403).json({ success: false, message: "Access denied" });
+                return res.status(403).json({ success: false, message:Messages.OFFER.ACCESS_DEINED });
             }
         }
 
         res.status(200).json({
             success: true,
-            message: "Offer letter updated successfully",
+            message: Messages.OFFER.UPDATE_SUCCESS,
             data: updatedOffer,
         });
     } catch (error) {
-        console.error("❌ Error updating offer letter:", error.message);
+        logger.error("Error updating offer letter:", error);
         if (error.name === 'CastError' && error.path === '_id') {
-             return res.status(400).json({ success: false, message: "Invalid Offer ID format" });
+             return res.status(400).json({ success: false, message:Messages.OFFER.INVLAID_OFFER_ID });
         }
         res.status(500).json({
             success: false,
-            message: "Server error while updating offer letter",
+            message: Messages.ERROR.SERVER,
             error: error.message,
         });
     }
@@ -270,7 +272,7 @@ exports.deleteOfferLetter = async (req, res) => {
     if (!offer) {
       return res.status(404).json({
         success: false,
-        message: "Offer letter not found",
+        message: Messages.OFFER.OFFER_NOT_FOUND
       });
     }
 
@@ -279,23 +281,23 @@ exports.deleteOfferLetter = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Offer letter deleted successfully",
+      message: Messages.OFFER.DELETE_SUCCESS,
       data: offer,
     });
     
   } catch (error) {
-    console.error("❌ Error deleting offer letter:", error.message);
+    logger.error("Error deleting offer letter:", error);
 
     if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: "Invalid Offer ID format",
+        message: Messages.OFFER.INVLAID_OFFER_ID,
       });
     }
 
     res.status(500).json({
       success: false,
-      message: "Server error while deleting offer letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -322,8 +324,8 @@ exports.getAllOffers = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("❌ Error fetching offers:", error);
-        res.status(500).json({ message: "Server error while fetching offers" });
+        logger.error("Error fetching offers:", error);
+        res.status(500).json({ message: Messages.ERROR.SERVER });
     }
 };
 
@@ -340,20 +342,20 @@ exports.getOfferById = async (req, res) => {
 
     // Check for valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid offer ID" });
+      return res.status(400).json({ message: Messages.OFFER.INVLAID_OFFER_ID });
     }
 
     const offer = await OfferLetter.findById(id).populate("createdBy", "firstName lastName email");
 
     if (!offer) {
-      return res.status(404).json({ message: "Offer not found" });
+      return res.status(404).json({ message: Messages.OFFER.OFFER_NOT_FOUND });
     }
 
     const totalCount = await OfferLetter.countDocuments({});
     res.status(200).json({ success: true, data: offer, count: totalCount });
   } catch (err) {
-    console.error("❌ Error fetching offer by ID:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    logger.error("Error fetching offer by ID:", err);
+    res.status(500).json({ message: Messages.ERROR.SERVER, error: err.message });
   }
 };
 
@@ -363,7 +365,7 @@ exports.downloadOfferLetter = async (req, res) => {
   try {
     const offer = await OfferLetter.findById(req.params.id);
     if (!offer)
-      return res.status(404).json({ message: "Offer letter not found" });
+      return res.status(404).json({ message: Messages.OFFER.OFFER_NOT_FOUND });
 
     let pdfPath = offer.pdfPath;
 
@@ -380,12 +382,12 @@ exports.downloadOfferLetter = async (req, res) => {
         if (err)
           return res
             .status(500)
-            .json({ message: "Error while downloading PDF" });
+            .json({ message:Messages.OFFER.DOWNLOAD_ERROR });
       }
     );
   } catch (error) {
-    console.error("❌ Download error:", error);
-    res.status(500).json({ message: "Server error" });
+    logger.error("Download error:", error);
+    res.status(500).json({ message: Messages.ERROR.SERVER });
   }
 };
 
@@ -396,22 +398,22 @@ exports.sendOfferLetterEmail=async(req,res)=>{
     try{
         const {offerId,candidateEmail}=req.body;
         if(!offerId || !candidateEmail){
-            return res.status(400).json({message:"Offer ID and candiateEmail is required"});
+            return res.status(400).json({message:Messages.OFFER.EMAIL_AND_OFFER_ID});
         }
         const offer=await OfferLetter.findById(offerId).populate("createdBy", "name email");
         if(!offer){
-            return res.status(404).json({message:"Offer letter not found"})
+            return res.status(404).json({message:Messages.OFFER.OFFER_NOT_FOUND})
         }
         const pdfPath = path.join(
       __dirname,
       `../uploads/OfferLetter_${offer.candidateName.replace(/\s+/g, "_")}.pdf`
     );
      if (!fs.existsSync(pdfPath)) {
-      console.log("📄 PDF not found — generating now...");
+      logger.info("PDF not found — generating now...");
       await generateOfferPDF(offer);
     }
-    console.log("PDF Path:", pdfPath);
-    console.log("File Exists:", fs.existsSync(pdfPath));
+    logger.info("PDF Path:", pdfPath);
+    logger.info("File Exists:", fs.existsSync(pdfPath));
 
     // compose mail
     const subject=`Offer  Letter -${offer.candidateName} | Amazon IT Solutions`;
@@ -438,33 +440,33 @@ exports.sendOfferLetterEmail=async(req,res)=>{
 
     res.status(200).json({
         success: true,
-      message: `Offer letter sent successfully to ${candidateEmail}`,
+      message: `Messages.OFFER.SENT_EMAIL ${candidateEmail}`,
     })
     }catch(err){
-    console.error("❌ Error sending offer letter email:", err);
-    res.status(500).json({ message: "Server error while sending offer letter email" });
+    logger.error("Error sending offer letter email:", err);
+    res.status(500).json({ message: messages.ERROR.SERVER });
 
     }
 }
 
 exports.generatePDF = async (req, res) => {
   try {
-    console.log("📩 Incoming PDF Generation Request:", req.body);
+    logger.info("Incoming PDF Generation Request:", req.body);
 
     const offerData = req.body;
     const pdfPath = await generateOfferPDF(offerData);
 
-    console.log("✅ PDF generated at:", pdfPath);
+    logger.info("PDF generated at:", pdfPath);
 
     return res.status(200).json({
       success: true,
-      message: "Offer Letter PDF generated successfully",
+      message: Messages.OFFER.GENERATE_PDF,
       pdfPath,
     });
   } catch (error) {
-    console.error("❌ PDF Generation Failed:", error);
+    logger.error("PDF Generation Failed:", error);
     res.status(500).json({
-      message: "Internal Server Error",
+      message: Messages.ERROR.SERVER,
       error: error.message,
       stack: error.stack,
     });

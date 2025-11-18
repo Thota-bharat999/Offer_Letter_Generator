@@ -3,6 +3,8 @@ const generateAppointmentPDF = require("../utils/appointmentPdfGenerator");
 const fs=require('fs');
 const path=require('path')
 const mongoose=require('mongoose');
+const logger = require('../logger/logger');
+const messages = require('../MsgConstants/messages');
 const {
   BASIC_WAGE_PERCENT,
   HRA_PERCENT,
@@ -10,6 +12,7 @@ const {
   TRAVEL_ALLOWANCES_PERCENT,
   OTHER_ALLOWANCES_PERCENT,
 } = require("../constants/salaryStructure");
+const Messages = require('../MsgConstants/messages');
 
 const generateSalaryBreakdown = (ctcAmount) => {
   const ctc = Number(ctcAmount);
@@ -63,7 +66,7 @@ exports.createAppointmentLetter=async(req,res)=>{
         if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Admin credentials missing.",
+        message: Messages.ERROR.UNAUTHORIZED,
       });
     }
     const {
@@ -79,11 +82,11 @@ exports.createAppointmentLetter=async(req,res)=>{
 
     }=req.body;
     if(!employeeName || !designation || !address || !joiningDate || !appointmentDate || !ctcAnnual || !ctcWords ||  !hrName || !hrDesignation){
-        return res.status(400).json({message:"All fields are Required"});
+        return res.status(400).json({message:Messages.APPOINTMENT_LETTER.MISSING_FIELDS_ERROR});
     }
     const totalCTC=Number(ctcAnnual);
     if(isNaN(totalCTC)|| totalCTC <=0){
-        return res.status(400).json({message:"Invalid CTC Amount"})
+        return res.status(400).json({message:Messages.APPOINTMENT_LETTER.INVALID_CTC})
     }
     const salaryBreakdown=generateSalaryBreakdown(totalCTC);
     const createdBy = req.admin.id;
@@ -114,15 +117,15 @@ exports.createAppointmentLetter=async(req,res)=>{
     await appointmentLetter.save();
     return res.status(201).json({
         success:true,
-         message: "Appointment letter created successfully with salary breakdown and PDF.",
+         message:Messages.APPOINTMENT_LETTER.CREATE_SUCCESS,
           data: appointmentLetter,
         pdfFile: appointmentLetter.pdfPath,
     })
     }catch(error){
-        console.error("❌ Error creating appointment letter:", error);
+        logger.error("Error creating appointment letter:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while creating appointment letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -134,7 +137,7 @@ exports.updateAppointmentLetter=async(req,res)=>{
     if(!req.admin || !req.admin.id){
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Admin credentials missing.",
+        message:Messages.ERROR.UNAUTHORIZED,
       });
     }
     const {id}=req.params;
@@ -143,7 +146,7 @@ exports.updateAppointmentLetter=async(req,res)=>{
     if(!appointment){
       return res.status(404).json({
         success: false,
-        message: "Appointment letter not found.",
+        message: Messages.APPOINTMENT_LETTER.APPOINTMENT_lETTER_NOT_FOUND,
       })
     }
     if(updates.ctcAnnual){
@@ -151,7 +154,7 @@ exports.updateAppointmentLetter=async(req,res)=>{
       if (isNaN(newCTC) || newCTC <= 0) {
         return res
           .status(400)
-          .json({ success: false, message: "Invalid CTC amount." });
+          .json({ success: false, message:Messages.APPOINTMENT_LETTER.INVALID_CTC });
       }
       appointment.ctcAnnual = newCTC;
       appointment.salaryBreakdown = generateSalaryBreakdown(newCTC);
@@ -164,7 +167,7 @@ exports.updateAppointmentLetter=async(req,res)=>{
     await appointment.save();
     return res.status(200).json({
       success: true,
-      message: "Appointment letter updated successfully",
+      message:Messages.APPOINTMENT_LETTER.CREATE_SUCCESS,
       data: {
         _id: appointment._id,
         employeeName: appointment.employeeName,
@@ -180,10 +183,10 @@ exports.updateAppointmentLetter=async(req,res)=>{
       },
     });
   }catch(error){
-    console.error("❌ Error updating appointment letter:", error);
+    logger.error("Error updating appointment letter:", error);
     res.status(500).json({
       success: false,
-      message: "Server error while updating appointment letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -195,7 +198,7 @@ exports.deleteAppointmentLetter=async(req,res)=>{
     if(!req.admin || !req.admin.id){
       return res.status(401).json({
         success:false,
-        messsage:"Unauthorized: Admin credientials missing.",
+        messsage:Messages.ERROR.UNAUTHORIZED,
       });
     }
     const {id}=req.params;
@@ -203,7 +206,7 @@ exports.deleteAppointmentLetter=async(req,res)=>{
     if(!appointment){
       return res.status(404).json({
         success:false,
-        message:"Appointment Letter not Found.",
+        message:Messages.APPOINTMENT_LETTER.APPOINTMENT_lETTER_NOT_FOUND,
       })
     }
     if(appointment.pdfPath && fs.existsSync(appointment.pdfPath)){
@@ -212,14 +215,14 @@ exports.deleteAppointmentLetter=async(req,res)=>{
     await AppointmentLetter.findByIdAndDelete(id);
     return res.status(200).json({
       success:true,
-      message:"Appointement Letter Deleted Successfully."
+      message:Messages.APPOINTMENT_LETTER.DELETE_SUCCESS
     });
 
   }catch(error){ 
-    console.log("Error Deleting Appointment Letter:",error);
+    logger.error("Error Deleting Appointment Letter:",error);
     return res.status(500).json({
       success:false,
-      message:"Server Error While deleting Appointement Letter.",
+      message:Messages.ERROR.SERVER,
       error:error.messsage,
     });
 
@@ -231,7 +234,7 @@ exports.getAllAppointmentLetters=async(req,res)=>{
     if(!req.admin || !req.admin.id){
       return res.status(401).json({
         success:false,
-        message:"Unauthorized: Admin Credientials missing.",
+        message:Messages.ERROR.UNAUTHORIZED,
       });
     }
     const appointmentLetters=await AppointmentLetter.find().sort({created:-1});
@@ -247,20 +250,20 @@ exports.getAllAppointmentLetters=async(req,res)=>{
     if(result.length==0){
       return res.status(404).json({
         success:false,
-        message:"No Appointment Letters Found.",
+        message:Messages.APPOINTMENT_LETTER.NO_APPOINTMENT_LETTER,
         data:[],
       });
     }
 return res.status(200).json({
   success:true,
-  message:"Appointement Letters fetched Successfully.",
+  message:Messages.APPOINTMENT_LETTER.APPOINTMENT_FETCHED,
   data:result,
 })
   }catch(error){
-    console.error("❌ Error fetching appointment letters:", error);
+    logger.error("Error fetching appointment letters:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while fetching appointment letters",
+      message: messages.ERROR.SERVER,
       error: error.message,
     });
 
@@ -274,7 +277,7 @@ exports.getAppointmentLetterById = async (req, res) => {
     if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Admin credentials missing.",
+        message: Messages.ERROR.UNAUTHORIZED,
       });
     }
 
@@ -286,7 +289,7 @@ exports.getAppointmentLetterById = async (req, res) => {
     if (!letter) {
       return res.status(404).json({
         success: false,
-        message: "Appointment letter not found.",
+        message: Messages.APPOINTMENT_LETTER.NO_APPOINTMENT_LETTER,
       });
     }
 
@@ -307,14 +310,14 @@ exports.getAppointmentLetterById = async (req, res) => {
     // ✅ Success response
     return res.status(200).json({
       success: true,
-      message: "Appointment letter fetched successfully",
+      message: Messages.APPOINTMENT_LETTER.APPOINTMENT_FETCHED,
       data: result,
     });
   } catch (error) {
-    console.error("❌ Error fetching appointment letter by ID:", error);
+    logger.error("Error fetching appointment letter by ID:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while fetching appointment letter",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -326,7 +329,7 @@ exports.generateAppointmentPDF = async (req, res) => {
     if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Admin credentials missing.",
+        message:Messages.ERROR.UNAUTHORIZED,
       });
     }
 
@@ -356,7 +359,7 @@ exports.generateAppointmentPDF = async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        message: "All required fields must be provided.",
+        message:Messages.APPOINTMENT_LETTER.MISSING_FIELDS_ERROR,
       });
     }
 
@@ -390,7 +393,7 @@ exports.generateAppointmentPDF = async (req, res) => {
     // ✅ Success response
     return res.status(201).json({
       success: true,
-      message: "Appointment PDF generated and saved successfully",
+      message: Messages.APPOINTMENT_LETTER.GENERATE_PDF,
       pdfPath,
       data: {
         _id: appointment._id,
@@ -400,10 +403,10 @@ exports.generateAppointmentPDF = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Error generating appointment PDF:", error);
+    logger.error("Error generating appointment PDF:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while generating appointment PDF",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }
@@ -416,7 +419,7 @@ exports.downloadAppointmentPDF = async (req, res) => {
     if (!req.admin || !req.admin.id) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized: Admin credentials missing.",
+        message: Messages.ERROR.UNAUTHORIZED,
       });
     }
 
@@ -428,14 +431,14 @@ exports.downloadAppointmentPDF = async (req, res) => {
     if (!appointment) {
       return res.status(404).json({
         success: false,
-        message: "Appointment letter not found.",
+        message: Messages.APPOINTMENT_LETTER.APPOINTMENT_lETTER_NOT_FOUND,
       });
     }
 
     if (!appointment.pdfPath) {
       return res.status(400).json({
         success: false,
-        message: "No PDF file associated with this appointment letter.",
+        message:Messages.APPOINTMENT_LETTER.NO_PDF_FILE,
       });
     }
 
@@ -443,7 +446,7 @@ exports.downloadAppointmentPDF = async (req, res) => {
 
     // ✅ Check file existence, if not generate it
     if (!fs.existsSync(pdfPath)) {
-      console.log("📄 PDF not found — generating now...");
+      logger.info("PDF not found — generating now...");
       pdfPath = await generateAppointmentPDF({
         ...appointment.toObject(),
         companyName: "Amazon IT Solutions",
@@ -464,17 +467,17 @@ exports.downloadAppointmentPDF = async (req, res) => {
     fileStream.pipe(res);
 
     fileStream.on("error", (err) => {
-      console.error("❌ Error streaming PDF file:", err);
+      logger.error("Error streaming PDF file:", err);
       res.status(500).json({
         success: false,
-        message: "Error downloading appointment PDF",
+        message:Messages.APPOINTMENT_LETTER.ERROR_DOWNLAOD,
       });
     });
   } catch (error) {
-    console.error("❌ Error downloading appointment letter:", error);
+    logger.error("Error downloading appointment letter:", error);
     return res.status(500).json({
       success: false,
-      message: "Server error while downloading appointment PDF",
+      message: Messages.ERROR.SERVER,
       error: error.message,
     });
   }

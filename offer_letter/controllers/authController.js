@@ -4,6 +4,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require("crypto");
 const sendEmail=require("../services/emailService")
+const logger = require('../logger/logger');
+const messages = require('../MsgConstants/messages');
+const Messages = require('../MsgConstants/messages');
 
 
 const generateToken = (id) => {
@@ -17,13 +20,13 @@ exports.registerAdmin = async (req, res) => {
 
     // 1️⃣ Validate inputs
     if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message: Messages.ERROR.MISSING_FIELDS });
     }
 
     // 2️⃣ Check if admin already exists
     const existingAdmin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
     if (existingAdmin) {
-      return res.status(400).json({ message: "Admin already exists with this email" });
+      return res.status(400).json({ message:Messages.SUCCESS.ADMIN_EXIST });
     }
 
     // 3️⃣ Hash the password manually
@@ -51,7 +54,7 @@ exports.registerAdmin = async (req, res) => {
 
     // 6️⃣ Response
     return res.status(201).json({
-      message: "Admin registered successfully",
+      message: Messages.SUCCESS.REGISTER,
       token,
       admin: {
         id: newAdmin._id,
@@ -62,8 +65,8 @@ exports.registerAdmin = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Register error:", err.message);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    logger.error("Register error:", err);
+    return res.status(500).json({ message: Messages.ERROR.SERVER, error: err.message });
   }
 };
 
@@ -74,13 +77,13 @@ exports.loginAdmin = async (req, res) => {
     // 1️⃣ Find admin by email
     const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() }).select("+password");
     if (!admin) {
-      return res.status(404).json({ message: "Admin not found" });
+      return res.status(404).json({ message:Messages.ERROR.ADMIN_NOT_FOUND});
     }
 
     // 2️⃣ Compare password using bcrypt
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(401).json({ message:Messages.ERROR.INVALID_PASSWORD });
     }
 
     // 3️⃣ Generate JWT token
@@ -93,7 +96,7 @@ exports.loginAdmin = async (req, res) => {
 
     // 4️⃣ Response
     res.status(200).json({
-      message: "Login successful",
+      message: Messages.SUCCESS.LOGIN,
       token,
       admin: {
         id: admin._id,
@@ -104,23 +107,23 @@ exports.loginAdmin = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ Login error:", err.message);
-    res.status(500).json({ message: "Server error", error: err.message });
+    logger.error("Login error:", err);
+    res.status(500).json({ message: Messages.ERROR.SERVER, error: err.message });
   }
 };
 
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log("📧 Forgot password request:", email);
+    logger.info("Forgot password request:", email);
 
     if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+      return res.status(400).json({ message: Messages.ERROR.EMAIL_REQUIRED });
     }
 
     const admin = await HrAdmin.findOne({ email: email.toLowerCase().trim() });
     if (!admin) {
-      return res.status(404).json({ message: "Admin not found" });
+      return res.status(404).json({ message: Messages.ERROR.ADMIN_NOT_FOUND });
     }
 
     // ✅ Generate OTP
@@ -154,10 +157,10 @@ exports.forgotPassword = async (req, res) => {
       text,
     });
 
-    return res.status(200).json({ message: "OTP sent successfully" });
+    return res.status(200).json({ message: Messages.SUCCESS.OTP_SENT });
   } catch (error) {
-    console.error("❌ Forgot password error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    logger.error("Forgot password error:", error);
+    return res.status(500).json({ message: Messages.ERROR.SERVER, error: error.message });
   }
 };
 
@@ -171,12 +174,12 @@ exports.resetPasswordWithOtp = async (req, res) => {
 
     // ✅ 1. Validate inputs
     if (!otp || !newPassword || !confirmPassword) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).json({ message:Messages.ERROR.MISSING_FIELDS });
     }
 
     // ✅ 2. Confirm passwords match
     if (newPassword !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
+      return res.status(400).json({ message:Messages.ERROR.INVALID_PASSWORD });
     }
 
     // ✅ 3. Hash entered OTP to compare with DB
@@ -189,7 +192,7 @@ exports.resetPasswordWithOtp = async (req, res) => {
     }).select("+password");
 
     if (!admin) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+      return res.status(400).json({ message:Messages.ERROR.OTP_INVALID });
     }
 
     // ✅ 5. Hash and save new password
@@ -205,11 +208,11 @@ exports.resetPasswordWithOtp = async (req, res) => {
     // ✅ 6. Respond success
     res.status(200).json({
       success: true,
-      message: "Password reset successfully",
+      message: Messages.SUCCESS.PASSWORD_RESET,
     });
   } catch (error) {
-    console.error("❌ Reset password error:", error);
-    res.status(500).json({ message: "Server error during password reset" });
+    logger.error("Reset password error:", error);
+    res.status(500).json({ message: Messages.ERROR.SERVER });
   }
 };
 
