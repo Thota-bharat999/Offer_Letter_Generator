@@ -440,7 +440,7 @@ exports.sendOfferLetterEmail=async(req,res)=>{
 
     res.status(200).json({
         success: true,
-      message: `Messages.OFFER.SENT_EMAIL ${candidateEmail}`,
+      message: `${Messages.OFFER.SENT_EMAIL} ${candidateEmail}`,
     })
     }catch(err){
     logger.error("Error sending offer letter email:", err);

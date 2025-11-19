@@ -7,7 +7,7 @@ const Messages = require('../MsgConstants/messages');
 
 const generateRelievingPDF = async (data) => {
   try {
-    console.log("🟩 [1] Starting Relieving PDF generation...");
+    logger.info("🟩 [1] Starting Relieving PDF generation...");
 
     if (!data || typeof data !== "object") {
       throw new Error("Invalid data provided to generateRelievingPDF()");
@@ -72,7 +72,7 @@ const generateRelievingPDF = async (data) => {
     } else logger.warn("⚠️ Signature not found in:", signatureCandidates);
 
     // === RENDER EJS ===
-    console.log("🟩 [2] Rendering EJS template...");
+    logger.info("🟩 [2] Rendering EJS template...");
     const html = await ejs.renderFile(templatePath, {
       employee_name: data.employeeName || "Employee Name",
       employee_id: data.employeeId || "EMP001",
@@ -121,7 +121,7 @@ const generateRelievingPDF = async (data) => {
     const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
 
     // === LAUNCH PUPPETEER ===
-    console.log("[4] Launching Puppeteer...");
+    logger.info("[4] Launching Puppeteer...");
     const browser = await puppeteer.launch({
       headless: true,
       args: [
@@ -150,7 +150,7 @@ const companySafe = (data.companyName || "Amazon IT Solutions")
     const pdfPath = path.join(uploadsDir, `Relieving_Letter_${safeName}_${companySafe}.pdf`);
 
     // === GENERATE PDF with Correct Margins ===
-    console.log("🟩 [6] Generating PDF...");
+    logger.info("🟩 [6] Generating PDF...");
     await page.pdf({
       path: pdfPath,
       format: "A4",

@@ -31,8 +31,8 @@ const sendEmail = async (options) => {
 
     // ✅ Send email via SendGrid API
     await sgMail.send(msg);
-    console.log(`📧 Email sent successfully to: ${options.to}`);
-    console.log(`📎 Attachments: ${msg.attachments.length}`);
+    logger.info(`📧 Email sent successfully to: ${options.to}`);
+    logger.info(`📎 Attachments: ${msg.attachments.length}`);
     return true;
 
   } catch (error) {
