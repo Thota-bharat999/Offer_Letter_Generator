@@ -1,3 +1,4 @@
+const path = require("path");
 const { createLogger, format, transports } = require("winston");
 
 const logger = createLogger({
@@ -10,11 +11,11 @@ const logger = createLogger({
   ),
   transports: [
     new transports.File({
-      filename: "logs/error.log",
+      filename: path.join(__dirname, "../logs/error.log"),
       level: "error",
     }),
     new transports.File({
-      filename: "logs/combined.log",
+      filename: path.join(__dirname, "../logs/combined.log"),
     }),
   ],
 });
