@@ -123,9 +123,11 @@ const generateAppointmentPDF = async (appointmentData) => {
 
     const uploadsDir = path.resolve(__dirname, "../uploads");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
+    const companySafe = (appointmentData.companyName || "Amazon IT Solutions")
+  .replace(/\s+/g, "_")
+  .replace(/[^a-zA-Z0-9_]/g, "");
     const safeName = (appointmentData.employeeName || "Employee").replace(/\s+/g, "_");
-    const pdfPath = path.join(uploadsDir, `AppointmentLetter_${safeName}.pdf`);
+    const pdfPath = path.join(uploadsDir, `Appointment_Letter_${safeName}_${companySafe}.pdf`);
 
     console.log("🟩 [14] Generating Appointment PDF...");
     await page.pdf({

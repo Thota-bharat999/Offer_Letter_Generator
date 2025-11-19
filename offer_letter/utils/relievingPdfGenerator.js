@@ -141,9 +141,11 @@ const generateRelievingPDF = async (data) => {
     // === OUTPUT DIR ===
     const uploadsDir = path.resolve(__dirname, "../generated_pdfs");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
+const companySafe = (data.companyName || "Amazon IT Solutions")
+  .replace(/\s+/g, "_")
+  .replace(/[^a-zA-Z0-9_]/g, "");
     const safeName = (data.employeeName || "Employee").replace(/\s+/g, "_");
-    const pdfPath = path.join(uploadsDir, `Relieving_${safeName}.pdf`);
+    const pdfPath = path.join(uploadsDir, `Relieving_Letter_${safeName}_${companySafe}.pdf`);
 
     // === GENERATE PDF with Correct Margins ===
     console.log("🟩 [6] Generating PDF...");

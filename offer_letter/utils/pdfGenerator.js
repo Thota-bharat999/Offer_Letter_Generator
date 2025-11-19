@@ -161,7 +161,7 @@ const generateOfferPDF = async (offerData) => {
   .replace(/\s+/g, "_")
   .replace(/[^a-zA-Z0-9_]/g, "");
     const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
-    const pdfPath = path.join(uploadsDir, `OfferLetter_${safeName}_${companySafe}.pdf`);
+    const pdfPath = path.join(uploadsDir, `Offer_Letter_${safeName}_${companySafe}.pdf`);
 
     console.log("🟩 [14] Generating PDF...");
     await page.pdf({
