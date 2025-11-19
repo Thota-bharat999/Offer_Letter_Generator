@@ -2,10 +2,11 @@ const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
+const logger = require("../logger/logger");
 
 const generateAppointmentPDF = async (appointmentData) => {
   try {
-    console.log("🟩 [1] Starting Appointment PDF generation...");
+    logger.info("🟩 [1] Starting Appointment PDF generation...");
 
     if (!appointmentData || typeof appointmentData !== "object") {
       throw new Error("Invalid appointment data provided to generateAppointmentPDF()");
@@ -20,9 +21,10 @@ const generateAppointmentPDF = async (appointmentData) => {
       if (!found) return "";
       const mime = found.endsWith(".png")
         ? "image/png"
-        : found.endsWith(".jpg") || found.endsWith(".jpeg")
+        : (found.endsWith(".jpg") || found.endsWith(".jpeg"))
         ? "image/jpeg"
         : "application/octet-stream";
+
       return `data:${mime};base64,${fs.readFileSync(found).toString("base64")}`;
     };
 
@@ -44,8 +46,7 @@ const generateAppointmentPDF = async (appointmentData) => {
       path.join(assetsDir, "sign.png"),
       path.join(assetsDir, "signature.jpg"),
     ]);
-    
- 
+
     const stampPath = embedImage([
       path.join(assetsDir, "stamp.png"),
       path.join(assetsDir, "seal.png"),
@@ -58,7 +59,7 @@ const generateAppointmentPDF = async (appointmentData) => {
       path.join(assetsDir, "footer-strip.png"),
     ]);
 
-    /** ✅ Normalize Salary Data */
+    /** Normalize Salary Data */
     let salaryComponents = [];
     if (Array.isArray(appointmentData.salaryComponents) && appointmentData.salaryComponents.length > 0) {
       salaryComponents = appointmentData.salaryComponents;
@@ -66,14 +67,13 @@ const generateAppointmentPDF = async (appointmentData) => {
       salaryComponents = appointmentData.salaryBreakdown;
     }
 
-    // Ensure numeric formatting for table
     salaryComponents = salaryComponents.map((item) => ({
       label: item.label || item.component || "",
       perAnnum: Number(item.perAnnum || item.annualAmount || item.annual || item.yearly || 0),
       perMonth: Number(item.perMonth || item.monthlyAmount || item.monthly || 0),
     }));
 
-    console.log("✅ Salary components prepared:", salaryComponents);
+    logger.info("✅ Salary components prepared for PDF table");
 
     // === Render EJS Template ===
     const html = await ejs.renderFile(templatePath, {
@@ -85,7 +85,7 @@ const generateAppointmentPDF = async (appointmentData) => {
         joiningDate: appointmentData.joiningDate || new Date(),
         ctcAnnual: appointmentData.ctcAnnual || 0,
         ctcWords: appointmentData.ctcWords || "",
-        salaryComponents, // ✅ guaranteed table data
+        salaryComponents,
         hrName: appointmentData.hrName || "HR Manager",
         hrDesignation: appointmentData.hrDesignation || "Manager – Human Resources",
       },
@@ -97,9 +97,10 @@ const generateAppointmentPDF = async (appointmentData) => {
       footerPath,
     });
 
-    console.log("✅ [8] Appointment EJS rendered successfully");
+    logger.info("✅ [8] Appointment EJS rendered successfully");
 
     // === Launch Puppeteer ===
+    logger.info("🟩 Launching Puppeteer...");
     const browser = await puppeteer.launch({
       headless: true,
       args: [
@@ -112,24 +113,32 @@ const generateAppointmentPDF = async (appointmentData) => {
       ],
       executablePath: puppeteer.executablePath(),
     });
+    logger.info("✅ Puppeteer launched");
 
     const page = await browser.newPage();
     await page.setDefaultNavigationTimeout(0);
     await page.setDefaultTimeout(0);
 
-    console.log("🟩 [12] Setting HTML content...");
+    logger.info("🟩 Setting HTML content into Puppeteer...");
     await page.setContent(html, { waitUntil: "networkidle0", timeout: 0 });
     await page.evaluateHandle("document.fonts.ready");
 
+    // === Output directory ===
     const uploadsDir = path.resolve(__dirname, "../uploads");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-    const companySafe = (appointmentData.companyName || "Amazon IT Solutions")
-  .replace(/\s+/g, "_")
-  .replace(/[^a-zA-Z0-9_]/g, "");
-    const safeName = (appointmentData.employeeName || "Employee").replace(/\s+/g, "_");
-    const pdfPath = path.join(uploadsDir, `Appointment_Letter_${safeName}_${companySafe}.pdf`);
 
-    console.log("🟩 [14] Generating Appointment PDF...");
+    const companySafe = (appointmentData.companyName || "Amazon_IT_Solutions")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_]/g, "");
+
+    const safeName = (appointmentData.employeeName || "Employee").replace(/\s+/g, "_");
+
+    const pdfPath = path.join(
+      uploadsDir,
+      `Appointment_Letter_${safeName}_${companySafe}.pdf`
+    );
+
+    logger.info("🟩 [14] Generating Appointment PDF...");
     await page.pdf({
       path: pdfPath,
       format: "A4",
@@ -139,12 +148,14 @@ const generateAppointmentPDF = async (appointmentData) => {
       timeout: 0,
     });
 
-    console.log("✅ [15] Appointment PDF generated successfully:", pdfPath);
+    logger.info(`✅ [15] Appointment PDF generated successfully: ${pdfPath}`);
     await browser.close();
+    logger.info("✅ Browser closed");
 
     return pdfPath;
+
   } catch (error) {
-    console.error("❌ Error generating appointment PDF:", error);
+    logger.error("❌ Error generating appointment PDF: " + error.stack);
     throw error;
   }
 };

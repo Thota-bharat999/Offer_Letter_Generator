@@ -1,12 +1,12 @@
 const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
-
 const fs = require("fs");
+const logger = require("../logger/logger");
 
 const generateOfferPDF = async (offerData) => {
   try {
-    console.log("🟩 [1] Starting PDF generation...");
+    logger.info("🟩 [1] Starting PDF generation...");
 
     if (!offerData || typeof offerData !== "object") {
       throw new Error("Invalid offer data provided to generateOfferPDF()");
@@ -23,15 +23,19 @@ const generateOfferPDF = async (offerData) => {
     ];
     const foundLogo = logoCandidates.find((p) => fs.existsSync(p));
     let logoPath = "";
+
     if (foundLogo) {
       const mime = foundLogo.endsWith(".png")
         ? "image/png"
-        : foundLogo.endsWith(".jpg") || foundLogo.endsWith(".jpeg")
+        : (foundLogo.endsWith(".jpg") || foundLogo.endsWith(".jpeg"))
         ? "image/jpeg"
         : "application/octet-stream";
+
       logoPath = `data:${mime};base64,${fs.readFileSync(foundLogo).toString("base64")}`;
-      console.log("✅ Logo embedded:", foundLogo);
-    } else console.warn("⚠️ Logo not found in:", logoCandidates);
+      logger.info(`✅ Logo embedded: ${foundLogo}`);
+    } else {
+      logger.warn(`⚠️ Logo not found. Paths checked: ${logoCandidates.join(", ")}`);
+    }
 
     // === EMBED LETTERHEAD ===
     const letterheadCandidates = [
@@ -41,15 +45,19 @@ const generateOfferPDF = async (offerData) => {
     ];
     const foundLetterhead = letterheadCandidates.find((p) => fs.existsSync(p));
     let letterheadPath = "";
+
     if (foundLetterhead) {
       const mime = foundLetterhead.endsWith(".png")
         ? "image/png"
-        : foundLetterhead.endsWith(".jpg") || foundLetterhead.endsWith(".jpeg")
+        : (foundLetterhead.endsWith(".jpg") || foundLetterhead.endsWith(".jpeg"))
         ? "image/jpeg"
         : "application/octet-stream";
+
       letterheadPath = `data:${mime};base64,${fs.readFileSync(foundLetterhead).toString("base64")}`;
-      console.log("✅ Letterhead embedded:", foundLetterhead);
-    } else console.warn("⚠️ Letterhead not found in:", letterheadCandidates);
+      logger.info(`✅ Letterhead embedded: ${foundLetterhead}`);
+    } else {
+      logger.warn(`⚠️ Letterhead not found. Paths checked: ${letterheadCandidates.join(", ")}`);
+    }
 
     // === EMBED SIGNATURE ===
     const signatureCandidates = [
@@ -59,17 +67,22 @@ const generateOfferPDF = async (offerData) => {
     ];
     const foundSignature = signatureCandidates.find((p) => fs.existsSync(p));
     let signaturePath = "";
+
     if (foundSignature) {
       const mime = foundSignature.endsWith(".png")
         ? "image/png"
-        : foundSignature.endsWith(".jpg") || foundSignature.endsWith(".jpeg")
+        : (foundSignature.endsWith(".jpg") || foundSignature.endsWith(".jpeg"))
         ? "image/jpeg"
         : "application/octet-stream";
+
       signaturePath = `data:${mime};base64,${fs.readFileSync(foundSignature).toString("base64")}`;
-      console.log("✅ Signature embedded:", foundSignature);
-    } else console.warn("⚠️ Signature not found in:", signatureCandidates);
+      logger.info(`✅ Signature embedded: ${foundSignature}`);
+    } else {
+      logger.warn(`⚠️ Signature not found. Paths checked: ${signatureCandidates.join(", ")}`);
+    }
 
     // === RENDER EJS ===
+    logger.info("🟩 [8] Rendering EJS template...");
     const html = await ejs.renderFile(templatePath, {
       candidateName: offerData.candidateName || "Candidate",
       candidateAddress: offerData.candidateAddress || "Address Not Provided",
@@ -81,17 +94,16 @@ const generateOfferPDF = async (offerData) => {
       salaryBreakdown: offerData.salaryBreakdown || [],
       probationPeriodMonths: offerData.probationPeriodMonths || 6,
       dateIssued: offerData.dateIssued || new Date(),
-      companyName: "Amazon IT Solutions",
+      companyName: offerData.companyName || "Amazon IT Solutions",
       companyAddress:
         "Amazon IT Solutions Pvt. Ltd.\nPlot No. 23, Hi-Tech City Road,\nHyderabad, Telangana – 500081",
       logoPath,
       letterheadPath,
       signaturePath,
     });
+    logger.info("✅ [8] EJS rendered successfully");
 
-    console.log("✅ [8] EJS rendered successfully");
-
-    // === ADD LETTERHEAD BACKGROUND ===
+    // === LETTERHEAD BACKGROUND ===
     let modifiedHtml = html;
     if (letterheadPath) {
       modifiedHtml = modifiedHtml.replace(
@@ -112,7 +124,7 @@ const generateOfferPDF = async (offerData) => {
       );
     }
 
-    // === ADD CUSTOM CSS ===
+    // === CUSTOM CSS INJECTION ===
     const cssParts = ['.title-row { margin: -3mm 0 4mm !important; }'];
     if (letterheadPath) {
       cssParts.push(
@@ -122,12 +134,10 @@ const generateOfferPDF = async (offerData) => {
         ".watermark { display: none !important; }"
       );
     }
+
     const finalHtml = modifiedHtml.replace("</style>", cssParts.join("\n") + "\n</style>");
 
-    // === LAUNCH PUPPETEER (Render-safe) ===
-    console.log("🟩 [10] Launching Puppeteer...");
-
-
+    logger.info("🟩 [10] Launching Puppeteer...");
     const browser = await puppeteer.launch({
       headless: true,
       args: [
@@ -139,48 +149,51 @@ const generateOfferPDF = async (offerData) => {
         "--single-process",
       ],
     });
-
-
-
-
-    console.log("✅ [11] Puppeteer launched successfully");
+    logger.info("✅ [11] Puppeteer launched successfully");
 
     const page = await browser.newPage();
-    await page.setDefaultNavigationTimeout(0); // ✅ disable timeout
-    await page.setDefaultTimeout(0); // ✅ disable timeout globally
+    await page.setDefaultNavigationTimeout(0);
+    await page.setDefaultTimeout(0);
 
-    console.log("🟩 [12] Setting HTML content...");
+    logger.info("🟩 [12] Setting HTML content...");
     await page.setContent(finalHtml, { waitUntil: "networkidle0", timeout: 0 });
     await page.evaluateHandle("document.fonts.ready");
-    console.log("✅ [13] Page fully loaded with fonts");
+    logger.info("✅ [13] Page fully loaded with fonts");
 
-    // === OUTPUT DIR ===
+    // === OUTPUT DIRECTORY ===
     const uploadsDir = path.resolve(__dirname, "../uploads");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-  const companySafe = (offerData.companyName || "Amazon IT Solutions")
-  .replace(/\s+/g, "_")
-  .replace(/[^a-zA-Z0-9_]/g, "");
-    const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
-    const pdfPath = path.join(uploadsDir, `Offer_Letter_${safeName}_${companySafe}.pdf`);
 
-    console.log("🟩 [14] Generating PDF...");
+    const companySafe = (offerData.companyName || "Amazon_IT_Solutions")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_]/g, "");
+
+    const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
+
+    const pdfPath = path.join(
+      uploadsDir,
+      `Offer_Letter_${safeName}_${companySafe}.pdf`
+    );
+
+    logger.info("🟩 [14] Generating PDF...");
     await page.pdf({
       path: pdfPath,
       format: "A4",
       printBackground: true,
       preferCSSPageSize: true,
       margin: { top: "0", bottom: "0", left: "0", right: "0" },
-      timeout: 0, // ✅ ensure no timeout in pdf generation
+      timeout: 0,
     });
 
-    console.log("✅ [15] PDF generated successfully:", pdfPath);
+    logger.info(`✅ [15] PDF generated successfully: ${pdfPath}`);
 
     await browser.close();
-    console.log("✅ [16] Browser closed");
+    logger.info("✅ [16] Browser closed");
 
     return pdfPath;
+
   } catch (error) {
-    console.error("❌ Error generating offer PDF:", error);
+    logger.error("❌ Error generating offer PDF: " + error.stack);
     throw error;
   }
 };

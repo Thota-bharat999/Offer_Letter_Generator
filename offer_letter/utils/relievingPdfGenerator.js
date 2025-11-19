@@ -2,6 +2,8 @@ const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
+const logger = require('../logger/logger');
+const Messages = require('../MsgConstants/messages');
 
 const generateRelievingPDF = async (data) => {
   try {
@@ -30,8 +32,8 @@ const generateRelievingPDF = async (data) => {
         ? "image/jpeg"
         : "application/octet-stream";
       logoPath = `data:${mime};base64,${fs.readFileSync(foundLogo).toString("base64")}`;
-      console.log("✅ Logo embedded:", foundLogo);
-    } else console.warn("⚠️ Logo not found in:", logoCandidates);
+      logger.info("✅ Logo embedded:", foundLogo);
+    } else logger.warn("⚠️ Logo not found in:", logoCandidates);
 
     // === EMBED LETTERHEAD ===
     const letterheadCandidates = [
@@ -48,8 +50,8 @@ const generateRelievingPDF = async (data) => {
         ? "image/jpeg"
         : "application/octet-stream";
       letterheadPath = `data:${mime};base64,${fs.readFileSync(foundLetterhead).toString("base64")}`;
-      console.log("✅ Letterhead embedded:", foundLetterhead);
-    } else console.warn("⚠️ Letterhead not found in:", letterheadCandidates);
+      logger.info("✅ Letterhead embedded:", foundLetterhead);
+    } else logger.warn("⚠️ Letterhead not found in:", letterheadCandidates);
 
     // === EMBED SIGNATURE ===
     const signatureCandidates = [
@@ -66,8 +68,8 @@ const generateRelievingPDF = async (data) => {
         ? "image/jpeg"
         : "application/octet-stream";
       signaturePath = `data:${mime};base64,${fs.readFileSync(foundSignature).toString("base64")}`;
-      console.log("✅ Signature embedded:", foundSignature);
-    } else console.warn("⚠️ Signature not found in:", signatureCandidates);
+      logger.info("✅ Signature embedded:", foundSignature);
+    } else logger.warn("⚠️ Signature not found in:", signatureCandidates);
 
     // === RENDER EJS ===
     console.log("🟩 [2] Rendering EJS template...");
@@ -86,7 +88,7 @@ const generateRelievingPDF = async (data) => {
       signaturePath,
     });
 
-    console.log("✅ [3] EJS rendered successfully");
+    logger.info("✅ [3] EJS rendered successfully");
 
     // === ADD LETTERHEAD BACKGROUND ===
     let modifiedHtml = html;
@@ -132,7 +134,7 @@ const generateRelievingPDF = async (data) => {
       ],
       executablePath: puppeteer.executablePath(),
     });
-    console.log("[5] Puppeteer launched successfully");
+    logger.info("[5] Puppeteer launched successfully");
 
     const page = await browser.newPage();
     await page.setContent(finalHtml, { waitUntil: "networkidle0" });
@@ -162,14 +164,14 @@ const companySafe = (data.companyName || "Amazon IT Solutions")
       },
     });
 
-    console.log("✅ [7] PDF generated successfully:", pdfPath);
+    logger.info("✅ [7] PDF generated successfully:", pdfPath);
 
     await browser.close();
-    console.log("✅ [8] Browser closed");
+    logger.info("✅ [8] Browser closed");
 
     return pdfPath;
   } catch (error) {
-    console.error("❌ Error generating relieving PDF:", error);
+    logger.error("❌ Error generating relieving PDF:", error);
     throw error;
   }
 };

@@ -2,10 +2,12 @@ const path = require("path");
 const ejs = require("ejs");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
+const logger = require('../logger/logger');
+const Messages = require('../MsgConstants/messages');
 
 const generateFullPacketPDF = async (candidate) => {
   try {
-    console.log("🟩 [1] Starting Full Packet PDF generation...");
+    logger.info("🟩 [1] Starting Full Packet PDF generation...");
 
     const templatePath = path.join(__dirname, "../templates/fullPacket.ejs");
     const assetsDir = path.resolve(__dirname, "../assets");
@@ -160,7 +162,7 @@ const generateFullPacketPDF = async (candidate) => {
 
     return pdfPath;
   } catch (error) {
-    console.error("❌ Error generating full packet PDF:", error);
+    logger.error("❌ Error generating full packet PDF:", error);
     throw error;
   }
 };
