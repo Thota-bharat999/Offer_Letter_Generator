@@ -157,9 +157,11 @@ const generateOfferPDF = async (offerData) => {
     // === OUTPUT DIR ===
     const uploadsDir = path.resolve(__dirname, "../uploads");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
+  const companySafe = (offerData.companyName || "Amazon IT Solutions")
+  .replace(/\s+/g, "_")
+  .replace(/[^a-zA-Z0-9_]/g, "");
     const safeName = (offerData.candidateName || "Candidate").replace(/\s+/g, "_");
-    const pdfPath = path.join(uploadsDir, `OfferLetter_${safeName}.pdf`);
+    const pdfPath = path.join(uploadsDir, `OfferLetter_${safeName}_${companySafe}.pdf`);
 
     console.log("🟩 [14] Generating PDF...");
     await page.pdf({
