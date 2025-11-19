@@ -1,3 +1,9 @@
+const logger = require("./logger/logger");
+
+console.log = (...args) => logger.info(args.join(" "));
+console.error = (...args) => logger.error(args.join(" "));
+console.warn = (...args) => logger.warn(args.join(" "));
+
 require("dotenv").config()
 const express=require("express");
 const cors=require("cors");
@@ -7,7 +13,6 @@ const bodyParser=require("body-parser");
 const loggerMiddleware = require("./middleware/loggerMiddleware");
 
 
-
 app.use(bodyParser.json()); 
 app.use(bodyParser.urlencoded({ extended: true }));
 const offerRoutes=require('./routes/offerRoutes');
@@ -15,6 +20,7 @@ const companyRoutes=require('./routes/companyRoutes')
 const relievingRoutes=require('./routes/relievingRoutes')
 const appointmentRoutes=require('./routes/appointmentRoutes')
 const onboardingRoutes=require('./routes/onboardingRoutes')
+
 
 
 app.use(
@@ -38,9 +44,9 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 30000,
-}).then(()=> console.log("MongoDB connected"))
-  .catch(err => console.error("MongoDB connection error:", err));
+}).then(()=> logger.info("MongoDB connected"))
+  .catch(err => logger.error("MongoDB connection error:", err));
 
 app.get("/", (req, res) => res.send("Offer Letter Generator API is running..."));
   const PORT=process.env.PORT || 5000;
-  app.listen(PORT,()=>console.log(`Server Running on ${PORT}`))
+  app.listen(PORT,()=>logger.info(`Server Running on ${PORT}`))

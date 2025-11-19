@@ -3,7 +3,6 @@ const fs=require('fs');
 const CandidateOnboarding=require('../models/Onboarding');
 const mongoose=require('mongoose');
 const logger = require('../logger/logger');
-const messages = require('../MsgConstants/messages');
 const Messages = require('../MsgConstants/messages');
 
 // Create a new onboarding record

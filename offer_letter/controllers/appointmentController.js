@@ -4,7 +4,6 @@ const fs=require('fs');
 const path=require('path')
 const mongoose=require('mongoose');
 const logger = require('../logger/logger');
-const messages = require('../MsgConstants/messages');
 const {
   BASIC_WAGE_PERCENT,
   HRA_PERCENT,

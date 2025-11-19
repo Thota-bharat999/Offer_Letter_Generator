@@ -4,7 +4,6 @@ const RelievingLetter=require('../models/RelievingLetter');
 const generateRelievingPDFUtil = require("../utils/relievingPdfGenerator")
 const sendEmail=require('../services/emailService')
 const logger = require('../logger/logger');
-const messages = require('../MsgConstants/messages');
 
 const mongoose=require('mongoose');
 const Messages = require('../MsgConstants/messages');

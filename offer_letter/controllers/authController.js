@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 const crypto = require("crypto");
 const sendEmail=require("../services/emailService")
 const logger = require('../logger/logger');
-const messages = require('../MsgConstants/messages');
 const Messages = require('../MsgConstants/messages');
 
 
