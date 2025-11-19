@@ -283,7 +283,9 @@ exports.uploadAllDocuments = async (req, res) => {
     const userId = req.params.id;
     const files = req.files;
 
-    if (!userId) return res.status(400).json({ success: false, message:Messages.ONBOARDING.CANDIDATE_ID });
+    if (!userId)
+      return res.status(400).json({ success: false, message: Messages.ONBOARDING.CANDIDATE_ID });
+
     if (!files || files.length === 0)
       return res.status(400).json({ success: false, message: Messages.ONBOARDING.NO_FILE });
 
@@ -291,7 +293,8 @@ exports.uploadAllDocuments = async (req, res) => {
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
     const candidate = await CandidateOnboarding.findById(userId);
-    if (!candidate) return res.status(404).json({ success: false, message: Messages.ONBOARDING.CANDIDATE_NOT_FOUND });
+    if (!candidate)
+      return res.status(404).json({ success: false, message: Messages.ONBOARDING.CANDIDATE_NOT_FOUND });
 
     const uploadedFiles = [];
 
@@ -303,39 +306,45 @@ exports.uploadAllDocuments = async (req, res) => {
 
       fs.writeFileSync(filePath, file.buffer);
 
-      uploadedFiles.push({ field: file.fieldname, path: dbPath });
+      const fileObject = {
+        fileName,
+        filePath: dbPath,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        uploadedAt: new Date(),
+      };
 
-      // 🎯 MAP FILE TO CORRECT DB FIELD
+      uploadedFiles.push({ field: file.fieldname, ...fileObject });
+
+      // 🎯 MAP FILE TO CORRECT DB FIELD (store OBJECT instead of string)
       switch (file.fieldname) {
         case "pan":
-          candidate.panAttachment = dbPath;
+          candidate.panAttachment = fileObject;
           break;
 
         case "aadhar":
-          candidate.aadharAttachment = dbPath;
+          candidate.aadharAttachment = fileObject;
           break;
 
         case "offer_letter":
-          candidate.offerDetails.offerLetterAttachment = dbPath;
+          candidate.offerDetails.offerLetterAttachment = fileObject;
           break;
 
         case "bank_proof":
-          candidate.bankDetails.bankAttachment = dbPath;
+          candidate.bankDetails.bankAttachment = fileObject;
           break;
 
         case "marksheet":
-          // store a single latest certificate in qualification[0]
           if (candidate.qualifications?.length > 0) {
-            candidate.qualifications[0].certificateAttachment = dbPath;
+            candidate.qualifications[0].certificateAttachment = fileObject;
           }
           break;
 
         case "od":
-          // OD = experience payslips
           if (!candidate.experiences[0].payslipAttachment) {
             candidate.experiences[0].payslipAttachment = [];
           }
-          candidate.experiences[0].payslipAttachment.push(dbPath);
+          candidate.experiences[0].payslipAttachment.push(fileObject);
           break;
 
         default:
@@ -347,16 +356,21 @@ exports.uploadAllDocuments = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message:Messages.ONBOARDING.FILE_UPLOAD_SUCCESS,
+      message: Messages.ONBOARDING.FILE_UPLOAD_SUCCESS,
       uploaded: uploadedFiles,
-      candidate
+      candidate,
     });
 
   } catch (err) {
-    logger.error("Upload Error:", err);
-    res.status(500).json({ success: false, message:Messages.ONBOARDING.FILE_UPLOAD_FAILED, error: err.message });
+    logger.error("Upload Error: " + err.message);
+    res.status(500).json({
+      success: false,
+      message: Messages.ONBOARDING.FILE_UPLOAD_FAILED,
+      error: err.message,
+    });
   }
 };
+
 
 // get Candidate Details By Id
 exports.getCandidateById=async(req,res)=>{

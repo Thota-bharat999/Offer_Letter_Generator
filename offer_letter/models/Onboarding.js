@@ -1,6 +1,20 @@
 const mongoose = require("mongoose");
 
 //
+// ======================= FILE OBJECT SUBSCHEMA =======================
+//
+const fileObjectSchema = new mongoose.Schema(
+  {
+    fileName: String,
+    filePath: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: { type: Date, default: Date.now }
+  },
+  { _id: false }
+);
+
+//
 // ======================= QUALIFICATION SUBSCHEMA =======================
 //
 const qualificationSchema = new mongoose.Schema(
@@ -37,8 +51,8 @@ const qualificationSchema = new mongoose.Schema(
     yearOfPassing: { type: String },
     percentageOrGPA: { type: String },
 
-    // ✔ UNLIMITED certificate uploads for each qualification
-    certificateAttachments: { type: [String], default: [] },
+    // 🔥 Unlimited certificate uploads as file objects
+    certificateAttachments: { type: [fileObjectSchema], default: [] }
   },
   { _id: false }
 );
@@ -55,8 +69,8 @@ const experienceSchema = new mongoose.Schema(
     joinedCTC: Number,
     finalCTC: Number,
 
-    // ✔ Unlimited payslips allowed
-    payslipAttachments: { type: [String], default: [] },
+    // 🔥 Unlimited payslips (file objects)
+    payslipAttachments: { type: [fileObjectSchema], default: [] },
 
     consentForBackgroundCheck: { type: Boolean, default: false },
     generalRemarks: String,
@@ -73,8 +87,8 @@ const fresherDetailsSchema = new mongoose.Schema(
     internshipCompany: { type: String },
     internshipDuration: { type: String },
 
-    // ✔ UNLIMITED training certificates
-    trainingCertificates: { type: [String], default: [] },
+    // 🔥 unlimited training certificates (file objects)
+    trainingCertificates: { type: [fileObjectSchema], default: [] },
 
     collegeName: { type: String },
     projectTitle: { type: String },
@@ -95,11 +109,11 @@ const offerDetailsSchema = new mongoose.Schema(
     ctcWords: String,
     interviewRemarks: String,
 
-    // ✔ SINGLE offer letter PDF
-    offerLetterAttachment: { type: String, default: null },
+    // 🔥 Single offer letter (file object)
+    offerLetterAttachment: { type: fileObjectSchema, default: null },
 
-    // ✔ MULTIPLE OFFER-RELATED DOCUMENTS (optional)
-    additionalOfferDocs: { type: [String], default: [] },
+    // 🔥 Unlimited extra documents (file objects)
+    additionalOfferDocs: { type: [fileObjectSchema], default: [] },
   },
   { _id: false }
 );
@@ -113,11 +127,11 @@ const bankDetailsSchema = new mongoose.Schema(
     ifscCode: String,
     branchName: String,
 
-    // ✔ SINGLE bank proof upload
-    bankAttachment: { type: String, default: null },
+    // 🔥 Single file object
+    bankAttachment: { type: fileObjectSchema, default: null },
 
-    // ✔ UNLIMITED supporting bank documents
-    bankAdditionalDocs: { type: [String], default: [] },
+    // 🔥 Unlimited additional bank documents
+    bankAdditionalDocs: { type: [fileObjectSchema], default: [] },
   },
   { _id: false }
 );
@@ -127,7 +141,6 @@ const bankDetailsSchema = new mongoose.Schema(
 //
 const OnboardingSchema = new mongoose.Schema(
   {
-    // ================== 1️⃣ Basic Candidate Info ==================
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     guardianName: { type: String, default: null },
@@ -135,23 +148,21 @@ const OnboardingSchema = new mongoose.Schema(
     email: { type: String, required: true },
     phoneNumber: { type: String, default: null },
 
-    panNumber: { type: String },
-    aadharNumber: { type: String },
+    panNumber: String,
+    aadharNumber: String,
 
-    // ✔ Single uploads
-    panAttachment: { type: String, default: null },
-    aadharAttachment: { type: String, default: null },
+    // 🌟 These two now store file objects, not strings
+    panAttachment: { type: fileObjectSchema, default: null },
+    aadharAttachment: { type: fileObjectSchema, default: null },
 
-    // ================== 2️⃣ Unlimited Qualifications ==================
+    // Qualifications
     qualifications: { type: [qualificationSchema], default: [] },
 
-    // ================== 3️⃣ Offer Details ==================
+    // Offer & Bank details
     offerDetails: offerDetailsSchema,
-
-    // ================== 4️⃣ Bank Details ==================
     bankDetails: bankDetailsSchema,
 
-    // ================== 5️⃣ Experience (Unlimited) ==================
+    // Experience
     experienceType: {
       type: String,
       enum: ["Fresher", "Experienced"],
@@ -160,10 +171,8 @@ const OnboardingSchema = new mongoose.Schema(
 
     experiences: { type: [experienceSchema], default: [] },
 
-    // ================== 6️⃣ Fresher Details ==================
     fresherDetails: fresherDetailsSchema,
 
-    // ================== 7️⃣ Onboarding Status & Meta ==================
     status: {
       type: String,
       enum: ["Draft", "Submitted", "OfferGenerated", "Completed"],
@@ -173,9 +182,8 @@ const OnboardingSchema = new mongoose.Schema(
     createdBy: String,
     updatedBy: String,
 
-    // ================== 8️⃣ GLOBAL ATTACHMENT BUCKET (optional) ==================
-    // For files not belonging to any category
-    otherAttachments: { type: [String], default: [] },
+    // 🔥 Global bucket for unidentified uploads (file objects)
+    otherAttachments: { type: [fileObjectSchema], default: [] }
   },
   { timestamps: true }
 );
