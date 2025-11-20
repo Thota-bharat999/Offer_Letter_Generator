@@ -14,11 +14,11 @@ exports.saveBasicInfo=async(req,res)=>{
 if(req.files && req.files.length>0){
   for(const file of req.files){
     const base64String=file.buffer.toString("base64")
-    attachments[file,fildName]={
+    attachments[file.fieldname]={
       fileName:file.originalname,
       base64:base64String,
-      mimeType:file.mimeType,
-      fileSize:file.Size,
+      mimeType:file.mimetype,
+      fileSize:file.size,
       uploadedAt:new Date(),
 
     }
