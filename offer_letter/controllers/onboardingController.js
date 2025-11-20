@@ -1,11 +1,11 @@
 const BasicInfo=require("../models/BasicInfo");
-const {v4:uuidv4}=require("uuid")
 // const logger = require('../logger/logger');
 // const Messages = require('../MsgConstants/messages');
 
 // controllers/onboardingController.js
 exports.saveBasicInfo=async(req,res)=>{
   try{
+    const { v4: uuidv4 } = await import('uuid');
     let {draftId}=req.body;
     if(!draftId || draftId ===""){
       draftId=uuidv4();
