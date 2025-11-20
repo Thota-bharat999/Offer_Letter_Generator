@@ -1,67 +1,84 @@
-const BasicInfo=require("../models/BasicInfo");
 // const logger = require('../logger/logger');
 // const Messages = require('../MsgConstants/messages');
-
 // controllers/onboardingController.js
-exports.saveBasicInfo=async(req,res)=>{
-  try{
-    const { v4: uuidv4 } = await import('uuid');
-    let {draftId}=req.body;
-    if(!draftId || draftId ===""){
-      draftId=uuidv4();
+
+const BasicInfo = require("../models/BasicInfo");
+
+exports.saveBasicInfo = async (req, res) => {
+  try {
+    const {
+      draftId: existingDraftId,
+      firstName,
+      lastName,
+      fatherName,
+      email,
+      countryCode,
+      phoneNumber,
+      aadharNumber,
+      panNumber
+    } = req.body;
+
+    // Generate draftId if not provided
+    let draftId = existingDraftId;
+    if (!draftId) {
+      draftId = BasicInfo.generateDraftId(aadharNumber, panNumber);
     }
-    let attachments={};
-if(req.files && req.files.length>0){
-  for(const file of req.files){
-    const base64String=file.buffer.toString("base64")
-    attachments[file.fieldname]={
-      fileName:file.originalname,
-      base64:base64String,
-      mimeType:file.mimetype,
-      fileSize:file.size,
-      uploadedAt:new Date(),
 
+    // Prepare Base64 attachments
+    const attachments = {};
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        attachments[file.fieldname] = {
+          fileName: file.originalname,
+          base64: file.buffer.toString("base64"),
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedAt: new Date()
+        };
+      });
     }
-  }
-}
-const basicInfoData={
-  draftId,
-  firstName:req.body.firstName,
-  lastName:req.body.lastName,
-  fatherName:req.body.fatherName,
-  email:req.body.email,
-  countryCode:req.body.countryCode,
-  phoneNumber:req.body.phoneNumber,
-  aadharNumber:req.body.aadharNumber,
-  panNumber:req.body.panNumber,
 
-  ...(attachments.aadhar && {aadharAttachment:aadhar.attachments}),
-  ...(attachments.pan && {panAttachment:pan.attachments}),
+    // Check existing draft
+    let record = await BasicInfo.findOne({ draftId });
 
-}
-const savedBasicInfo=await BasicInfo.findOneAndUpdate(
-  { draftId },
-      { $set: basicInfoData },
-      { upsert: true, new: true }
+    if (!record) record = new BasicInfo({ draftId });
 
-)
-return res.status(200).json({
+    // Update fields
+    record.firstName = firstName;
+    record.lastName = lastName;
+    record.fatherName = fatherName;
+    record.email = email;
+    record.countryCode = countryCode;
+    record.phoneNumber = phoneNumber;
+
+    // Encrypt Aadhaar & PAN only if they exist
+    if (aadharNumber) record.setAadhar(aadharNumber);
+    if (panNumber) record.setPan(panNumber);
+
+    // Attachments
+    if (attachments.aadhar) record.aadharAttachment = attachments.aadhar;
+    if (attachments.pan) record.panAttachment = attachments.pan;
+
+    await record.save();
+
+    return res.status(200).json({
       success: true,
-      message: "Basic information saved successfully",
+      message: "Basic info saved successfully",
       draftId,
-      data: savedBasicInfo
+      data: record
     });
-
-  }catch(error){
-    console.error("Basic Info Save Error:", error);
+  } catch (err) {
     return res.status(500).json({
       success: false,
-      message: "Failed to save basic information",
-      error: error.message,
+      message: "Failed to save basic info",
+      error: err.message
     });
-
   }
-}
+};
+
+
+
+
 
 
 
