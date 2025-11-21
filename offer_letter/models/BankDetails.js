@@ -1,23 +1,53 @@
 // models/BankDetails.js
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 
-const attachmentSchema = new mongoose.Schema({
-  fileName: String,
-  mimeType: String,
-  fileSize: Number,
-  uploadedAt: Date,
-});
+// SALT for hashing account number + IFSC
+const SALT_KEY = process.env.BANK_SALT || "default-bank-salt";
 
-const bankDetailsSchema = new mongoose.Schema({
-  draftId: { type: String, required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "BasicInfo" },
+// 🔐 Hash function directly inside model (NO controller hashing)
+function hashValue(value) {
+  return crypto
+    .createHash("sha256")
+    .update(value + "|" + SALT_KEY)
+    .digest("hex");
+}
 
-  bankName: { type: String, required: true },
-  accountNumber: { type: String, required: true },
-  ifscCode: { type: String, required: true },
-  branchName: String,
+const attachmentSchema = new mongoose.Schema(
+  {
+    fileName: String,
+    base64: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: Date
+  },
+  { _id: false }
+);
 
-  bankAttachment: attachmentSchema,
-}, { timestamps: true });
+const bankSchema = new mongoose.Schema(
+  {
+    draftId: { type: String, required: true, index: true },
 
-module.exports = mongoose.model("BankDetails", bankDetailsSchema);
+    // hashed fields (never store raw)
+    accountNumberHashed: String,
+    ifscCodeHashed: String,
+
+    bankName: String,
+    branchName: String,
+
+    bankAttachment: attachmentSchema
+  },
+  { timestamps: true }
+);
+
+// ⚡ Model method to set hashed values
+bankSchema.methods.setBankData = function (accountNumber, ifscCode) {
+  if (accountNumber) {
+    this.accountNumberHashed = hashValue(accountNumber);
+  }
+  if (ifscCode) {
+    this.ifscCodeHashed = hashValue(ifscCode);
+  }
+};
+
+module.exports = mongoose.model("BankDetails", bankSchema);

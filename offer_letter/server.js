@@ -47,7 +47,7 @@ app.use("/api/offer", offerRoutes);
 app.use("/api/offer/company", companyRoutes);
 app.use("/api/relieving", relievingRoutes);
 app.use("/api/appointment", appointmentRoutes);
-app.use("/api/onboarding", onboardingRoutes);
+app.use("/api/candidate", onboardingRoutes);
 
 // MongoDB
 mongoose

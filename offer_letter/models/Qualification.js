@@ -1,23 +1,31 @@
 // models/Qualification.js
 const mongoose = require("mongoose");
 
-const attachmentSchema = new mongoose.Schema({
-    draftId: { type: String, required: true },
-  fileName: String,
-  mimeType: String,
-  fileSize: Number,
-  uploadedAt: Date,
-});
+const attachmentSchema = new mongoose.Schema(
+  {
+    fileName: String,
+    base64: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: Date
+  },
+  { _id: false }
+);
 
-const qualificationSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "BasicInfo" },
+const qualificationSchema = new mongoose.Schema(
+  {
+    draftId: { type: String, required: true, index: true },
 
-  qualification: { type: String, required: true },
-  percentage: String,
-  yearOfPassing: String,
+    qualification: String,
+    specialization: String,
+    percentage: String,
+    university: String,
+    passingYear: String,
 
-  marksheetAttachment: attachmentSchema,
-  odAttachment: attachmentSchema,   // Optional
-}, { timestamps: true });
+    marksheetAttachment: attachmentSchema,
+    odAttachment: attachmentSchema
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Qualification", qualificationSchema);

@@ -1,23 +1,29 @@
 // models/OfferDetails.js
 const mongoose = require("mongoose");
 
-const attachmentSchema = new mongoose.Schema({
-  fileName: String,
-  mimeType: String,
-  fileSize: Number,
-  uploadedAt: Date,
-});
+const attachmentSchema = new mongoose.Schema(
+  {
+    fileName: String,
+    base64: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: Date
+  },
+  { _id: false }
+);
 
-const offerDetailsSchema = new mongoose.Schema({
-  draftId: { type: String, required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "BasicInfo" },
+const offerDetailsSchema = new mongoose.Schema(
+  {
+    draftId: { type: String, required: true, index: true },
 
-  offerDate: { type: Date, required: true },
-  dateOfJoining: { type: Date, required: true },
-  employeeId: String,
+    offerDate: String,
+    dateOfJoining: String,
+    employeeId: String,
+    interviewRemarks: String,
 
-  offerLetterAttachment: attachmentSchema,
-  interviewRemarks: String,
-}, { timestamps: true });
+    offerLetterAttachment: attachmentSchema
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("OfferDetails", offerDetailsSchema);

@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require("multer");
 const upload = require("../middleware/upload");
 const { verifyToken } = require("../middleware/authMiddleware");
-const { saveBasicInfo, updateCandidateSection, uploadAllDocuments, getCandidateById,getAllCandidates, deleteCandidateById,getOnboardingDashboardSummary} = require("../controllers/onboardingController");
+const { saveBasicInfo,saveQulification,saveOfferDetails,saveBankDetails,fetchDraft,finalSubmit,getCandidatesWithSearch,saveEmployeeDetials,getCandidateById,deleteCandidate,updateSection,uploadAnySectionFiles} = require("../controllers/onboardingController");
 
 
 router.post(
@@ -11,35 +11,57 @@ router.post(
   upload.any(),   // accepts pan, aadhar attachments
   verifyToken,saveBasicInfo
 );
-// // POST /api/onboarding - Create new candidate
-// router.post("/create", verifyToken, createOnboaringdingRecord);
 
-// // PATCH /api/onboarding/:id - Update any section dynamically
-// router.patch("/:id", verifyToken, updateCandidateSection);
+router.post(
+  "/qualification",
+  upload.any(), // marksheet + od
+  verifyToken,saveQulification
+);
+router.post(
+  "/offer-details",
+  upload.any(), // offer letter upload
+  verifyToken,saveOfferDetails
+);
+router.post(
+  "/bank-details",
+  upload.any(), // bank proof image/pdf
+  verifyToken,saveBankDetails
+);
+router.post(
+  "/employment-details",
+  upload.any(), // payslips or offer letter
+  verifyToken,saveEmployeeDetials
+);
+router.get(
+  "/fetch-draft",
+  verifyToken,fetchDraft
+);
+router.post(
+  "/final-submit",
+  verifyToken,finalSubmit
+);
 
-// // GET /api/onboarding - List all candidates (filter by status/search)
-// router.get("/all", verifyToken, getAllCandidates);
+router.get(
+  "/candidates/search",
+  verifyToken,getCandidatesWithSearch
+);
+
+router.get("/candidate/:id",verifyToken,getCandidateById);
+
+router.delete("/candidate/:id", verifyToken,deleteCandidate);
+
+// UPDATE any section (basic, qualification, offer, bank, employment)
+router.post(
+  "/update-section",
+  upload.any(),
+  verifyToken,updateSection
+);
+router.post(
+  "/upload-section",
+  upload.any(),             // all file types
+  verifyToken,uploadAnySectionFiles
+);
 
 
-// // GET /api/onboarding/:id - Get single candidate details
-// router.get("/:id", verifyToken, getCandidateById);
-
-
-// // DELETE /api/onboarding/:id - Delete candidate
-// router.delete("/:id", verifyToken, deleteCandidateById);
-
-// // POST /api/onboarding/:id/upload - Upload document
-// router.post("/upload/:id", upload.any(), uploadAllDocuments);
-// // // POST /api/onboarding/:id/generate-offer - Generate Offer Letter PDF
-// // router.post("/:id/generate-offer", verifyToken, generateOfferPDF);
-
-// // // PATCH /api/onboarding/:id/status - Update candidate status
-// // router.patch("/:id/status", verifyToken, updateStatus);
-
-// // GET /api/onboarding/dashboard/summary - Get counts by status
-// router.get("/dashboard/summary", verifyToken, getOnboardingDashboardSummary);
-
-// // // POST /api/onboarding/:id/generate-full-packet - Generate Full Packet PDF
-// // router.post("/:id/generate-full-packet", verifyToken, generateFullPacket);
 
 module.exports = router;

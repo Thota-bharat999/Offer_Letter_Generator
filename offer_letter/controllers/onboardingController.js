@@ -1,8 +1,13 @@
-// const logger = require('../logger/logger');
-// const Messages = require('../MsgConstants/messages');
+const logger = require('../logger/logger');
+const Messages = require('../MsgConstants/messages');
 // controllers/onboardingController.js
 
 const BasicInfo = require("../models/BasicInfo");
+const OfferDetails = require("../models/OfferDetails");
+const Qualification=require("../models/Qualification")
+const BankDetails=require('../models/BankDetails')
+const EmploymentDetails=require('../models/EmploymentDetails')
+const OnboardedCandidate = require("../models/OnboardedCandidate");
 
 exports.saveBasicInfo = async (req, res) => {
   try {
@@ -76,394 +81,679 @@ exports.saveBasicInfo = async (req, res) => {
   }
 };
 
+// Qulification Controller
 
+exports.saveQulification=async(req,res)=>{
+  try{
+    const {
+      draftId,qualification,specialization,percentage,university,passingYear
+    }=req.bdoy;
 
+  if(!draftId){
+    return res.status(400).json({
+      success:false,
+      message:"draftId required for qualification page"
+    })
+  }
+  const attachments={}
+  if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        attachments[file.fieldname] = {
+          fileName: file.originalname,
+          base64: file.buffer.toString("base64"),
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedAt: new Date()
+        };
+      });
+    }
+    let record=await Qualification.findOne(draftId);
+    if(!record){
+      record=new Qualification({draftId})
+    }
+    record.qualification=qualification;
+    record.specialization=specialization;
+    record.percentage=percentage;
+    record.university=university;
+    record.passingYear=passingYear;
 
+    if(attachments.marksheet) record.marksheetAttachment=attachments.marksheet
+    if(attachments.od) record.odAttachment=attachments.od
+    await record.save()
+    return res.status(200).json({
+      success:true,
+      message:"Qualification details saved successfully",
+      draftId,
+      data:record
+    })
 
+  }catch(error){
+    console.error("Qualification Save Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save qualification details",
+      error: error.message
+});
+  }
+}
 
+// Offer or InterView Controller
+exports.saveOfferDetails=async(req,res)=>{
+  try{
+    const {draftId,offerDate,dateOfJoining,employeeId,interviewRemarks}=req.body;
+    if(draftId){
+      return res.status(400).json({
+        success:false,
+        message:"draftId required for OfferDetails page"
+      })
+    }
+     let attachment = null;
 
-// ✅ UPDATE ANY SECTION DYNAMICALLY
-// exports.updateCandidateSection = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const updateData = req.body;
+    // Convert uploaded offer letter → Base64
+    if (req.files && req.files.length > 0) {
+      const file = req.files[0];
+      attachment = {
+        fileName: file.originalname,
+        base64: file.buffer.toString("base64"),
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        uploadedAt: new Date()
+      };
+    }
+    let record=await OfferDetails.findOne({draftId})
+    if(!record) record =new OfferDetails({draftId})
+    record.offerDate=offerDate;
+    record.dateOfJoining=dateOfJoining;
+    record.employeeId=employeeId;
+    record.interviewRemarks=interviewRemarks
 
-//     if (!id) {
-//       return res.status(400).json({ success: false, message:Messages.ONBOARDING.CANDIDATE_ID });
-//     }
-//     if (!updateData || Object.keys(updateData).length === 0) {
-//       return res.status(400).json({ success: false, message:Messages.ONBOARDING.NO_DATA });
-//     }
+    if(attachment) record.offerLetterAttachment=attachment
+    await record.save()
+    return res.status(200).json({
+      success:true,
+      message:"Qualification details saved successfully",
+      draftId,
+      data:record
+    })
+  }catch(error){
+    console.error("Offer Save Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save offer details",
+      error: error.message
+    });
 
-//     const normalizeObject = (obj) => {
-//       if (typeof obj === "string") return obj.trim();
-//       if (Array.isArray(obj)) return obj.map(normalizeObject);
-//       if (obj && typeof obj === "object") {
-//         const normalized = {};
-//         for (const key in obj) normalized[key] = normalizeObject(obj[key]);
-//         return normalized;
-//       }
-//       return obj;
-//     };
+  }
+  
+}
+// Bank Details
+exports.saveBankDetails=async(req,res)=>{
+  try{
+    const {draftId,bankName,branchName,accountNumber,ifscCode}=req.body;
+    if(draftId){
+      return res.status(400).json({
+        success:false,
+        message:"draftId required for OfferDetails page"
+      })
+    }
+    let attachment = null;
 
-//     const normalizedUpdateData = normalizeObject(updateData || {});
+    // Convert uploaded offer letter → Base64
+    if (req.files && req.files.length > 0) {
+      const file = req.files[0];
+      attachment = {
+        fileName: file.originalname,
+        base64: file.buffer.toString("base64"),
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        uploadedAt: new Date()
+      };
+    }
+    let record=await BankDetails.findOne({draftId})
+    if(!record) record=new BankDetails({draftId})
+    
+    record.bankName=bankName;
+    record.branchName=branchName;
+    record.setBankdata(accountNumber+ifscCode)
+    if(attachment){
+      record.bankAttachment=attachment
+    }
+    await record.save();
+    return res.status(200).json({
+      success: true,
+      message: "Bank details saved successfully",
+      draftId,
+      data: record
+    })
 
-//     // ✅ Use same normalizeEducationType here
-//     const normalizeEducationType = (value) => {
-//       if (!value) return "Other";
-//       const v = String(value).trim();
-//       const lowered = v.toLowerCase();
+  }catch(error){
+    console.error("Bank Save Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save bank details",
+      error: error.message
+    });
 
-//       const canonical = {
-//         "btech": "B.Tech",
-//         "b.tech": "B.Tech",
-//         "be": "B.E",
-//         "b.e": "B.E",
-//         "bsc": "B.Sc",
-//         "b.sc": "B.Sc",
-//         "bca": "BCA",
-//         "bcom": "B.Com",
-//         "b.com": "B.Com",
-//         "mtech": "M.Tech",
-//         "m.tech": "M.Tech",
-//         "me": "M.E",
-//         "m.e": "M.E",
-//         "msc": "M.Sc",
-//         "m.sc": "M.Sc",
-//         "mca": "MCA",
-//         "mba": "MBA",
-//         "phd": "PhD",
-//         "p.hd": "PhD",
-//         "ssc": "SSC",
-//         "intermediate": "Intermediate",
-//         "diploma": "Diploma",
-//         "graduation": "Graduation",
-//         "post-graduation": "Post-Graduation",
-//         "doctorate": "Doctorate",
-//         "other": "Other",
-//       };
+  }
+}
+// employmentController
+exports.saveEmployeeDetials=async(req,res)=>{
+  try{
+    const {draftId,
+      employmentType,
+      fresherCtc,
+      hiredRole,
 
-//       return canonical[lowered] || v;
-//     };
+      // Experience fields
+      companyName,
+      durationFrom,
+      durationTo,
+      joinedCtc,
+      offeredCtc,
+      reasonForLeaving}=req.body
+      if(!draftId){
+        return res.status(400).json({
+          success:false,
+          message:"draftId is required for employment details"
+        })
+      }
+  const attachmentList = [];
+    if (req.files && req.files.length > 0) {
+      req.files.forEach((file) => {
+        attachmentList.push({
+          fileName: file.originalname,
+          base64: file.buffer.toString("base64"),
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedAt: new Date()
+        });
+      });
+    }
+    let record = await EmploymentDetails.findOne({ draftId });
+    if (!record) record = new EmploymentDetails({ draftId });
+    record.employmentType = employmentType;
+    // fresher logic
+    if (employmentType === "Fresher") {
+      record.fresherCtc = fresherCtc;
+      record.hiredRole = hiredRole;
 
-//     // ✅ Normalize qualifications (array or object)
-//     if (normalizedUpdateData.qualifications) {
-//       let quals = normalizedUpdateData.qualifications;
-//       if (!Array.isArray(quals) && typeof quals === "object") {
-//         quals = Object.values(quals);
-//       }
+      // Single attachment → Offer letter
+      if (attachmentList.length > 0) {
+        record.offerLetterAttachment = attachmentList[0];
+      }
+    }
+    // experience logic
+    if (employmentType === "Experience") {
+      const experienceData = {
+        companyName,
+        durationFrom,
+        durationTo,
+        joinedCtc,
+        offeredCtc,
+        reasonForLeaving,
+        payslipAttachments: attachmentList   // all payslips stored
+      };
 
-//       normalizedUpdateData.qualifications = quals.map((qual) => {
-//         const q = normalizeObject(qual);
-//         const eduValue = q.educationType || q.qualificationName;
-//         q.educationType = normalizeEducationType(eduValue);
-//         delete q.qualificationName;
+      record.experiences = [experienceData];
+    }
+    await record.save()
+    return res.status(200).json({
+      success: true,
+      message: "Employment details saved successfully",
+      draftId,
+      data: record
+    })
 
-//         q.institutionName =
-//           q.institutionName && q.institutionName.trim() !== ""
-//             ? q.institutionName.trim()
-//             : "Not Provided";
-//         q.subCourse = q.subCourse?.trim() || "Not Provided";
-//         q.yearOfPassing = q.yearOfPassing?.trim() || "Not Provided";
-//         q.percentageOrGPA = q.percentageOrGPA?.trim() || "Not Provided";
-//         return q;
-//       });
-//     }
+  }catch(error){
+    console.error("Employment Save Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to save employment details",
+      error: error.message
+    });
 
-//     if (normalizedUpdateData.experienceType === "Experience") {
-//       normalizedUpdateData.experienceType = "Experienced";
-//     }
+  }
 
-//     const candidate = await CandidateOnboarding.findById(id);
-//     if (!candidate) {
-//       return res.status(404).json({ success: false, message:Messages.ONBOARDING.CANDIDATE_NOT_FOUND });
-//     }
+}
+exports.fetchDraft = async (req, res) => {
+  try {
+    const { draftId } = req.query;
 
-//     for (const key in normalizedUpdateData) {
-//       const value = normalizedUpdateData[key];
-//       if (
-//         typeof value === "object" &&
-//         !Array.isArray(value) &&
-//         Object.keys(value).length > 0
-//       ) {
-//         candidate[key] = { ...(candidate[key]?._doc || candidate[key] || {}), ...value };
-//       } else if (value !== undefined && value !== null && value !== "") {
-//         candidate[key] = value;
-//       }
-//     }
+    if (!draftId) {
+      return res.status(400).json({
+        success: false,
+        message: "draftId is required"
+      });
+    }
 
-//     await candidate.save();
+    // Fetch all pages using the same draftId
+    const basic = await BasicInfo.findOne({ draftId });
+    const qualification = await Qualification.findOne({ draftId });
+    const offer = await OfferDetails.findOne({ draftId });
+    const bank = await BankDetails.findOne({ draftId });
+    const employment = await EmploymentDetails.findOne({ draftId });
 
-//     return res.status(200).json({
-//       success: true,
-//       message: Messages.ONBOARDING.UPDATE_SUCCESS,
-//       data: candidate,
-//     });
-//   } catch (error) {
-//     logger.error("Error updating candidate section:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: Messages.ERROR.SERVER,
-//       error: error.message,
-//     });
-//   }
-// };
+    return res.status(200).json({
+      success: true,
+      draftId,
+      data: {
+        basicInfo: basic,
+        qualification,
+        offerDetails: offer,
+        bankDetails: bank,
+        employmentDetails: employment
+      }
+    });
 
-// // UNLIMITED FILE UPLOAD CONTROLLER
-// exports.uploadAllDocuments = async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const files = req.files;
+  } catch (error) {
+    console.error("Fetch Draft Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch draft data",
+      error: error.message
+    });
+  }
+};
+exports.finalSubmit = async (req, res) => {
+  try {
+    const { draftId } = req.body;
 
-//     if (!userId)
-//       return res.status(400).json({ success: false, message: Messages.ONBOARDING.CANDIDATE_ID });
+    if (!draftId) {
+      return res.status(400).json({
+        success: false,
+        message: "draftId is required for final submit"
+      });
+    }
 
-//     if (!files || files.length === 0)
-//       return res.status(400).json({ success: false, message: Messages.ONBOARDING.NO_FILE });
+    // Avoid duplicate submissions
+    const already = await OnboardedCandidate.findOne({ draftId });
+    if (already) {
+      return res.status(400).json({
+        success: false,
+        message: "This draft is already submitted"
+      });
+    }
 
-//     const uploadDir = path.join(__dirname, "../uploads/onboarding");
-//     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    // Fetch all draft pages
+    const basic = await BasicInfo.findOne({ draftId });
+    const qualification = await Qualification.findOne({ draftId });
+    const offer = await OfferDetails.findOne({ draftId });
+    const bank = await BankDetails.findOne({ draftId });
+    const employment = await EmploymentDetails.findOne({ draftId });
 
-//     const candidate = await CandidateOnboarding.findById(userId);
-//     if (!candidate)
-//       return res.status(404).json({ success: false, message: Messages.ONBOARDING.CANDIDATE_NOT_FOUND });
+    // Validate required pages
+    if (!basic)
+      return res.status(400).json({ success: false, message: "Basic Info missing" });
 
-//     const uploadedFiles = [];
+    if (!qualification)
+      return res.status(400).json({ success: false, message: "Qualification missing" });
 
-//     for (const file of files) {
-//       const ext = path.extname(file.originalname) || ".jpg";
-//       const fileName = `${userId}_${file.fieldname}_${Date.now()}${ext}`;
-//       const filePath = path.join(uploadDir, fileName);
+    if (!offer)
+      return res.status(400).json({ success: false, message: "Offer Details missing" });
 
-//       fs.writeFileSync(filePath, file.buffer);
+    if (!bank)
+      return res.status(400).json({ success: false, message: "Bank Details missing" });
 
-//       // ❌ Removed filePath/dbPath
-//       const fileObject = {
-//         fileName,
-//         mimeType: file.mimetype,
-//         fileSize: file.size,
-//         uploadedAt: new Date(),
-//       };
+    if (!employment)
+      return res.status(400).json({ success: false, message: "Employment Details missing" });
 
-//       uploadedFiles.push({ field: file.fieldname, ...fileObject });
+    // Merge all pages into final record
+    const finalRecord = await OnboardedCandidate.create({
+      draftId,
+      basicInfo: basic,
+      qualification,
+      offerDetails: offer,
+      bankDetails: bank,
+      employmentDetails: employment
+    });
 
-//       // 🎯 Map to DB field
-//       switch (file.fieldname) {
-//         case "pan":
-//           candidate.panAttachment = fileObject;
-//           break;
+    // Update draft pages to submitted
+    await BasicInfo.updateOne({ draftId }, { status: "submitted" });
+    await Qualification.updateOne({ draftId }, { status: "submitted" });
+    await OfferDetails.updateOne({ draftId }, { status: "submitted" });
+    await BankDetails.updateOne({ draftId }, { status: "submitted" });
+    await EmploymentDetails.updateOne({ draftId }, { status: "submitted" });
 
-//         case "aadhar":
-//           candidate.aadharAttachment = fileObject;
-//           break;
+    return res.status(200).json({
+      success: true,
+      message: "Onboarding completed successfully!",
+      data: finalRecord
+    });
 
-//         case "offer_letter":
-//           candidate.offerDetails.offerLetterAttachment = fileObject;
-//           break;
+  } catch (error) {
+    console.error("Final Submit Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to submit onboarding",
+      error: error.message
+    });
+  }
+};
 
-//         case "bank_proof":
-//           candidate.bankDetails.bankAttachment = fileObject;
-//           break;
+// GET CANDIDATES + PAGINATION + SEARCH
+exports.getCandidatesWithSearch = async (req, res) => {
+  try {
+    let { page = 1, limit = 10, search = "" } = req.query;
 
-//         case "marksheet":
-//           if (candidate.qualifications?.length > 0) {
-//             candidate.qualifications[0].certificateAttachment = fileObject;
-//           }
-//           break;
+    page = Number(page);
+    limit = Number(limit);
 
-//         case "od":
-//           if (!candidate.experiences[0].payslipAttachment) {
-//             candidate.experiences[0].payslipAttachment = [];
-//           }
-//           candidate.experiences[0].payslipAttachment.push(fileObject);
-//           break;
+    // Build search filter
+    let searchFilter = {};
 
-//         default:
-//           logger.warn(`Unmapped field: ${file.fieldname}`);
-//       }
-//     }
+    if (search && search.trim() !== "") {
+      const regex = new RegExp(search, "i"); // case-insensitive search
 
-//     await candidate.save();
+      // Search inside basicInfo for name/email/phone
+      searchFilter = {
+        $or: [
+          { "basicInfo.firstName": regex },
+          { "basicInfo.lastName": regex },
+          { "basicInfo.email": regex },
+          { "basicInfo.phoneNumber": regex }
+        ]
+      };
+    }
 
-//     res.status(200).json({
-//       success: true,
-//       message: Messages.ONBOARDING.FILE_UPLOAD_SUCCESS,
-//       uploaded: uploadedFiles,
-//       candidate,
-//     });
+    const total = await OnboardedCandidate.countDocuments(searchFilter);
 
-//   } catch (err) {
-//     logger.error("Upload Error: " + err.message);
-//     res.status(500).json({
-//       success: false,
-//       message: Messages.ONBOARDING.FILE_UPLOAD_FAILED,
-//       error: err.message,
-//     });
-//   }
-// };
+    const candidates = await OnboardedCandidate.find(searchFilter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: candidates
+    });
 
+  } catch (error) {
+    console.error("Pagination Search Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidates",
+      error: error.message
+    });
+  }
+};
 
-// // get Candidate Details By Id
-// exports.getCandidateById=async(req,res)=>{
-//   try{
-//     const {id}=req.params;
-//     if(!id){
-//       return res.status(400).json({
-//         success:false,
-//         message:Messages.ONBOARDING.CANDIDATE_ID,
-//       })
-//     }
-//     if(!mongoose.Types.ObjectId.isValid(id)){
-//       return res.status(400).json({
-//         success:false,
-//         message:Messages.ONBOARDING.CANDIDATE_VALID_ID,
-//       })
-//     }
-//     const candidate=await CandidateOnboarding.findById(id).lean();
-//     if(!candidate){
-//       return res.status(404).json({
-//         success:false,
-//         message:Messages.ONBOARDING.CANDIDATE_NOT_FOUND,
-//       })
-//     }
-//     return res.status(200).json({
-//       success:true,
-//       message:Messages.ONBOARDING.FETCHED_DETAILS,
-//       data:candidate,
-//     })
-//   }catch(error){
-//     logger.error("Error fetching candidate:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: Messages.ERROR.SERVER,
-//       error: error.message,
-//     });
+// Get specific onboarded candidate by draftId OR _id
+exports.getCandidateById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-//   }
-// }
-// // Get All Candidates With Pagination and Filtering
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate ID or draftId is required"
+      });
+    }
 
-// exports.getAllCandidates=async(req,res)=>{
-//   try{
-//     const {status,search,page=1,limit=20}=req.query;
-//     const filter={};
-//     if(status){
-//       filter.status=status;
-//     }
-//     if(search){
-//       const searchRegex=new RegExp(search,'i');
-//       filter.$or=[
-//         {firstName:searchRegex},
-//         {lastName:searchRegex},
-//         {email:searchRegex},
-//         {phoneNumber:searchRegex},
-//     ]
-//     }
-//     const skip=(parseInt(page)-1)*parseInt(limit);
-//     const [candidates,total]=await Promise.all([
-//       CandidateOnboarding.find(filter)
-//       .sort({createdAt:-1})
-//       .skip(skip)
-//       .limit(parseInt(limit))
-//       .lean(),
-//       CandidateOnboarding.countDocuments(filter),
-//     ]);
-//     return res.status(200).json({
-//       success:true,
-//       message:Messages.ONBOARDING.FETCHED_DETAILS,
-//       total,
-//       currentPage: parseInt(page),
-//       pageSize: parseInt(limit),
-//       data: candidates,
+    // Try to find by draftId first
+    let candidate = await OnboardedCandidate.findOne({ draftId: id });
 
-//     })
+    // If not found → try MongoDB _id
+    if (!candidate) {
+      try {
+        candidate = await OnboardedCandidate.findById(id);
+      } catch (err) {
+        // Ignore invalid _id format — do not break
+      }
+    }
 
-//   }catch(error){
-//     logger.error("Error fetching candidate list:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: Messages.ERROR.SERVER,
-//       error: error.message,
-//     });
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found"
+      });
+    }
 
-//   }
-// }
+    return res.status(200).json({
+      success: true,
+      data: candidate
+    });
+  } catch (error) {
+    console.error("Get Candidate Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidate information",
+      error: error.message
+    });
+  }
+};
 
-// // Delete Candidate By Id 
-// exports.deleteCandidateById=async(req,res)=>{
-//   try{
-//     const {id}=req.params;
-//     if(!id || !mongoose.Types.ObjectId.isValid(id)){
-//       return res.status(400).json({
-//         success:false,
-//         message:Messages.ONBOARDING.CANDIDATE_ID,
-//       })
-//     }
-//     const deleteCandidate=await CandidateOnboarding.findByIdAndDelete(id);
-//     if(!deleteCandidate){
-//       return res.status(404).json({
-//         success:false,
-//         message:Messages.ONBOARDING.CANDIDATE_NOT_FOUND,
-//       })
-//     }
-//     return res.status(200).json({
-//       success:true,
-//       message:Messages.ONBOARDING.DELETE_SUCCESS,
-//     })
+// DELETE Candidate by draftId or _id
+exports.deleteCandidate = async (req, res) => {
+  try {
+    const { id } = req.params;
 
-//   }catch(error){
-//     logger.error("Error deleting candidate:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: Messages.ERROR.SERVER,
-//       error: error.message,
-//     });
+    // Find candidate by draftId or _id
+    let candidate = await OnboardedCandidate.findOne({ draftId: id });
+    if (!candidate) {
+      try { candidate = await OnboardedCandidate.findById(id); }
+      catch (_) {}
+    }
 
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found"
+      });
+    }
 
-//   }
-// }
+    const draftId = candidate.draftId;
 
-// // DashBoard Summary
-// exports.getOnboardingDashboardSummary = async (req, res) => {
-//   try {
-//     // 1️ Aggregate counts by status
-//     const summary = await CandidateOnboarding.aggregate([
-//       {
-//         $group: {
-//           _id: "$status",
-//           count: { $sum: 1 },
-//         },
-//       },
-//     ]);
+    // Delete from all collections
+    await OnboardedCandidate.deleteOne({ draftId });
+    await BasicInfo.deleteOne({ draftId });
+    await Qualification.deleteOne({ draftId });
+    await OfferDetails.deleteOne({ draftId });
+    await BankDetails.deleteOne({ draftId });
+    await EmploymentDetails.deleteOne({ draftId });
 
-//     // 2️Transform into readable object
-//     const result = {
-//       Draft: 0,
-//       Submitted: 0,
-//       OfferGenerated: 0,
-//       Completed: 0,
-//     };
+    return res.status(200).json({
+      success: true,
+      message: "Candidate deleted successfully"
+    });
 
-//     summary.forEach((item) => {
-//       result[item._id] = item.count;
-//     });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete candidate",
+      error: error.message
+    });
+  }
+};
 
-//     // 3️ Total candidates
-//     const total = Object.values(result).reduce((a, b) => a + b, 0);
+// Mapping sections → Mongoose Models
+const SECTION_MAP = {
+  basic: BasicInfo,
+  qualification: Qualification,
+  offer: OfferDetails,
+  bank: BankDetails,
+  employment: EmploymentDetails
+};
 
-//     // 4️ Success response
-//     return res.status(200).json({
-//       success: true,
-//       totalCandidates: total,
-//       summary: result,
-//     });
-//   } catch (error) {
-//     logger.error("Error fetching dashboard summary:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: Messages.ERROR.SERVER,
-//       error: error.message,
-//     });
-//   }
-// };
+exports.updateSection = async (req, res) => {
+  try {
+    const { draftId, section } = req.body;
+
+    if (!draftId || !section) {
+      return res.status(400).json({
+        success: false,
+        message: "draftId and section are required"
+      });
+    }
+
+    const Model = SECTION_MAP[section];
+
+    if (!Model) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid section. Allowed: basic, qualification, offer, bank, employment"
+      });
+    }
+
+    // Prepare Base64 files
+    const attachments = {};
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        attachments[file.fieldname] = {
+          fileName: file.originalname,
+          base64: file.buffer.toString("base64"),
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedAt: new Date()
+        };
+      });
+    }
+
+    // Find section record
+    let record = await Model.findOne({ draftId });
+    if (!record) record = new Model({ draftId });
+
+    // Update text fields automatically
+    Object.keys(req.body).forEach(k => {
+      if (k !== "section" && k !== "draftId") {
+        record[k] = req.body[k];
+      }
+    });
+
+    // Add attachments automatically
+    Object.keys(attachments).forEach(key => {
+      record[key] = attachments[key];
+    });
+
+    await record.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `${section.toUpperCase()} section updated successfully`,
+      data: record
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update section",
+      error: error.message
+    });
+  }
+};
+// Map sections → Mongoose Models
+const MODEL_MAP = {
+  basic: BasicInfo,
+  qualification: Qualification,
+  offer: OfferDetails,
+  bank: BankDetails,
+  employment: EmploymentDetails
+};
+
+// 🔥 Base64 Conversion Directly Here (INSTEAD of fileHandler.js)
+function prepareBase64Files(files = []) {
+  const attachments = {};
+
+  files.forEach((file) => {
+    attachments[file.fieldname] = {
+      fileName: file.originalname,
+      base64: file.buffer.toString("base64"),
+      mimeType: file.mimetype,
+      fileSize: file.size,
+      uploadedAt: new Date()
+    };
+  });
+
+  return attachments;
+}
+
+exports.uploadAnySectionFiles = async (req, res) => {
+  try {
+    const { draftId, section } = req.body;
+
+    if (!draftId || !section) {
+      return res.status(400).json({
+        success: false,
+        message: "draftId and section are required"
+      });
+    }
+
+    // Validate section
+    const Model = MODEL_MAP[section];
+    if (!Model) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid section. Allowed: basic, qualification, offer, bank, employment"
+      });
+    }
+
+    // Convert uploaded files → Base64 map (NOW using inline function)
+    const attachments = prepareBase64Files(req.files);
+
+    let record = await Model.findOne({ draftId });
+    if (!record) record = new Model({ draftId });
+
+    // -----------------------
+    // PAGE 1 — BASIC INFO
+    // -----------------------
+    if (section === "basic") {
+      if (attachments.aadhar) record.aadharAttachment = attachments.aadhar;
+      if (attachments.pan) record.panAttachment = attachments.pan;
+    }
+
+    // -----------------------
+    // PAGE 2 — QUALIFICATION
+    // -----------------------
+    if (section === "qualification") {
+      if (attachments.marksheet) record.marksheetAttachment = attachments.marksheet;
+      if (attachments.od) record.odAttachment = attachments.od;
+    }
+
+    // -----------------------
+    // PAGE 3 — OFFER DETAILS
+    // -----------------------
+    if (section === "offer") {
+      if (attachments.offerLetter) record.offerLetterAttachment = attachments.offerLetter;
+    }
+
+    // -----------------------
+    // PAGE 4 — BANK DETAILS
+    // -----------------------
+    if (section === "bank") {
+      if (attachments.bankAttachment) record.bankAttachment = attachments.bankAttachment;
+    }
+
+    // -----------------------
+    // PAGE 5 — EMPLOYMENT
+    // -----------------------
+    if (section === "employment") {
+      if (!record.experiences || record.experiences.length === 0) {
+        record.experiences = [{ payslipAttachments: [] }];
+      }
+
+      Object.keys(attachments).forEach((key) => {
+        record.experiences[0].payslipAttachments.push(attachments[key]);
+      });
+    }
+
+    await record.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `${section.toUpperCase()} file(s) uploaded successfully`,
+      data: record
+    });
+
+  } catch (error) {
+    console.error("Combined Upload Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "File upload failed",
+      error: error.message
+    });
+  }
+};
+

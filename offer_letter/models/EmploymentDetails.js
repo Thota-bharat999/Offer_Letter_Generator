@@ -1,39 +1,52 @@
 // models/EmploymentDetails.js
 const mongoose = require("mongoose");
 
-const attachmentSchema = new mongoose.Schema({
-  fileName: String,
-  mimeType: String,
-  fileSize: Number,
-  uploadedAt: Date,
-});
+const attachmentSchema = new mongoose.Schema(
+  {
+    fileName: String,
+    base64: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: Date
+  },
+  { _id: false }
+);
 
 // Experience sub-schema
-const experienceSchema = new mongoose.Schema({
-  companyName: String,
-  durationFrom: Date,
-  durationTo: Date,
-  joinedCtc: String,
-  offeredCtc: String,
-  isExEmployee: Boolean,
-  payslipAttachment: [attachmentSchema],  // Multiple payslips
-});
+const experienceSchema = new mongoose.Schema(
+  {
+    companyName: String,
+    durationFrom: String,
+    durationTo: String,
+    joinedCtc: String,
+    offeredCtc: String,
+    reasonForLeaving: String,
 
-const employmentDetailsSchema = new mongoose.Schema({
-  draftId: { type: String, required: true },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "BasicInfo" },
+    payslipAttachments: [attachmentSchema]   // Base64 array
+  },
+  { _id: false }
+);
 
-  employmentType: { type: String, enum: ["Fresher", "Experience"], required: true },
+const employmentSchema = new mongoose.Schema(
+  {
+    draftId: { type: String, required: true, index: true },
 
-  // Fresher
-  roleHired: String,
-  fresherCtc: String,
-  offerLetterAttachment: attachmentSchema,
+    employmentType: {
+      type: String,
+      enum: ["Fresher", "Experience"],
+      required: true
+    },
 
-  // Experience
-  experiences: [experienceSchema],
+    // Fresher fields
+    fresherCtc: String,
+    hiredRole: String,
+    offerLetterAttachment: attachmentSchema,
 
-  remarks: String,
-}, { timestamps: true });
+    // Experience fields
+    experiences: [experienceSchema]  // can store multiple companies
 
-module.exports = mongoose.model("EmploymentDetails", employmentDetailsSchema);
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("EmploymentDetails", employmentSchema);
