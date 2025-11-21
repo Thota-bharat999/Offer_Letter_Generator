@@ -1,4 +1,3 @@
-// models/Qualification.js
 const mongoose = require("mongoose");
 
 const attachmentSchema = new mongoose.Schema(
@@ -12,18 +11,24 @@ const attachmentSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const qualificationSchema = new mongoose.Schema(
+const educationSchema = new mongoose.Schema(
   {
-    draftId: { type: String, required: true, index: true },
-
-    qualification: String,
+    qualification: { type: String, required: true },      // B.Tech, Intermediate, 10th
     specialization: String,
     percentage: String,
     university: String,
     passingYear: String,
 
-    marksheetAttachment: attachmentSchema,
-    odAttachment: attachmentSchema
+    certificateAttachment: attachmentSchema       // marksheet / OD / 10th memo
+  },
+  { _id: false }
+);
+
+const qualificationSchema = new mongoose.Schema(
+  {
+    draftId: { type: String, required: true, index: true },
+
+    education: [educationSchema],                 // ARRAY OF EDUCATIONS
   },
   { timestamps: true }
 );

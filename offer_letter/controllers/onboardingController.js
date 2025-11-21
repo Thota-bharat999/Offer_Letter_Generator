@@ -83,20 +83,20 @@ exports.saveBasicInfo = async (req, res) => {
 
 // Qulification Controller
 
-exports.saveQulification=async(req,res)=>{
-  try{
-    const {
-      draftId,qualification,specialization,percentage,university,passingYear
-    }=req.body;
+exports.saveQulification = async (req, res) => {
+  try {
+    const { draftId, education } = req.body;
 
-  if(!draftId){
-    return res.status(400).json({
-      success:false,
-      message:"draftId required for qualification page"
-    })
-  }
-  const attachments={}
-  if (req.files && req.files.length > 0) {
+    if (!draftId) {
+      return res.status(400).json({
+        success: false,
+        message: "draftId required for qualification page"
+      });
+    }
+
+    // Convert uploaded files -> Base64 (YOUR EXISTING LOGIC)
+    const attachments = {};
+    if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
         attachments[file.fieldname] = {
           fileName: file.originalname,
@@ -107,35 +107,51 @@ exports.saveQulification=async(req,res)=>{
         };
       });
     }
-    let record=await Qualification.findOne({draftId});
-    if(!record){
-      record=new Qualification({draftId})
+
+    // Parse education JSON (sent as string in form-data)
+    let educationArray = [];
+    try {
+      educationArray = JSON.parse(education);
+    } catch (e) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid education JSON format"
+      });
     }
-    record.qualification=qualification;
-    record.specialization=specialization;
-    record.percentage=percentage;
-    record.university=university;
-    record.passingYear=passingYear;
 
-    if(attachments.marksheet) record.marksheetAttachment=attachments.marksheet
-    if(attachments.od) record.odAttachment=attachments.od
-    await record.save()
+    // Attach files to the correct education level
+    educationArray.forEach((item) => {
+      if (attachments[item.level]) {
+        item.certificateAttachment = attachments[item.level];
+      }
+    });
+
+    // Find or create qualification record
+    let record = await Qualification.findOne({ draftId });
+    if (!record) record = new Qualification({ draftId });
+
+    // Save multiple educations
+    record.education = educationArray;
+
+    await record.save();
+
     return res.status(200).json({
-      success:true,
-      message:"Qualification details saved successfully",
+      success: true,
+      message: "Qualification details saved successfully",
       draftId,
-      data:record
-    })
+      data: record
+    });
 
-  }catch(error){
+  } catch (error) {
     console.error("Qualification Save Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to save qualification details",
       error: error.message
-});
+    });
   }
-}
+};
+
 
 // Offer or InterView Controller
 exports.saveOfferDetails=async(req,res)=>{
