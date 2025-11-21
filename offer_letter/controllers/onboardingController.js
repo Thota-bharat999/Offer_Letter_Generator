@@ -13,12 +13,14 @@ exports.saveBasicInfo = async (req, res) => {
   try {
     const {
       draftId: existingDraftId,
+      salutation,
       firstName,
       lastName,
       fatherName,
       email,
       countryCode,
       phoneNumber,
+      gender,
       aadharNumber,
       panNumber
     } = req.body;
@@ -55,6 +57,8 @@ exports.saveBasicInfo = async (req, res) => {
     record.email = email;
     record.countryCode = countryCode;
     record.phoneNumber = phoneNumber;
+    record.salutation = salutation;
+    record.gender = gender;
 
     // Encrypt Aadhaar & PAN only if they exist
     if (aadharNumber) record.setAadhar(aadharNumber);
@@ -196,55 +200,84 @@ exports.saveOfferDetails=async(req,res)=>{
 
 }
 // Bank Details
-exports.saveBankDetails=async(req,res)=>{
-  try{
-    const {draftId,bankName,branchName,accountNumber,ifscCode}=req.body;
-    if(!draftId){
-      return res.status(400).json({
-        success:false,
-        message:"draftId required for OfferDetails page"
-      })
-    }
-    let attachment = null;
+exports.saveBankDetails = async (req, res) => {
+  try {
+    const {
+      draftId,
+      bankDetails
+    } = req.body;
 
-    // Convert uploaded offer letter → Base64
+    if (!draftId) {
+      return res.status(400).json({
+        success: false,
+        message: "draftId is required"
+      });
+    }
+
+    // 🔍 Check confirmAccountNumber
+    if (accountNumber !== confirmAccountNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Account Number and Confirm Account Number do not match"
+      });
+    }
+     const {
+      bankName,
+      branchName,
+      accountNumber,
+      confirmAccountNumber,
+      ifscCode
+    } = bankDetails;
+
+    // Convert uploaded file → Base64
+    const attachments = {};
     if (req.files && req.files.length > 0) {
-      const file = req.files[0];
-      attachment = {
-        fileName: file.originalname,
-        base64: file.buffer.toString("base64"),
-        mimeType: file.mimetype,
-        fileSize: file.size,
-        uploadedAt: new Date()
-      };
+      req.files.forEach((file) => {
+        attachments[file.fieldname] = {
+          fileName: file.originalname,
+          base64: file.buffer.toString("base64"),
+          mimeType: file.mimetype,
+          fileSize: file.size,
+          uploadedAt: new Date()
+        };
+      });
     }
-    let record=await BankDetails.findOne({draftId})
-    if(!record) record=new BankDetails({draftId})
-    
-    record.bankName=bankName;
-    record.branchName=branchName;
-    record.setBankdata(accountNumber+ifscCode)
-    if(attachment){
-      record.bankAttachment=attachment
+
+    // Find or create record
+    let record = await BankDetails.findOne({ draftId });
+    if (!record) record = new BankDetails({ draftId });
+
+    // Assign UI fields
+    record.bankName = bankName;
+    record.branchName = branchName;
+
+    // Hash sensitive fields using model method
+    record.setBankData(accountNumber, ifscCode);
+
+    // Add file attachment
+    if (attachments.bankAttachment) {
+      record.bankAttachment = attachments.bankAttachment;
     }
+
     await record.save();
+
     return res.status(200).json({
       success: true,
       message: "Bank details saved successfully",
       draftId,
       data: record
-    })
+    });
 
-  }catch(error){
+  } catch (error) {
     console.error("Bank Save Error:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to save bank details",
       error: error.message
     });
-
   }
-}
+};
+
 // employmentController
 exports.saveEmployeeDetials=async(req,res)=>{
   try{
