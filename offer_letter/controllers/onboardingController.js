@@ -87,7 +87,7 @@ exports.saveQulification=async(req,res)=>{
   try{
     const {
       draftId,qualification,specialization,percentage,university,passingYear
-    }=req.bdoy;
+    }=req.body;
 
   if(!draftId){
     return res.status(400).json({
