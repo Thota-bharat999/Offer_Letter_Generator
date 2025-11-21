@@ -148,13 +148,14 @@ exports.saveQulification = async (req, res) => {
 // Offer or InterView Controller
 exports.saveOfferDetails=async(req,res)=>{
   try{
-    const {draftId,offerDate,dateOfJoining,employeeId,interviewRemarks}=req.body;
+    const {draftId, offerDetails}=req.body;
     if(!draftId){
       return res.status(400).json({
         success:false,
         message:"draftId required for OfferDetails page"
       })
     }
+    const {offerDate,dateOfJoining,employeeId,interviewRemarks}=offerDetails;
      let attachment = null;
 
     // Convert uploaded offer letter → Base64
@@ -179,7 +180,7 @@ exports.saveOfferDetails=async(req,res)=>{
     await record.save()
     return res.status(200).json({
       success:true,
-      message:"Qualification details saved successfully",
+      message:"Offer details saved successfully",
       draftId,
       data:record
     })
@@ -192,7 +193,7 @@ exports.saveOfferDetails=async(req,res)=>{
     });
 
   }
-  
+
 }
 // Bank Details
 exports.saveBankDetails=async(req,res)=>{
