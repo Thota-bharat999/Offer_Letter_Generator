@@ -149,7 +149,7 @@ exports.saveQulification = async (req, res) => {
 exports.saveOfferDetails=async(req,res)=>{
   try{
     const {draftId,offerDate,dateOfJoining,employeeId,interviewRemarks}=req.body;
-    if(draftId){
+    if(!draftId){
       return res.status(400).json({
         success:false,
         message:"draftId required for OfferDetails page"
@@ -198,7 +198,7 @@ exports.saveOfferDetails=async(req,res)=>{
 exports.saveBankDetails=async(req,res)=>{
   try{
     const {draftId,bankName,branchName,accountNumber,ifscCode}=req.body;
-    if(draftId){
+    if(!draftId){
       return res.status(400).json({
         success:false,
         message:"draftId required for OfferDetails page"

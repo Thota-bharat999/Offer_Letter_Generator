@@ -42,13 +42,13 @@ router.post(
 );
 
 router.get(
-  "/candidates/search",
+  "/all/search",
   verifyToken,getCandidatesWithSearch
 );
 
-router.get("/candidate/:id",verifyToken,getCandidateById);
+router.get("/:id",verifyToken,getCandidateById);
 
-router.delete("/candidate/:id", verifyToken,deleteCandidate);
+router.delete("/:id", verifyToken,deleteCandidate);
 
 // UPDATE any section (basic, qualification, offer, bank, employment)
 router.post(
