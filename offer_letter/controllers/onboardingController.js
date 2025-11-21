@@ -107,7 +107,7 @@ exports.saveQulification=async(req,res)=>{
         };
       });
     }
-    let record=await Qualification.findOne(draftId);
+    let record=await Qualification.findOne({draftId});
     if(!record){
       record=new Qualification({draftId})
     }
