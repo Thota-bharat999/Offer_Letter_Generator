@@ -214,13 +214,6 @@ exports.saveBankDetails = async (req, res) => {
       });
     }
 
-    // 🔍 Check confirmAccountNumber
-    if (accountNumber !== confirmAccountNumber) {
-      return res.status(400).json({
-        success: false,
-        message: "Account Number and Confirm Account Number do not match"
-      });
-    }
      const {
       bankName,
       branchName,
@@ -228,6 +221,14 @@ exports.saveBankDetails = async (req, res) => {
       confirmAccountNumber,
       ifscCode
     } = bankDetails;
+
+    // 🔍 Check confirmAccountNumber
+    if (accountNumber !== confirmAccountNumber) {
+      return res.status(400).json({
+        success: false,
+        message: "Account Number and Confirm Account Number do not match"
+      });
+    }
 
     // Convert uploaded file → Base64
     const attachments = {};
