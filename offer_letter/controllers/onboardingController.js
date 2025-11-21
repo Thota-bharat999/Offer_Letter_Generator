@@ -108,21 +108,13 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // Parse education JSON (sent as string in form-data)
-    let educationArray = [];
-    try {
-      educationArray = JSON.parse(education);
-    } catch (e) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid education JSON format"
-      });
-    }
+    // education is already an array from req.body
+    let educationArray = education;
 
     // Attach files to the correct education level
     educationArray.forEach((item) => {
-      if (attachments[item.level]) {
-        item.certificateAttachment = attachments[item.level];
+      if (attachments[item.qualification]) {
+        item.certificateAttachment = attachments[item.qualification];
       }
     });
 
