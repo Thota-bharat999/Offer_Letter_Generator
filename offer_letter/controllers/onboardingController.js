@@ -282,8 +282,14 @@ exports.saveBankDetails = async (req, res) => {
 // employmentController
 exports.saveEmployeeDetials=async(req,res)=>{
   try{
-    const {draftId,
-      employmentType,
+    const {draftId, employmentDetails}=req.body;
+    if(!draftId){
+      return res.status(400).json({
+        success:false,
+        message:"draftId is required for employment details"
+      })
+    }
+    const {employmentType,
       fresherCtc,
       hiredRole,
 
@@ -293,13 +299,7 @@ exports.saveEmployeeDetials=async(req,res)=>{
       durationTo,
       joinedCtc,
       offeredCtc,
-      reasonForLeaving}=req.body
-      if(!draftId){
-        return res.status(400).json({
-          success:false,
-          message:"draftId is required for employment details"
-        })
-      }
+      reasonForLeaving}=employmentDetails;
   const attachmentList = [];
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
