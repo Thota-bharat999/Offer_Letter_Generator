@@ -180,12 +180,19 @@ exports.saveQulification = async (req, res) => {
     let record = await Qualification.findOne({ draftId });
     if (!record) record = new Qualification({ draftId });
 
-    if (!attachments.od && !record.odAttachment) {
-      return res.status(400).json({
-        success: false,
-        message: "ODAttachment is required"
-      });
-    }
+    // Check if B.Tech exists in education list
+const hasBtech = educationArray.some(item => item.qualification === "B.Tech");
+
+// If B.Tech exists, OD is required
+if (hasBtech) {
+  if (!attachments.od && !record.odAttachment) {
+    return res.status(400).json({
+      success: false,
+      message: "ODAttachment is required for B.Tech"
+    });
+  }
+}
+
 
     // Attach certificates
     educationArray.forEach((item) => {
