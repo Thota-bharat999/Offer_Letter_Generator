@@ -475,3 +475,4 @@
 (Use `node --trace-warnings ...` to show where the warning was created)
 2025-11-24T12:38:10.075Z  ERROR: (node:11212) [MONGODB DRIVER] Warning: useUnifiedTopology is a deprecated option: useUnifiedTopology has no effect since Node.js Driver version 4.0.0 and will be removed in the next major version
 2025-11-24T12:38:10.075Z  INFO: Server Running on 5000
+2025-11-24T12:38:11.524Z  INFO: MongoDB connected
