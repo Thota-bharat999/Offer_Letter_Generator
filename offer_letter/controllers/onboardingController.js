@@ -128,7 +128,7 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // ⭐ FIXED: Convert education string → array
+    // Convert education string → array
     let educationArray;
     try {
       educationArray = JSON.parse(education);
@@ -146,7 +146,7 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // Convert uploaded files -> Base64
+    // Convert uploaded files → Base64
     const attachments = {};
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
@@ -160,15 +160,24 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
+    // QUALIFICATIONS that DO NOT require subbranch
+    const NO_SUBBRANCH = ["10th", "SSLC", "HSC"];
+
     // Validate fields
     for (let i = 0; i < educationArray.length; i++) {
       const item = educationArray[i];
-      if (!item.subbranch || item.subbranch.trim() === "") {
-        return res.status(400).json({
-          success: false,
-          message: `subbranch is required in education item at index ${i}`
-        });
+
+      // Check subbranch ONLY IF qualification requires subbranch
+      if (!NO_SUBBRANCH.includes(item.qualification)) {
+        if (!item.subbranch || item.subbranch.trim() === "") {
+          return res.status(400).json({
+            success: false,
+            message: `subbranch is required for ${item.qualification} at index ${i}`
+          });
+        }
       }
+
+      // yearPassing is required ALWAYS
       if (!item.yearPassing || item.yearPassing.trim() === "") {
         return res.status(400).json({
           success: false,
@@ -180,19 +189,17 @@ exports.saveQulification = async (req, res) => {
     let record = await Qualification.findOne({ draftId });
     if (!record) record = new Qualification({ draftId });
 
-    // Check if B.Tech exists in education list
-const hasBtech = educationArray.some(item => item.qualification === "B.Tech");
+    // Check OD required for B.Tech
+    const hasBtech = educationArray.some(item => item.qualification === "B.Tech");
 
-// If B.Tech exists, OD is required
-if (hasBtech) {
-  if (!attachments.od && !record.odAttachment) {
-    return res.status(400).json({
-      success: false,
-      message: "ODAttachment is required for B.Tech"
-    });
-  }
-}
-
+    if (hasBtech) {
+      if (!attachments.od && !record.odAttachment) {
+        return res.status(400).json({
+          success: false,
+          message: "ODAttachment is required for B.Tech"
+        });
+      }
+    }
 
     // Attach certificates
     educationArray.forEach((item) => {
@@ -221,6 +228,7 @@ if (hasBtech) {
     });
   }
 };
+
 
 
 
