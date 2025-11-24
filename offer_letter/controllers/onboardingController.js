@@ -128,14 +128,25 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    if (!education || !Array.isArray(education) || education.length === 0) {
+    // ⭐ FIXED: Convert education string → array
+    let educationArray;
+    try {
+      educationArray = JSON.parse(education);
+    } catch (err) {
+      return res.status(400).json({
+        success: false,
+        message: "Education must be a valid JSON array"
+      });
+    }
+
+    if (!Array.isArray(educationArray) || educationArray.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Education array is required"
       });
     }
 
-    // Convert uploaded files -> Base64 (YOUR EXISTING LOGIC)
+    // Convert uploaded files -> Base64
     const attachments = {};
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
@@ -149,9 +160,9 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // Check required fields in each education item
-    for (let i = 0; i < education.length; i++) {
-      const item = education[i];
+    // Validate fields
+    for (let i = 0; i < educationArray.length; i++) {
+      const item = educationArray[i];
       if (!item.subbranch || item.subbranch.trim() === "") {
         return res.status(400).json({
           success: false,
@@ -166,7 +177,6 @@ exports.saveQulification = async (req, res) => {
       }
     }
 
-    // Check if odAttachment provided either in new uploads or existing record
     let record = await Qualification.findOne({ draftId });
     if (!record) record = new Qualification({ draftId });
 
@@ -177,15 +187,14 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // Attach files to the correct education level
-    education.forEach((item) => {
+    // Attach certificates
+    educationArray.forEach((item) => {
       if (attachments[item.qualification]) {
         item.certificateAttachment = attachments[item.qualification];
       }
     });
 
-    // Save multiple educations
-    record.education = education;
+    record.education = educationArray;
 
     await record.save();
 
@@ -205,6 +214,7 @@ exports.saveQulification = async (req, res) => {
     });
   }
 };
+
 
 
 // Offer or InterView Controller
