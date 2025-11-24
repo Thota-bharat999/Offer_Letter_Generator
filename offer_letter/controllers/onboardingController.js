@@ -25,6 +25,21 @@ exports.saveBasicInfo = async (req, res) => {
       panNumber
     } = req.body;
 
+    // Validation for required fields
+    if (!fatherName || fatherName.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "fatherName is required"
+      });
+    }
+
+    if (!phoneNumber || phoneNumber.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "phoneNumber is required"
+      });
+    }
+
     // Generate draftId if not provided
     let draftId = existingDraftId;
     if (!draftId) {
@@ -49,6 +64,21 @@ exports.saveBasicInfo = async (req, res) => {
     let record = await BasicInfo.findOne({ draftId });
 
     if (!record) record = new BasicInfo({ draftId });
+
+    // Check for required attachments AFTER record is fetched
+    if (!attachments.aadhar && !record.aadharAttachment) {
+      return res.status(400).json({
+        success: false,
+        message: "aadharAttachment is required"
+      });
+    }
+
+    if (!attachments.pan && !record.panAttachment) {
+      return res.status(400).json({
+        success: false,
+        message: "panAttachment is required"
+      });
+    }
 
     // Update fields
     record.firstName = firstName;
@@ -98,6 +128,13 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
+    if (!education || !Array.isArray(education) || education.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Education array is required"
+      });
+    }
+
     // Convert uploaded files -> Base64 (YOUR EXISTING LOGIC)
     const attachments = {};
     if (req.files && req.files.length > 0) {
@@ -112,22 +149,43 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // education is already an array from req.body
-    let educationArray = education;
+    // Check required fields in each education item
+    for (let i = 0; i < education.length; i++) {
+      const item = education[i];
+      if (!item.subbranch || item.subbranch.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: `subbranch is required in education item at index ${i}`
+        });
+      }
+      if (!item.yearPassing || item.yearPassing.trim() === "") {
+        return res.status(400).json({
+          success: false,
+          message: `yearPassing is required in education item at index ${i}`
+        });
+      }
+    }
+
+    // Check if odAttachment provided either in new uploads or existing record
+    let record = await Qualification.findOne({ draftId });
+    if (!record) record = new Qualification({ draftId });
+
+    if (!attachments.od && !record.odAttachment) {
+      return res.status(400).json({
+        success: false,
+        message: "ODAttachment is required"
+      });
+    }
 
     // Attach files to the correct education level
-    educationArray.forEach((item) => {
+    education.forEach((item) => {
       if (attachments[item.qualification]) {
         item.certificateAttachment = attachments[item.qualification];
       }
     });
 
-    // Find or create qualification record
-    let record = await Qualification.findOne({ draftId });
-    if (!record) record = new Qualification({ draftId });
-
     // Save multiple educations
-    record.education = educationArray;
+    record.education = education;
 
     await record.save();
 
