@@ -1,6 +1,7 @@
 const logger = require('../logger/logger');
 const Messages = require('../MsgConstants/messages');
 const PDFDocument = require("pdfkit");
+const { encryptText, decryptText } = require('../utils/cryptoUtil');
 
 const BasicInfo = require("../models/BasicInfo");
 const OfferDetails = require("../models/OfferDetails");
@@ -285,41 +286,25 @@ exports.saveOfferDetails=async(req,res)=>{
 // Bank Details
 exports.saveBankDetails = async (req, res) => {
   try {
-    const {
-      draftId,
-      bankDetails
-    } = req.body;
+    const { draftId, bankDetails } = req.body;
 
     if (!draftId) {
-      return res.status(400).json({
-        success: false,
-        message: "draftId is required"
-      });
+      return res.status(400).json({ success: false, message: "draftId is required" });
     }
 
-     const {
-      bankName,
-      branchName,
-      accountNumber,
-      confirmAccountNumber,
-      ifscCode
-    } = bankDetails;
+    const { bankName, branchName, accountNumber, confirmAccountNumber, ifscCode } = bankDetails || {};
 
-    // 🔍 Check confirmAccountNumber
     if (accountNumber !== confirmAccountNumber) {
-      return res.status(400).json({
-        success: false,
-        message: "Account Number and Confirm Account Number do not match"
-      });
+      return res.status(400).json({ success: false, message: "Account Number and Confirm Account Number do not match" });
     }
 
-    // Convert uploaded file → Base64
+    // Convert uploaded file -> Base64
     const attachments = {};
     if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
+      req.files.forEach(file => {
         attachments[file.fieldname] = {
           fileName: file.originalname,
-          base64: file.buffer.toString("base64"),
+          base64: file.buffer.toString('base64'),
           mimeType: file.mimetype,
           fileSize: file.size,
           uploadedAt: new Date()
@@ -327,40 +312,29 @@ exports.saveBankDetails = async (req, res) => {
       });
     }
 
-    // Find or create record
     let record = await BankDetails.findOne({ draftId });
     if (!record) record = new BankDetails({ draftId });
 
-    // Assign UI fields
     record.bankName = bankName;
     record.branchName = branchName;
 
-    // Hash sensitive fields using model method
+    // Use model method to encrypt
     record.setBankData(accountNumber, ifscCode);
 
-    // Add file attachment
     if (attachments.bankAttachment) {
       record.bankAttachment = attachments.bankAttachment;
     }
 
     await record.save();
 
-    return res.status(200).json({
-      success: true,
-      message: "Bank details saved successfully",
-      draftId,
-      data: record
-    });
+    return res.status(200).json({ success: true, message: "Bank details saved successfully", draftId, data: record });
 
   } catch (error) {
     console.error("Bank Save Error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to save bank details",
-      error: error.message
-    });
+    return res.status(500).json({ success: false, message: "Failed to save bank details", error: error.message });
   }
 };
+
 
 // employmentController
 exports.saveEmployeeDetials=async(req,res)=>{
@@ -969,122 +943,243 @@ exports.downloadSingleFile = async (req, res) => {
 };
 
 // controllers/pdfController.js
-
-
+function bufferFromBase64(b64) {
+  return Buffer.from(b64, 'base64');
+}
 
 exports.downloadCandidatePDF = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Step 1: Find candidate
     let candidate = await OnboardedCandidate.findOne({ draftId: id });
     if (!candidate) {
       try { candidate = await OnboardedCandidate.findById(id); } catch (_) {}
     }
+    if (!candidate) return res.status(404).json({ success:false, message: 'Candidate not found' });
 
-    if (!candidate) {
-      return res.status(404).json({ success: false, message: "Candidate not found" });
-    }
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
 
-    // Step 2: Initialize PDF
-    const doc = new PDFDocument({ margin: 40 });
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="Candidate_${id}.pdf"`
-    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Candidate_${id}.pdf"`);
 
     doc.pipe(res);
 
-    // --------------------------
-    // BASIC INFORMATION
-    // --------------------------
-    doc.fontSize(18).text("Basic Information", { underline: true });
-    doc.moveDown();
-    const basic = candidate.basicInfo;
+    // Basic Info
+    doc.fontSize(18).text('Basic Information', { underline: true });
+    doc.moveDown(0.3);
+    const b = candidate.basicInfo || {};
+    doc.fontSize(11).text(`Name: ${b.firstName || ''} ${b.lastName || ''}`);
+    doc.text(`Email: ${b.email || ''}`);
+    doc.text(`Phone: ${b.countryCode || ''} ${b.phoneNumber || ''}`);
+    doc.text(`Father Name: ${b.fatherName || ''}`);
+    doc.text(`Gender: ${b.gender || ''}`);
+    doc.moveDown(0.5);
 
-    doc.fontSize(12).text(`Name: ${basic.firstName} ${basic.lastName}`);
-    doc.text(`Email: ${basic.email}`);
-    doc.text(`Phone: ${basic.countryCode} ${basic.phoneNumber}`);
-    doc.text(`Father Name: ${basic.fatherName}`);
-    doc.text(`Gender: ${basic.gender}`);
-    doc.text("Aadhar Attachment: Available");
-    doc.text("PAN Attachment: Available");
-    doc.moveDown(2);
-
-    // --------------------------
-    // QUALIFICATION
-    // --------------------------
-    doc.fontSize(18).text("Qualification Details", { underline: true });
-    doc.moveDown();
-
-    const qualification = candidate.qualification;
-    qualification.education.forEach((edu, idx) => {
-      doc.fontSize(14).text(`Qualification ${idx + 1}`);
-      doc.fontSize(12).text(`Degree: ${edu.qualification}`);
-      doc.text(`Specialization: ${edu.specialization}`);
-      doc.text(`Percentage: ${edu.percentage}`);
-      doc.text(`Passing Year: ${edu.passingYear}`);
-      doc.text(`Certificate: ${edu.certificateAttachment?.fileName || "None"}`);
-      doc.moveDown();
-    });
-
-    // --------------------------
-    // OFFER DETAILS
-    // --------------------------
-    doc.fontSize(18).text("Offer Details", { underline: true });
-    const offer = candidate.offerDetails;
-
-    doc.fontSize(12).text(`Offer Date: ${offer.offerDate}`);
-    doc.text(`Date of Joining: ${offer.dateOfJoining}`);
-    doc.text(`Employee ID: ${offer.employeeId}`);
-    doc.text(`Offer Letter: ${offer.offerLetterAttachment?.fileName || "None"}`);
-    doc.moveDown(2);
-
-    // --------------------------
-    // BANK DETAILS
-    // --------------------------
-    doc.fontSize(18).text("Bank Details", { underline: true });
-    const bank = candidate.bankDetails;
-
-    doc.fontSize(12).text(`Bank Name: ${bank.bankName}`);
-    doc.text(`Branch: ${bank.branchName}`);
-    doc.text(`Account Number: XXXX${bank.accountNumberHashed.slice(-4)}`);
-    doc.text(`IFSC: Hashed`);
-    doc.text(`Bank Attachment: ${bank.bankAttachment?.fileName || "None"}`);
-    doc.moveDown(2);
-
-    // --------------------------
-    // EMPLOYMENT DETAILS
-    // --------------------------
-    doc.fontSize(18).text("Employment Details", { underline: true });
-    const emp = candidate.employmentDetails;
-
-    if (emp.employmentType === "Fresher") {
-      doc.fontSize(12).text(`Employment Type: Fresher`);
-      doc.text(`CTC: ${emp.fresherCtc}`);
-      doc.text(`Role: ${emp.hiredRole}`);
-      doc.text(`Offer Letter: ${emp.offerLetterAttachment?.fileName || "None"}`);
+    // Embed Aadhar/PAN images if present and images; otherwise note
+    if (b.aadharAttachment && b.aadharAttachment.base64) {
+      try {
+        const buf = bufferFromBase64(b.aadharAttachment.base64);
+        // Add image with width fit
+        doc.fontSize(12).text('Aadhar Attachment:');
+        doc.image(buf, { fit: [250, 150] });
+        doc.moveDown(0.5);
+      } catch (e) {
+        doc.text(`Aadhar Attachment: ${b.aadharAttachment.fileName || 'Attached (cannot render)'} `);
+      }
     } else {
-      const exp = emp.experiences[0];
-      doc.fontSize(12).text(`Employment Type: Experience`);
-      doc.text(`Company: ${exp.companyName}`);
-      doc.text(`Duration: ${exp.durationFrom} → ${exp.durationTo}`);
-      doc.text(`Joined CTC: ${exp.joinedCtc}`);
-      doc.text(`Offered CTC: ${exp.offeredCtc}`);
-      doc.text(`Reason for Leaving: ${exp.reasonForLeaving}`);
-      doc.text(`Payslips: ${exp.payslipAttachments.length} file(s)`);
+      doc.text('Aadhar Attachment: None');
     }
 
+    if (b.panAttachment && b.panAttachment.base64) {
+      try {
+        const buf = bufferFromBase64(b.panAttachment.base64);
+        doc.fontSize(12).text('PAN Attachment:');
+        doc.image(buf, { fit: [250, 150] });
+        doc.moveDown(0.5);
+      } catch (e) {
+        doc.text(`PAN Attachment: ${b.panAttachment.fileName || 'Attached (cannot render)'} `);
+      }
+    } else {
+      doc.text('PAN Attachment: None');
+    }
+
+    doc.moveDown(1);
+
+    // Qualifications same as before (text + certificate image if available)
+    doc.fontSize(18).text('Qualification Details', { underline: true });
+    doc.moveDown(0.3);
+
+    const qualification = candidate.qualification || {};
+    const eduArray = qualification.education || [];
+    for (let i=0; i<eduArray.length; i++) {
+      const edu = eduArray[i];
+      doc.fontSize(14).text(`Qualification ${i+1}`);
+      doc.fontSize(11).text(`Degree: ${edu.qualification || ''}`);
+      doc.text(`Specialization: ${edu.specialization || ''}`);
+      doc.text(`Percentage: ${edu.percentage || ''}`);
+      doc.text(`Passing Year: ${edu.passingYear || ''}`);
+      if (edu.certificateAttachment && edu.certificateAttachment.base64) {
+        try {
+          const buf = bufferFromBase64(edu.certificateAttachment.base64);
+          // if image, embed; if not image, print filename
+          doc.text('Certificate:');
+          doc.image(buf, { fit: [400, 200] });
+        } catch (e) {
+          doc.text(`Certificate: ${edu.certificateAttachment.fileName || 'Attached'}`);
+        }
+      } else {
+        doc.text('Certificate: None');
+      }
+      doc.moveDown(0.5);
+    }
+
+    // Offer Details
+    doc.addPage(); // optional - keep content readable
+    doc.fontSize(18).text('Offer Details', { underline: true });
+    doc.moveDown(0.3);
+    const offer = candidate.offerDetails || {};
+    doc.fontSize(12).text(`Offer Date: ${offer.offerDate || ''}`);
+    doc.text(`Date of Joining: ${offer.dateOfJoining || ''}`);
+    doc.text(`Employee ID: ${offer.employeeId || ''}`);
+    if (offer.offerLetterAttachment && offer.offerLetterAttachment.base64) {
+      try {
+        const buf = bufferFromBase64(offer.offerLetterAttachment.base64);
+        doc.text('Offer Letter:');
+        // if pdf/attachment cannot be embedded as page easily, still place a filename and indicate download available
+        doc.image(buf, { fit: [400, 200] });
+      } catch (e) {
+        doc.text(`Offer Letter: ${offer.offerLetterAttachment.fileName || 'Attached'}`);
+      }
+    } else {
+      doc.text('Offer Letter: None');
+    }
+
+    doc.moveDown(1);
+
+    // Bank Details (DECRYPT here)
+    doc.fontSize(18).text('Bank Details', { underline: true });
+    doc.moveDown(0.3);
+    const bank = candidate.bankDetails || {};
+    // if bank model has methods: bank.getAccountNumber() etc. If not, decrypt via util
+    let accountNumber = bank.accountEncrypted ? decryptText(bank.accountEncrypted) : null;
+    let ifsc = bank.ifscEncrypted ? decryptText(bank.ifscEncrypted) : null;
+
+    doc.fontSize(12).text(`Bank Name: ${bank.bankName || ''}`);
+    doc.text(`Branch: ${bank.branchName || ''}`);
+    doc.text(`Account Number: ${accountNumber || 'Not Available'}`);
+    doc.text(`IFSC Code: ${ifsc || 'Not Available'}`);
+
+    if (bank.bankAttachment && bank.bankAttachment.base64) {
+      try {
+        const buf = bufferFromBase64(bank.bankAttachment.base64);
+        doc.text('Bank Proof:');
+        doc.image(buf, { fit: [400, 200] });
+      } catch (e) {
+        doc.text(`Bank Proof: ${bank.bankAttachment.fileName || 'Attached'}`);
+      }
+    } else {
+      doc.text('Bank Proof: None');
+    }
+
+    doc.moveDown(1);
+
+    // Employment details
+    doc.addPage();
+    doc.fontSize(18).text('Employment Details', { underline: true });
+    doc.moveDown(0.3);
+    const emp = candidate.employmentDetails || {};
+    doc.fontSize(12).text(`Employment Type: ${emp.employmentType || ''}`);
+    if (emp.employmentType === 'Fresher') {
+      doc.text(`Role Hired: ${emp.hiredRole || ''}`);
+      doc.text(`Offered CTC: ${emp.fresherCtc || ''}`);
+      if (emp.offerLetterAttachment && emp.offerLetterAttachment.base64) {
+        try {
+          const buf = bufferFromBase64(emp.offerLetterAttachment.base64);
+          doc.text('Offer Letter:');
+          doc.image(buf, { fit: [400, 200] });
+        } catch (e) {
+          doc.text(`Offer Letter: ${emp.offerLetterAttachment.fileName || 'Attached'}`);
+        }
+      }
+    } else {
+      const exp = emp.experiences && emp.experiences[0];
+      if (exp) {
+        doc.text(`Company: ${exp.companyName || ''}`);
+        doc.text(`Duration: ${exp.durationFrom || ''} → ${exp.durationTo || ''}`);
+        doc.text(`Joined CTC: ${exp.joinedCtc || ''}`);
+        doc.text(`Offered CTC: ${exp.offeredCtc || ''}`);
+        doc.text(`Reason for Leaving: ${exp.reasonForLeaving || ''}`);
+        // Payslips
+        if (exp.payslipAttachments && exp.payslipAttachments.length > 0) {
+          for (let p = 0; p < exp.payslipAttachments.length; p++) {
+            const payslip = exp.payslipAttachments[p];
+            if (payslip && payslip.base64) {
+              try {
+                const buf = bufferFromBase64(payslip.base64);
+                doc.text(`Payslip ${p+1}:`);
+                doc.image(buf, { fit: [400, 200] });
+                doc.moveDown(0.3);
+              } catch (e) {
+                doc.text(`Payslip ${p+1}: ${payslip.fileName || 'Attached'}`);
+              }
+            }
+          }
+        } else {
+          doc.text('Payslips: None');
+        }
+      }
+    }
+
+    // Finalize
     doc.end();
 
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to generate candidate PDF",
-      error: err.message
-    });
+    console.error('PDF generation error:', err);
+    return res.status(500).json({ success:false, message: 'Failed to generate candidate PDF', error: err.message });
   }
 };
 
+// controllers/onboardingController.js
+
+exports.viewCandidateDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Candidate ID or draftId is required",
+      });
+    }
+
+    // Try finding by draftId first
+    let candidate = await OnboardedCandidate.findOne({ draftId: id });
+
+    // If not found → try MongoDB _id
+    if (!candidate) {
+      try {
+        candidate = await OnboardedCandidate.findById(id);
+      } catch (err) {}
+    }
+
+    if (!candidate) {
+      return res.status(404).json({
+        success: false,
+        message: "Candidate not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Candidate details fetched successfully",
+      data: candidate,
+    });
+  } catch (error) {
+    console.error("View Candidate Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch candidate details",
+      error: error.message,
+    });
+  }
+};

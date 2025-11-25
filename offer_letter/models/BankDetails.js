@@ -1,53 +1,46 @@
 // models/BankDetails.js
-const mongoose = require("mongoose");
-const crypto = require("crypto");
+const mongoose = require('mongoose');
+const { encryptText, decryptText } = require('../utils/cryptoUtil');
 
-// SALT for hashing account number + IFSC
-const SALT_KEY = process.env.BANK_SALT || "default-bank-salt";
+const attachmentSchema = new mongoose.Schema({
+  fileName: String,
+  base64: String,
+  mimeType: String,
+  fileSize: Number,
+  uploadedAt: Date
+}, { _id: false });
 
-// 🔐 Hash function directly inside model (NO controller hashing)
-function hashValue(value) {
-  return crypto
-    .createHash("sha256")
-    .update(value + "|" + SALT_KEY)
-    .digest("hex");
-}
+const bankSchema = new mongoose.Schema({
+  draftId: { type: String, required: true, index: true },
 
-const attachmentSchema = new mongoose.Schema(
-  {
-    fileName: String,
-    base64: String,
-    mimeType: String,
-    fileSize: Number,
-    uploadedAt: Date
+  // encrypted versions
+  accountEncrypted: {
+    iv: String,
+    content: String
   },
-  { _id: false }
-);
-
-const bankSchema = new mongoose.Schema(
-  {
-    draftId: { type: String, required: true, index: true },
-
-    // hashed fields (never store raw)
-    accountNumberHashed: String,
-    ifscCodeHashed: String,
-
-    bankName: String,
-    branchName: String,
-
-    bankAttachment: attachmentSchema
+  ifscEncrypted: {
+    iv: String,
+    content: String
   },
-  { timestamps: true }
-);
 
-// ⚡ Model method to set hashed values
-bankSchema.methods.setBankData = function (accountNumber, ifscCode) {
-  if (accountNumber) {
-    this.accountNumberHashed = hashValue(accountNumber);
-  }
-  if (ifscCode) {
-    this.ifscCodeHashed = hashValue(ifscCode);
-  }
+  bankName: String,
+  branchName: String,
+
+  bankAttachment: attachmentSchema
+}, { timestamps: true });
+
+// method to set encrypted data
+bankSchema.methods.setBankData = function(accountNumber, ifscCode) {
+  if (accountNumber) this.accountEncrypted = encryptText(accountNumber);
+  if (ifscCode) this.ifscEncrypted = encryptText(ifscCode);
 };
 
-module.exports = mongoose.model("BankDetails", bankSchema);
+// helpers to get decrypted text
+bankSchema.methods.getAccountNumber = function() {
+  return decryptText(this.accountEncrypted);
+};
+bankSchema.methods.getIfscCode = function() {
+  return decryptText(this.ifscEncrypted);
+};
+
+module.exports = mongoose.model('BankDetails', bankSchema);
