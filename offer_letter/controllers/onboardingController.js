@@ -129,11 +129,27 @@ exports.saveQulification = async (req, res) => {
       });
     }
 
-    // Convert education string → array
+    // Normalize education to an array (accept both array and JSON string)
     let educationArray;
-    try {
-      educationArray = JSON.parse(education);
-    } catch (err) {
+    if (Array.isArray(education)) {
+      educationArray = education;
+    } else if (typeof education === "string") {
+      try {
+        const parsed = JSON.parse(education);
+        if (!Array.isArray(parsed)) {
+          return res.status(400).json({
+            success: false,
+            message: "Education must be a valid JSON array"
+          });
+        }
+        educationArray = parsed;
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Education must be a valid JSON array"
+        });
+      }
+    } else {
       return res.status(400).json({
         success: false,
         message: "Education must be a valid JSON array"
