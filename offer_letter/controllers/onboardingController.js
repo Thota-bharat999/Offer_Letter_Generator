@@ -951,12 +951,6 @@ exports.downloadSingleFile = async (req, res) => {
     });
   }
 };
-
-// controllers/pdfController.js
-function bufferFromBase64(b64) {
-  return Buffer.from(b64, 'base64');
-}
-
 // Convert base64 → buffer
 function bufferFromBase64(b64) {
   return Buffer.from(b64, "base64");
@@ -1029,16 +1023,23 @@ exports.downloadCandidatePDF = async (req, res) => {
 
     let candidate = await OnboardedCandidate.findOne({ draftId: id });
     if (!candidate) {
-      try { candidate = await OnboardedCandidate.findById(id); } catch (_) {}
+      try {
+        candidate = await OnboardedCandidate.findById(id);
+      } catch (_) {}
     }
 
     if (!candidate)
-      return res.status(404).json({ success: false, message: "Candidate not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Candidate not found" });
 
     const doc = new PDFDocument({ margin: 40, size: "A4" });
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="Candidate_${id}.pdf"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Candidate_${id}.pdf"`
+    );
 
     doc.pipe(res);
 
@@ -1047,9 +1048,7 @@ exports.downloadCandidatePDF = async (req, res) => {
     //
     doc.fontSize(18).text("Basic Information", { underline: true });
     doc.moveDown(0.3);
-
     const b = candidate.basicInfo || {};
-
     doc.fontSize(11).text(`Salutation: ${b.salutation || ""}`);
     doc.text(`Name: ${b.firstName || ""} ${b.lastName || ""}`);
     doc.text(`Email: ${b.email || ""}`);
@@ -1057,24 +1056,33 @@ exports.downloadCandidatePDF = async (req, res) => {
     doc.text(`Father Name: ${b.fatherName || ""}`);
     doc.text(`Gender: ${b.gender || ""}`);
 
-    // FIX 1 → proper Aadhar & PAN detection (all possible field names)
-    const aadharNum =
-      b.aadharEncrypted
-        ? decryptText(b.aadharEncrypted)
-        : b.aadhar_number || b.aadharNumber || b.aadhar || "";
-
-    const panNum =
-      b.panEncrypted
-        ? decryptText(b.panEncrypted)
-        : b.pan_number || b.panNumber || b.pan || "";
+    const aadharNum = b.aadharEncrypted
+      ? decryptText(b.aadharEncrypted)
+      : b.aadhar_number || "";
+    const panNum = b.panEncrypted
+      ? decryptText(b.panEncrypted)
+      : b.panNumber || b.pan_number || "";
 
     if (aadharNum) doc.text(`Aadhar Number: ${aadharNum}`);
     if (panNum) doc.text(`PAN Number: ${panNum}`);
 
     doc.moveDown(0.5);
 
-    renderAttachmentBlock(doc, "Aadhar Attachment:", b.aadharAttachment, candidate, "basicInfo");
-    renderAttachmentBlock(doc, "PAN Attachment:", b.panAttachment, candidate, "basicInfo");
+    // Aadhar + PAN
+    renderAttachmentBlock(
+      doc,
+      "Aadhar Attachment:",
+      b.aadharAttachment,
+      candidate,
+      "basicInfo"
+    );
+    renderAttachmentBlock(
+      doc,
+      "PAN Attachment:",
+      b.panAttachment,
+      candidate,
+      "basicInfo"
+    );
 
     doc.moveDown(1);
 
@@ -1113,12 +1121,9 @@ exports.downloadCandidatePDF = async (req, res) => {
     doc.moveDown(0.3);
 
     const offer = candidate.offerDetails || {};
-
     doc.fontSize(12).text(`Offer Date: ${offer.offerDate || ""}`);
     doc.text(`Date of Joining: ${offer.dateOfJoining || ""}`);
     doc.text(`Employee ID: ${offer.employeeId || ""}`);
-
-    // FIX 2 → Show interview remarks fully
     if (offer.interviewRemarks)
       doc.text(`Interview Remarks: ${offer.interviewRemarks}`);
 
@@ -1139,7 +1144,9 @@ exports.downloadCandidatePDF = async (req, res) => {
     doc.moveDown(0.3);
 
     const bank = candidate.bankDetails || {};
-    const accountNumber = bank.accountEncrypted ? decryptText(bank.accountEncrypted) : null;
+    const accountNumber = bank.accountEncrypted
+      ? decryptText(bank.accountEncrypted)
+      : null;
     const ifsc = bank.ifscEncrypted ? decryptText(bank.ifscEncrypted) : null;
 
     doc.fontSize(12).text(`Bank Name: ${bank.bankName || ""}`);
@@ -1147,7 +1154,13 @@ exports.downloadCandidatePDF = async (req, res) => {
     doc.text(`Account Number: ${accountNumber || "Not Available"}`);
     doc.text(`IFSC Code: ${ifsc || "Not Available"}`);
 
-    renderAttachmentBlock(doc, "Bank Proof:", bank.bankAttachment, candidate, "bankDetails");
+    renderAttachmentBlock(
+      doc,
+      "Bank Proof:",
+      bank.bankAttachment,
+      candidate,
+      "bankDetails"
+    );
 
     doc.moveDown(1);
 
@@ -1155,67 +1168,62 @@ exports.downloadCandidatePDF = async (req, res) => {
     // ---------------- EMPLOYMENT DETAILS ----------------
     //
     doc.addPage();
-    // Header for Employment Details (table-like)
-    doc.text('--------------------------------------------------------');
-    doc.fontSize(14).text('Employment Details');
-    doc.text('--------------------------------------------------------');
-    doc.fontSize(11);
+    doc.fontSize(18).text("Employment Details", { underline: true });
+    doc.moveDown(0.3);
 
     const emp = candidate.employmentDetails || {};
-    const baseUrl = process.env.PUBLIC_WEB_URL ||
-      'https://offerlettergenerator-production.up.railway.app';
-    const candId = candidate.draftId || candidate._id;
+    doc.fontSize(12).text(
+      `Employment Type: ${emp.employmentType || emp.experienceType || ""}`
+    );
 
-    // Fresher block
-    if ((emp.employmentType || emp.experienceType) === 'Fresher') {
-      doc.text(`| Field | Value |`);
-      doc.text(`| --------------------------- | -------------------- |`);
-      doc.text(`| Role Hired | ${emp.hiredRole || ''} |`);
-      doc.text(`| Offered CTC | ${emp.fresherCtc || ''} |`);
-      // Offer letter links
-      if (emp.offerLetterAttachment && emp.offerLetterAttachment.fileName) {
-        const fname = emp.offerLetterAttachment.fileName;
-        const url = `${baseUrl}/api/candidate/${candId}/employmentDetails/${encodeURIComponent(fname)}`;
-        doc.text(`| **Offer Letter Attachment** | `, { continued: true });
-        doc.text('📎 View', { link: url, underline: true, continued: true });
-        doc.text(' / ', { continued: true });
-        doc.text('⬇ Download', { link: url, underline: true, continued: true });
-        doc.text(' |');
-      } else {
-        doc.text(`| **Offer Letter Attachment** | - |`);
-      }
-      const gr = emp.generalRemarks || emp.general_notes || emp.notes;
-      if (gr) doc.text(`| Remarks | ${gr} |`);
+    if ((emp.employmentType || emp.experienceType) === "Fresher") {
+      doc.text(`Role Hired: ${emp.hiredRole || ""}`);
+      doc.text(`Offered CTC: ${emp.fresherCtc || ""}`);
+
+      renderAttachmentBlock(
+        doc,
+        "Offer Letter:",
+        emp.offerLetterAttachment,
+        candidate,
+        "employmentDetails"
+      );
     } else {
-      // Experience block
-      const exp = emp.experiences && emp.experiences[0];
-      if (exp) {
-        doc.text(`| Field | Value |`);
-        doc.text(`| ----------------------- | --------------------------------------- |`);
-        doc.text(`| Company Name | ${exp.companyName || ''} |`);
-        doc.text(`| Duration | ${(exp.durationFrom || '')} – ${(exp.durationTo || '')} |`);
-        doc.text(`| Joined CTC | ${exp.joinedCtc || ''} |`);
-        doc.text(`| Offered CTC | ${exp.offeredCtc || ''} |`);
-        doc.text(`| Reason for Leaving | ${exp.reasonForLeaving || ''} |`);
+      const exp = emp.experiences?.[0];
 
-        // Payslips: list each with View/Download
-        if (Array.isArray(exp.payslipAttachments) && exp.payslipAttachments.length > 0) {
-          exp.payslipAttachments.forEach((p, idx) => {
-            if (!p || !p.fileName) return;
-            const url = `${baseUrl}/api/candidate/${candId}/employmentDetails/${encodeURIComponent(p.fileName)}`;
-            doc.text(`| Payslip ${idx + 1} | `, { continued: true });
-            doc.text('📎 View', { link: url, underline: true, continued: true });
-            doc.text(' / ', { continued: true });
-            doc.text('⬇ Download', { link: url, underline: true, continued: true });
-            doc.text(' |');
+      if (exp) {
+        doc.text(`Company: ${exp.companyName || ""}`);
+        doc.text(`Duration: ${exp.durationFrom || ""} → ${exp.durationTo || ""}`);
+        doc.text(`Joined CTC: ${exp.joinedCtc || ""}`);
+        doc.text(`Offered CTC: ${exp.offeredCtc || ""}`);
+        doc.text(`Reason for Leaving: ${exp.reasonForLeaving || ""}`);
+
+        // Experience offer letter
+        renderAttachmentBlock(
+          doc,
+          "Offer Letter:",
+          exp.offerLetterAttachment,
+          candidate,
+          "employmentDetails"
+        );
+
+        // Payslips
+        if (exp.payslipAttachments?.length > 0) {
+          exp.payslipAttachments.forEach((p, i) => {
+            renderAttachmentBlock(
+              doc,
+              `Payslip ${i + 1}:`,
+              p,
+              candidate,
+              "employmentDetails"
+            );
           });
         } else {
-          doc.text(`| Payslips (Multiple) | None |`);
+          doc.text("Payslips: None");
         }
       }
     }
 
-    // Finalize
+    // Finalize PDF
     doc.end();
   } catch (err) {
     console.error("PDF generation error:", err);
@@ -1227,7 +1235,6 @@ exports.downloadCandidatePDF = async (req, res) => {
   }
 };
 
-// controllers/onboardingController.js
 
 exports.viewCandidateDetails = async (req, res) => {
   try {
