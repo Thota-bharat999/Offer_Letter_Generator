@@ -886,7 +886,7 @@ exports.downloadSingleFile = async (req, res) => {
     }
 
     if (section === "qualification") {
-      for (const edu of sectionData.education) {
+      for (const edu of (Array.isArray(sectionData.education) ? sectionData.education : [])) {
         if (edu.certificateAttachment?.fileName === fileName) {
           file = edu.certificateAttachment;
           break;
@@ -910,12 +910,16 @@ exports.downloadSingleFile = async (req, res) => {
     }
 
     if (section === "employmentDetails") {
-      const exp = sectionData.experiences?.[0];
-      if (exp?.offerLetterAttachment?.fileName === fileName) {
-        file = exp.offerLetterAttachment;
-      }
-      if (!file && exp?.payslipAttachments) {
-        file = exp.payslipAttachments.find(f => f.fileName === fileName);
+      const exps = Array.isArray(sectionData.experiences) ? sectionData.experiences : [];
+      for (const exp of exps) {
+        if (exp?.offerLetterAttachment?.fileName === fileName) {
+          file = exp.offerLetterAttachment;
+          break;
+        }
+        if (!file && Array.isArray(exp?.payslipAttachments)) {
+          const found = exp.payslipAttachments.find(f => f.fileName === fileName);
+          if (found) { file = found; break; }
+        }
       }
     }
 
@@ -1169,10 +1173,28 @@ exports.viewCandidateDetails = async (req, res) => {
       });
     }
 
+    // Augment with UI fields without changing storage
+    const data = candidate.toObject ? candidate.toObject() : JSON.parse(JSON.stringify(candidate));
+    const b = data.basicInfo || {};
+    const bank = data.bankDetails || {};
+
+    const aadharDecrypted = b.aadharEncrypted ? decryptText(b.aadharEncrypted) : null;
+    const panDecrypted = b.panEncrypted ? decryptText(b.panEncrypted) : null;
+    const accountDecrypted = bank.accountEncrypted ? decryptText(bank.accountEncrypted) : null;
+    const ifscDecrypted = bank.ifscEncrypted ? decryptText(bank.ifscEncrypted) : null;
+
+    if (!data.basicInfo) data.basicInfo = {};
+    data.basicInfo.aadhar_number = aadharDecrypted || null;
+    data.basicInfo.pan_number = panDecrypted || null;
+
+    if (!data.bankDetails) data.bankDetails = {};
+    data.bankDetails.account_number = accountDecrypted || null;
+    data.bankDetails.ifsc_number = ifscDecrypted || null;
+
     return res.status(200).json({
       success: true,
       message: "Candidate details fetched successfully",
-      data: candidate,
+      data,
     });
   } catch (error) {
     console.error("View Candidate Error:", error);
