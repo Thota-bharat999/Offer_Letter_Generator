@@ -206,17 +206,8 @@ exports.saveQulification = async (req, res) => {
     let record = await Qualification.findOne({ draftId });
     if (!record) record = new Qualification({ draftId });
 
-    // Check OD required for B.Tech
-    const hasBtech = educationArray.some(item => item.qualification === "B.Tech");
-
-    if (hasBtech) {
-      if (!attachments.od && !record.odAttachment) {
-        return res.status(400).json({
-          success: false,
-          message: "ODAttachment is required for B.Tech"
-        });
-      }
-    }
+    // ❌ REMOVED — ODAttachment is NO LONGER required for B.Tech
+    // (no validation here, fully optional)
 
     // Attach certificates
     educationArray.forEach((item) => {
@@ -245,6 +236,7 @@ exports.saveQulification = async (req, res) => {
     });
   }
 };
+
 
 
 
