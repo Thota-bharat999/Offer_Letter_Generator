@@ -816,8 +816,8 @@ exports.uploadAnySectionFiles = async (req, res) => {
     // PAGE 2 — QUALIFICATION
     // -----------------------
     if (section === "qualification") {
-      if (attachments.marksheet) record.marksheetAttachment = attachments.marksheet;
-      if (attachments.od) record.odAttachment = attachments.od;
+      // Keep qualification uploads optional; do not enforce or store root-level OD/marksheet
+      // Qualification certificates are handled per education item in saveQulification
     }
 
     // -----------------------
@@ -900,9 +900,7 @@ exports.downloadSingleFile = async (req, res) => {
           break;
         }
       }
-      if (!file && sectionData.odAttachment?.fileName === fileName) {
-        file = sectionData.odAttachment;
-      }
+      // Root-level OD was removed from qualification; nothing to fetch here.
     }
 
     if (section === "offerDetails") {
@@ -959,195 +957,287 @@ function bufferFromBase64(b64) {
   return Buffer.from(b64, 'base64');
 }
 
+// Convert base64 → buffer
+function bufferFromBase64(b64) {
+  return Buffer.from(b64, "base64");
+}
+
+// Detect if file is image
+function isImageAttachment(att) {
+  if (!att) return false;
+  const name = (att.fileName || "").toLowerCase();
+  const mime = (att.mimeType || "").toLowerCase();
+
+  return (
+    mime.startsWith("image/") ||
+    name.endsWith(".jpg") ||
+    name.endsWith(".jpeg") ||
+    name.endsWith(".png") ||
+    name.endsWith(".gif") ||
+    name.endsWith(".bmp") ||
+    name.endsWith(".webp")
+  );
+}
+
+// Render either embedded image OR download link
+function renderAttachmentBlock(doc, label, attachment, candidate, sectionKey) {
+  doc.fontSize(12).text(label);
+
+  if (!attachment || !attachment.base64) {
+    doc.text("None");
+    doc.moveDown(0.5);
+    return;
+  }
+
+  // Try embedding image if applicable
+  if (isImageAttachment(attachment)) {
+    try {
+      const buf = bufferFromBase64(attachment.base64);
+      doc.image(buf, { fit: [250, 150] });
+      doc.moveDown(0.5);
+      return;
+    } catch (e) {
+      // If fails → fallback to download link
+    }
+  }
+
+  // Otherwise show download link
+  const fileName = attachment.fileName || "Attachment";
+  doc.text(`File: ${fileName}`);
+
+  const baseUrl =
+    process.env.PUBLIC_WEB_URL ||
+    "https://offerlettergenerator-production.up.railway.app";
+
+  const id = candidate.draftId || candidate._id;
+
+  const downloadUrl = `${baseUrl}/api/candidate/${id}/${sectionKey}/${encodeURIComponent(
+    fileName
+  )}`;
+
+  doc
+    .fillColor("blue")
+    .text("Click here to download", { link: downloadUrl, underline: true })
+    .fillColor("black");
+
+  doc.moveDown(0.5);
+}
+
 exports.downloadCandidatePDF = async (req, res) => {
   try {
     const { id } = req.params;
 
     let candidate = await OnboardedCandidate.findOne({ draftId: id });
     if (!candidate) {
-      try { candidate = await OnboardedCandidate.findById(id); } catch (_) {}
+      try {
+        candidate = await OnboardedCandidate.findById(id);
+      } catch (_) {}
     }
-    if (!candidate) return res.status(404).json({ success:false, message: 'Candidate not found' });
 
-    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    if (!candidate)
+      return res
+        .status(404)
+        .json({ success: false, message: "Candidate not found" });
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Candidate_${id}.pdf"`);
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Candidate_${id}.pdf"`
+    );
 
     doc.pipe(res);
 
-    // Basic Info
-    doc.fontSize(18).text('Basic Information', { underline: true });
+    //
+    // ---------------- BASIC INFO ----------------
+    //
+    doc.fontSize(18).text("Basic Information", { underline: true });
     doc.moveDown(0.3);
     const b = candidate.basicInfo || {};
-    doc.fontSize(11).text(`Name: ${b.firstName || ''} ${b.lastName || ''}`);
-    doc.text(`Email: ${b.email || ''}`);
-    doc.text(`Phone: ${b.countryCode || ''} ${b.phoneNumber || ''}`);
-    doc.text(`Father Name: ${b.fatherName || ''}`);
-    doc.text(`Gender: ${b.gender || ''}`);
+    doc.fontSize(11).text(`Salutation: ${b.salutation || ""}`);
+    doc.text(`Name: ${b.firstName || ""} ${b.lastName || ""}`);
+    doc.text(`Email: ${b.email || ""}`);
+    doc.text(`Phone: ${b.countryCode || ""} ${b.phoneNumber || ""}`);
+    doc.text(`Father Name: ${b.fatherName || ""}`);
+    doc.text(`Gender: ${b.gender || ""}`);
+
+    const aadharNum = b.aadharEncrypted
+      ? decryptText(b.aadharEncrypted)
+      : b.aadhar_number || "";
+    const panNum = b.panEncrypted
+      ? decryptText(b.panEncrypted)
+      : b.panNumber || b.pan_number || "";
+
+    if (aadharNum) doc.text(`Aadhar Number: ${aadharNum}`);
+    if (panNum) doc.text(`PAN Number: ${panNum}`);
+
     doc.moveDown(0.5);
 
-    // Embed Aadhar/PAN images if present and images; otherwise note
-    if (b.aadharAttachment && b.aadharAttachment.base64) {
-      try {
-        const buf = bufferFromBase64(b.aadharAttachment.base64);
-        // Add image with width fit
-        doc.fontSize(12).text('Aadhar Attachment:');
-        doc.image(buf, { fit: [250, 150] });
-        doc.moveDown(0.5);
-      } catch (e) {
-        doc.text(`Aadhar Attachment: ${b.aadharAttachment.fileName || 'Attached (cannot render)'} `);
-      }
-    } else {
-      doc.text('Aadhar Attachment: None');
-    }
-
-    if (b.panAttachment && b.panAttachment.base64) {
-      try {
-        const buf = bufferFromBase64(b.panAttachment.base64);
-        doc.fontSize(12).text('PAN Attachment:');
-        doc.image(buf, { fit: [250, 150] });
-        doc.moveDown(0.5);
-      } catch (e) {
-        doc.text(`PAN Attachment: ${b.panAttachment.fileName || 'Attached (cannot render)'} `);
-      }
-    } else {
-      doc.text('PAN Attachment: None');
-    }
+    // Aadhar + PAN
+    renderAttachmentBlock(
+      doc,
+      "Aadhar Attachment:",
+      b.aadharAttachment,
+      candidate,
+      "basicInfo"
+    );
+    renderAttachmentBlock(
+      doc,
+      "PAN Attachment:",
+      b.panAttachment,
+      candidate,
+      "basicInfo"
+    );
 
     doc.moveDown(1);
 
-    // Qualifications same as before (text + certificate image if available)
-    doc.fontSize(18).text('Qualification Details', { underline: true });
+    //
+    // ---------------- QUALIFICATIONS ----------------
+    //
+    doc.fontSize(18).text("Qualification Details", { underline: true });
     doc.moveDown(0.3);
 
     const qualification = candidate.qualification || {};
     const eduArray = qualification.education || [];
-    for (let i=0; i<eduArray.length; i++) {
-      const edu = eduArray[i];
-      doc.fontSize(14).text(`Qualification ${i+1}`);
-      doc.fontSize(11).text(`Degree: ${edu.qualification || ''}`);
-      doc.text(`Specialization: ${edu.specialization || ''}`);
-      doc.text(`Percentage: ${edu.percentage || ''}`);
-      doc.text(`Passing Year: ${edu.passingYear || ''}`);
-      if (edu.certificateAttachment && edu.certificateAttachment.base64) {
-        try {
-          const buf = bufferFromBase64(edu.certificateAttachment.base64);
-          // if image, embed; if not image, print filename
-          doc.text('Certificate:');
-          doc.image(buf, { fit: [400, 200] });
-        } catch (e) {
-          doc.text(`Certificate: ${edu.certificateAttachment.fileName || 'Attached'}`);
-        }
-      } else {
-        doc.text('Certificate: None');
-      }
+
+    eduArray.forEach((edu, index) => {
+      doc.fontSize(14).text(`Qualification ${index + 1}`);
+      doc.fontSize(11).text(`Degree: ${edu.qualification || ""}`);
+      doc.text(`Specialization: ${edu.specialization || ""}`);
+      doc.text(`Percentage: ${edu.percentage || ""}`);
+      doc.text(`Passing Year: ${edu.passingYear || ""}`);
+
+      renderAttachmentBlock(
+        doc,
+        "Certificate:",
+        edu.certificateAttachment,
+        candidate,
+        "qualification"
+      );
+
       doc.moveDown(0.5);
-    }
+    });
 
-    // Offer Details
-    doc.addPage(); // optional - keep content readable
-    doc.fontSize(18).text('Offer Details', { underline: true });
-    doc.moveDown(0.3);
-    const offer = candidate.offerDetails || {};
-    doc.fontSize(12).text(`Offer Date: ${offer.offerDate || ''}`);
-    doc.text(`Date of Joining: ${offer.dateOfJoining || ''}`);
-    doc.text(`Employee ID: ${offer.employeeId || ''}`);
-    if (offer.offerLetterAttachment && offer.offerLetterAttachment.base64) {
-      try {
-        const buf = bufferFromBase64(offer.offerLetterAttachment.base64);
-        doc.text('Offer Letter:');
-        // if pdf/attachment cannot be embedded as page easily, still place a filename and indicate download available
-        doc.image(buf, { fit: [400, 200] });
-      } catch (e) {
-        doc.text(`Offer Letter: ${offer.offerLetterAttachment.fileName || 'Attached'}`);
-      }
-    } else {
-      doc.text('Offer Letter: None');
-    }
-
-    doc.moveDown(1);
-
-    // Bank Details (DECRYPT here)
-    doc.fontSize(18).text('Bank Details', { underline: true });
-    doc.moveDown(0.3);
-    const bank = candidate.bankDetails || {};
-    // if bank model has methods: bank.getAccountNumber() etc. If not, decrypt via util
-    let accountNumber = bank.accountEncrypted ? decryptText(bank.accountEncrypted) : null;
-    let ifsc = bank.ifscEncrypted ? decryptText(bank.ifscEncrypted) : null;
-
-    doc.fontSize(12).text(`Bank Name: ${bank.bankName || ''}`);
-    doc.text(`Branch: ${bank.branchName || ''}`);
-    doc.text(`Account Number: ${accountNumber || 'Not Available'}`);
-    doc.text(`IFSC Code: ${ifsc || 'Not Available'}`);
-
-    if (bank.bankAttachment && bank.bankAttachment.base64) {
-      try {
-        const buf = bufferFromBase64(bank.bankAttachment.base64);
-        doc.text('Bank Proof:');
-        doc.image(buf, { fit: [400, 200] });
-      } catch (e) {
-        doc.text(`Bank Proof: ${bank.bankAttachment.fileName || 'Attached'}`);
-      }
-    } else {
-      doc.text('Bank Proof: None');
-    }
-
-    doc.moveDown(1);
-
-    // Employment details
+    //
+    // ---------------- OFFER DETAILS ----------------
+    //
     doc.addPage();
-    doc.fontSize(18).text('Employment Details', { underline: true });
+    doc.fontSize(18).text("Offer Details", { underline: true });
     doc.moveDown(0.3);
+
+    const offer = candidate.offerDetails || {};
+    doc.fontSize(12).text(`Offer Date: ${offer.offerDate || ""}`);
+    doc.text(`Date of Joining: ${offer.dateOfJoining || ""}`);
+    doc.text(`Employee ID: ${offer.employeeId || ""}`);
+    if (offer.interviewRemarks)
+      doc.text(`Interview Remarks: ${offer.interviewRemarks}`);
+
+    renderAttachmentBlock(
+      doc,
+      "Offer Letter:",
+      offer.offerLetterAttachment,
+      candidate,
+      "offerDetails"
+    );
+
+    doc.moveDown(1);
+
+    //
+    // ---------------- BANK DETAILS ----------------
+    //
+    doc.fontSize(18).text("Bank Details", { underline: true });
+    doc.moveDown(0.3);
+
+    const bank = candidate.bankDetails || {};
+    const accountNumber = bank.accountEncrypted
+      ? decryptText(bank.accountEncrypted)
+      : null;
+    const ifsc = bank.ifscEncrypted ? decryptText(bank.ifscEncrypted) : null;
+
+    doc.fontSize(12).text(`Bank Name: ${bank.bankName || ""}`);
+    doc.text(`Branch: ${bank.branchName || ""}`);
+    doc.text(`Account Number: ${accountNumber || "Not Available"}`);
+    doc.text(`IFSC Code: ${ifsc || "Not Available"}`);
+
+    renderAttachmentBlock(
+      doc,
+      "Bank Proof:",
+      bank.bankAttachment,
+      candidate,
+      "bankDetails"
+    );
+
+    doc.moveDown(1);
+
+    //
+    // ---------------- EMPLOYMENT DETAILS ----------------
+    //
+    doc.addPage();
+    doc.fontSize(18).text("Employment Details", { underline: true });
+    doc.moveDown(0.3);
+
     const emp = candidate.employmentDetails || {};
-    doc.fontSize(12).text(`Employment Type: ${emp.employmentType || ''}`);
-    if (emp.employmentType === 'Fresher') {
-      doc.text(`Role Hired: ${emp.hiredRole || ''}`);
-      doc.text(`Offered CTC: ${emp.fresherCtc || ''}`);
-      if (emp.offerLetterAttachment && emp.offerLetterAttachment.base64) {
-        try {
-          const buf = bufferFromBase64(emp.offerLetterAttachment.base64);
-          doc.text('Offer Letter:');
-          doc.image(buf, { fit: [400, 200] });
-        } catch (e) {
-          doc.text(`Offer Letter: ${emp.offerLetterAttachment.fileName || 'Attached'}`);
-        }
-      }
+    doc.fontSize(12).text(
+      `Employment Type: ${emp.employmentType || emp.experienceType || ""}`
+    );
+
+    if ((emp.employmentType || emp.experienceType) === "Fresher") {
+      doc.text(`Role Hired: ${emp.hiredRole || ""}`);
+      doc.text(`Offered CTC: ${emp.fresherCtc || ""}`);
+
+      renderAttachmentBlock(
+        doc,
+        "Offer Letter:",
+        emp.offerLetterAttachment,
+        candidate,
+        "employmentDetails"
+      );
     } else {
-      const exp = emp.experiences && emp.experiences[0];
+      const exp = emp.experiences?.[0];
+
       if (exp) {
-        doc.text(`Company: ${exp.companyName || ''}`);
-        doc.text(`Duration: ${exp.durationFrom || ''} → ${exp.durationTo || ''}`);
-        doc.text(`Joined CTC: ${exp.joinedCtc || ''}`);
-        doc.text(`Offered CTC: ${exp.offeredCtc || ''}`);
-        doc.text(`Reason for Leaving: ${exp.reasonForLeaving || ''}`);
+        doc.text(`Company: ${exp.companyName || ""}`);
+        doc.text(`Duration: ${exp.durationFrom || ""} → ${exp.durationTo || ""}`);
+        doc.text(`Joined CTC: ${exp.joinedCtc || ""}`);
+        doc.text(`Offered CTC: ${exp.offeredCtc || ""}`);
+        doc.text(`Reason for Leaving: ${exp.reasonForLeaving || ""}`);
+
+        // Experience offer letter
+        renderAttachmentBlock(
+          doc,
+          "Offer Letter:",
+          exp.offerLetterAttachment,
+          candidate,
+          "employmentDetails"
+        );
+
         // Payslips
-        if (exp.payslipAttachments && exp.payslipAttachments.length > 0) {
-          for (let p = 0; p < exp.payslipAttachments.length; p++) {
-            const payslip = exp.payslipAttachments[p];
-            if (payslip && payslip.base64) {
-              try {
-                const buf = bufferFromBase64(payslip.base64);
-                doc.text(`Payslip ${p+1}:`);
-                doc.image(buf, { fit: [400, 200] });
-                doc.moveDown(0.3);
-              } catch (e) {
-                doc.text(`Payslip ${p+1}: ${payslip.fileName || 'Attached'}`);
-              }
-            }
-          }
+        if (exp.payslipAttachments?.length > 0) {
+          exp.payslipAttachments.forEach((p, i) => {
+            renderAttachmentBlock(
+              doc,
+              `Payslip ${i + 1}:`,
+              p,
+              candidate,
+              "employmentDetails"
+            );
+          });
         } else {
-          doc.text('Payslips: None');
+          doc.text("Payslips: None");
         }
       }
     }
 
-    // Finalize
+    // Finalize PDF
     doc.end();
-
   } catch (err) {
-    console.error('PDF generation error:', err);
-    return res.status(500).json({ success:false, message: 'Failed to generate candidate PDF', error: err.message });
+    console.error("PDF generation error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate candidate PDF",
+      error: err.message,
+    });
   }
 };
 

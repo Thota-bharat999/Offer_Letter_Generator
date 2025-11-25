@@ -37,9 +37,21 @@ const employmentSchema = new mongoose.Schema(
       required: true
     },
 
+    // Optional alias for compatibility with clients sending experienceType
+    experienceType: {
+      type: String,
+      enum: ["Fresher", "Experience"]
+    },
+
     // Fresher fields
     fresherCtc: String,
     hiredRole: String,
+
+    // Optional general remarks/notes
+    generalRemarks: String,
+    general_notes: String,
+    notes: String,
+    
     offerLetterAttachment: attachmentSchema,
 
     // Experience fields
