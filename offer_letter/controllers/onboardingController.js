@@ -1,6 +1,6 @@
 const logger = require('../logger/logger');
 const Messages = require('../MsgConstants/messages');
-// controllers/onboardingController.js
+const PDFDocument = require("pdfkit");
 
 const BasicInfo = require("../models/BasicInfo");
 const OfferDetails = require("../models/OfferDetails");
@@ -879,6 +879,211 @@ exports.uploadAnySectionFiles = async (req, res) => {
       success: false,
       message: "File upload failed",
       error: error.message
+    });
+  }
+};
+
+exports.downloadSingleFile = async (req, res) => {
+  try {
+    const { id, section, fileName } = req.params;
+
+    // Step 1: Find candidate by draftId or _id
+    let candidate = await OnboardedCandidate.findOne({ draftId: id });
+    if (!candidate) {
+      try { candidate = await OnboardedCandidate.findById(id); } catch (_) {}
+    }
+
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: "Candidate not found" });
+    }
+
+    // Step 2: get correct section object
+    let sectionData = candidate[section];
+    if (!sectionData) {
+      return res.status(400).json({ success: false, message: "Invalid section name" });
+    }
+
+    // Step 3: find the actual attachment
+    let file;
+
+    if (section === "basicInfo") {
+      file = sectionData.aadharAttachment?.fileName === fileName ? sectionData.aadharAttachment :
+             sectionData.panAttachment?.fileName === fileName ? sectionData.panAttachment : null;
+    }
+
+    if (section === "qualification") {
+      for (const edu of sectionData.education) {
+        if (edu.certificateAttachment?.fileName === fileName) {
+          file = edu.certificateAttachment;
+          break;
+        }
+      }
+      if (!file && sectionData.odAttachment?.fileName === fileName) {
+        file = sectionData.odAttachment;
+      }
+    }
+
+    if (section === "offerDetails") {
+      if (sectionData.offerLetterAttachment?.fileName === fileName) {
+        file = sectionData.offerLetterAttachment;
+      }
+    }
+
+    if (section === "bankDetails") {
+      if (sectionData.bankAttachment?.fileName === fileName) {
+        file = sectionData.bankAttachment;
+      }
+    }
+
+    if (section === "employmentDetails") {
+      const exp = sectionData.experiences?.[0];
+      if (exp?.offerLetterAttachment?.fileName === fileName) {
+        file = exp.offerLetterAttachment;
+      }
+      if (!file && exp?.payslipAttachments) {
+        file = exp.payslipAttachments.find(f => f.fileName === fileName);
+      }
+    }
+
+    if (!file) {
+      return res.status(404).json({ success: false, message: "File not found" });
+    }
+
+    // Step 4: Convert BASE64 → binary
+    const fileBuffer = Buffer.from(file.base64, "base64");
+
+    res.set({
+      "Content-Type": file.mimeType,
+      "Content-Disposition": `attachment; filename="${file.fileName}"`
+    });
+
+    return res.send(fileBuffer);
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to download file",
+      error: err.message
+    });
+  }
+};
+
+// controllers/pdfController.js
+
+
+
+exports.downloadCandidatePDF = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Step 1: Find candidate
+    let candidate = await OnboardedCandidate.findOne({ draftId: id });
+    if (!candidate) {
+      try { candidate = await OnboardedCandidate.findById(id); } catch (_) {}
+    }
+
+    if (!candidate) {
+      return res.status(404).json({ success: false, message: "Candidate not found" });
+    }
+
+    // Step 2: Initialize PDF
+    const doc = new PDFDocument({ margin: 40 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="Candidate_${id}.pdf"`
+    );
+
+    doc.pipe(res);
+
+    // --------------------------
+    // BASIC INFORMATION
+    // --------------------------
+    doc.fontSize(18).text("Basic Information", { underline: true });
+    doc.moveDown();
+    const basic = candidate.basicInfo;
+
+    doc.fontSize(12).text(`Name: ${basic.firstName} ${basic.lastName}`);
+    doc.text(`Email: ${basic.email}`);
+    doc.text(`Phone: ${basic.countryCode} ${basic.phoneNumber}`);
+    doc.text(`Father Name: ${basic.fatherName}`);
+    doc.text(`Gender: ${basic.gender}`);
+    doc.text("Aadhar Attachment: Available");
+    doc.text("PAN Attachment: Available");
+    doc.moveDown(2);
+
+    // --------------------------
+    // QUALIFICATION
+    // --------------------------
+    doc.fontSize(18).text("Qualification Details", { underline: true });
+    doc.moveDown();
+
+    const qualification = candidate.qualification;
+    qualification.education.forEach((edu, idx) => {
+      doc.fontSize(14).text(`Qualification ${idx + 1}`);
+      doc.fontSize(12).text(`Degree: ${edu.qualification}`);
+      doc.text(`Specialization: ${edu.specialization}`);
+      doc.text(`Percentage: ${edu.percentage}`);
+      doc.text(`Passing Year: ${edu.passingYear}`);
+      doc.text(`Certificate: ${edu.certificateAttachment?.fileName || "None"}`);
+      doc.moveDown();
+    });
+
+    // --------------------------
+    // OFFER DETAILS
+    // --------------------------
+    doc.fontSize(18).text("Offer Details", { underline: true });
+    const offer = candidate.offerDetails;
+
+    doc.fontSize(12).text(`Offer Date: ${offer.offerDate}`);
+    doc.text(`Date of Joining: ${offer.dateOfJoining}`);
+    doc.text(`Employee ID: ${offer.employeeId}`);
+    doc.text(`Offer Letter: ${offer.offerLetterAttachment?.fileName || "None"}`);
+    doc.moveDown(2);
+
+    // --------------------------
+    // BANK DETAILS
+    // --------------------------
+    doc.fontSize(18).text("Bank Details", { underline: true });
+    const bank = candidate.bankDetails;
+
+    doc.fontSize(12).text(`Bank Name: ${bank.bankName}`);
+    doc.text(`Branch: ${bank.branchName}`);
+    doc.text(`Account Number: XXXX${bank.accountNumberHashed.slice(-4)}`);
+    doc.text(`IFSC: Hashed`);
+    doc.text(`Bank Attachment: ${bank.bankAttachment?.fileName || "None"}`);
+    doc.moveDown(2);
+
+    // --------------------------
+    // EMPLOYMENT DETAILS
+    // --------------------------
+    doc.fontSize(18).text("Employment Details", { underline: true });
+    const emp = candidate.employmentDetails;
+
+    if (emp.employmentType === "Fresher") {
+      doc.fontSize(12).text(`Employment Type: Fresher`);
+      doc.text(`CTC: ${emp.fresherCtc}`);
+      doc.text(`Role: ${emp.hiredRole}`);
+      doc.text(`Offer Letter: ${emp.offerLetterAttachment?.fileName || "None"}`);
+    } else {
+      const exp = emp.experiences[0];
+      doc.fontSize(12).text(`Employment Type: Experience`);
+      doc.text(`Company: ${exp.companyName}`);
+      doc.text(`Duration: ${exp.durationFrom} → ${exp.durationTo}`);
+      doc.text(`Joined CTC: ${exp.joinedCtc}`);
+      doc.text(`Offered CTC: ${exp.offeredCtc}`);
+      doc.text(`Reason for Leaving: ${exp.reasonForLeaving}`);
+      doc.text(`Payslips: ${exp.payslipAttachments.length} file(s)`);
+    }
+
+    doc.end();
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate candidate PDF",
+      error: err.message
     });
   }
 };
