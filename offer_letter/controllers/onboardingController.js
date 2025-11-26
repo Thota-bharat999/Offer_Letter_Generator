@@ -983,21 +983,7 @@ function renderAttachmentBlock(doc, label, attachment, candidate, sectionKey) {
     return;
   }
 
-  // Try embedding image if applicable
-  if (isImageAttachment(attachment)) {
-    try {
-      const buf = bufferFromBase64(attachment.base64);
-      doc.image(buf, { fit: [250, 150] });
-      doc.moveDown(0.5);
-      return;
-    } catch (e) {
-      // If fails → fallback to download link
-    }
-  }
-
-  // Otherwise show download link
   const fileName = attachment.fileName || "Attachment";
-  doc.text(`File: ${fileName}`);
 
   const baseUrl =
     process.env.PUBLIC_WEB_URL ||
@@ -1009,10 +995,22 @@ function renderAttachmentBlock(doc, label, attachment, candidate, sectionKey) {
     fileName
   )}`;
 
+  // Always show file name and clickable link
+  doc.text(`File: ${fileName}`);
   doc
     .fillColor("blue")
     .text("Click here to download", { link: downloadUrl, underline: true })
     .fillColor("black");
+
+  // Optionally embed a small image preview if the attachment is an image
+  if (isImageAttachment(attachment)) {
+    try {
+      const buf = bufferFromBase64(attachment.base64);
+      doc.image(buf, { fit: [250, 150] });
+    } catch (e) {
+      // Ignore preview errors; link above is sufficient
+    }
+  }
 
   doc.moveDown(0.5);
 }
@@ -1043,19 +1041,122 @@ exports.downloadCandidatePDF = async (req, res) => {
 
     doc.pipe(res);
 
-    //
-    // ---------------- BASIC INFO ----------------
-    //
-    doc.fontSize(18).text("Basic Information", { underline: true });
-    doc.moveDown(0.3);
-    const b = candidate.basicInfo || {};
-    doc.fontSize(11).text(`Salutation: ${b.salutation || ""}`);
-    doc.text(`Name: ${b.firstName || ""} ${b.lastName || ""}`);
-    doc.text(`Email: ${b.email || ""}`);
-    doc.text(`Phone: ${b.countryCode || ""} ${b.phoneNumber || ""}`);
-    doc.text(`Father Name: ${b.fatherName || ""}`);
-    doc.text(`Gender: ${b.gender || ""}`);
+    // Helper functions for well-formatted tables
+    const pageWidth = doc.page.width;
+    const left = doc.page.margins.left;
+    const right = doc.page.margins.right;
+    const usableWidth = pageWidth - left - right;
+    const bottomY = doc.page.height - doc.page.margins.bottom;
 
+    function ensureSpace(h) {
+      if (doc.y + h > bottomY) {
+        doc.addPage();
+      }
+    }
+
+    function drawSectionHeader(title) {
+      const headerHeight = 24;
+      ensureSpace(headerHeight + 6);
+      const x = left;
+      const y = doc.y;
+      doc.save();
+      doc.rect(x, y, usableWidth, headerHeight).fill("#eaeef5");
+      doc.restore();
+      doc.fillColor("#000").font("Helvetica-Bold").fontSize(14);
+      doc.text(title, x + 8, y + 6);
+      doc.moveTo(x, y + headerHeight).lineTo(x + usableWidth, y + headerHeight).strokeColor("#d0d7e2").lineWidth(0.8).stroke();
+      doc.y = y + headerHeight + 6;
+      doc.fillColor("#000").font("Helvetica");
+    }
+
+    function buildDownloadUrl(sectionKey, fileName) {
+      const baseUrl =
+        process.env.PUBLIC_WEB_URL ||
+        "https://offerlettergenerator-production.up.railway.app";
+      const cid = candidate.draftId || candidate._id;
+      return `${baseUrl}/api/candidate/${cid}/${sectionKey}/${encodeURIComponent(
+        fileName
+      )}`;
+    }
+
+    function drawKeyValueTable(rows, opts = {}) {
+      const col1Width = Math.min(Math.floor(usableWidth * 0.38), 220);
+      const col2Width = usableWidth - col1Width;
+      const pad = 6;
+
+      rows.forEach((row) => {
+        const label = row.label || "";
+        const valueObj = row.value;
+        const valueText =
+          typeof valueObj === "object" && valueObj !== null
+            ? valueObj.text || ""
+            : valueObj ?? "";
+        const valueLink =
+          typeof valueObj === "object" && valueObj !== null
+            ? valueObj.link
+            : undefined;
+
+        const labelHeight = doc.heightOfString(String(label), {
+          width: col1Width - pad * 2,
+        });
+        const valueHeight = doc.heightOfString(String(valueText), {
+          width: col2Width - pad * 2,
+        });
+        const rowH = Math.max(labelHeight, valueHeight) + pad * 2;
+
+        ensureSpace(rowH + 2);
+
+        const x = left;
+        const y = doc.y;
+
+        // Draw cell borders
+        doc
+          .save()
+          .lineWidth(0.5)
+          .strokeColor("#C7CDD6")
+          .rect(x, y, col1Width, rowH)
+          .stroke()
+          .rect(x + col1Width, y, col2Width, rowH)
+          .stroke()
+          .restore();
+
+        // Draw texts
+        doc.font("Helvetica-Bold").fillColor("#111");
+        doc.text(String(label), x + pad, y + pad, {
+          width: col1Width - pad * 2,
+        });
+
+        doc.font("Helvetica").fillColor("#000");
+        if (valueLink) {
+          doc
+            .fillColor("blue")
+            .text(String(valueText), x + col1Width + pad, y + pad, {
+              width: col2Width - pad * 2,
+              link: valueLink,
+              underline: true,
+            })
+            .fillColor("#000");
+        } else {
+          doc.text(String(valueText), x + col1Width + pad, y + pad, {
+            width: col2Width - pad * 2,
+          });
+        }
+
+        doc.y = y + rowH;
+      });
+
+      doc.moveDown(0.5);
+    }
+
+    function attachmentValue(att, sectionKey) {
+      if (!att || !att.base64) return "None";
+      const fileName = att.fileName || "Attachment";
+      return { text: fileName, link: buildDownloadUrl(sectionKey, fileName) };
+    }
+
+    // ---------------- BASIC INFORMATION (TABLE) ----------------
+    drawSectionHeader("Basic Information");
+    const b = candidate.basicInfo || {};
     const aadharNum = b.aadharEncrypted
       ? decryptText(b.aadharEncrypted)
       : b.aadhar_number || "";
@@ -1063,163 +1164,132 @@ exports.downloadCandidatePDF = async (req, res) => {
       ? decryptText(b.panEncrypted)
       : b.panNumber || b.pan_number || "";
 
-    if (aadharNum) doc.text(`Aadhar Number: ${aadharNum}`);
-    if (panNum) doc.text(`PAN Number: ${panNum}`);
+    drawKeyValueTable([
+      { label: "Salutation", value: b.salutation || "" },
+      { label: "Name", value: `${b.firstName || ""} ${b.lastName || ""}`.trim() },
+      { label: "Email", value: b.email || "" },
+      { label: "Phone", value: `${b.countryCode || ""} ${b.phoneNumber || ""}`.trim() },
+      { label: "Father Name", value: b.fatherName || "" },
+      { label: "Gender", value: b.gender || "" },
+      { label: "Aadhar Number", value: aadharNum || "" },
+      { label: "PAN Number", value: panNum || "" },
+      { label: "Aadhar Attachment", value: attachmentValue(b.aadharAttachment, "basicInfo") },
+      { label: "PAN Attachment", value: attachmentValue(b.panAttachment, "basicInfo") },
+    ]);
 
-    doc.moveDown(0.5);
-
-    // Aadhar + PAN
-    renderAttachmentBlock(
-      doc,
-      "Aadhar Attachment:",
-      b.aadharAttachment,
-      candidate,
-      "basicInfo"
-    );
-    renderAttachmentBlock(
-      doc,
-      "PAN Attachment:",
-      b.panAttachment,
-      candidate,
-      "basicInfo"
-    );
-
-    doc.moveDown(1);
-
-    //
-    // ---------------- QUALIFICATIONS ----------------
-    //
-    doc.fontSize(18).text("Qualification Details", { underline: true });
-    doc.moveDown(0.3);
-
+    // ---------------- QUALIFICATION DETAILS (TABLES) ----------------
+    drawSectionHeader("Qualification Details");
     const qualification = candidate.qualification || {};
-    const eduArray = qualification.education || [];
+    const eduArray = Array.isArray(qualification.education)
+      ? qualification.education
+      : [];
 
-    eduArray.forEach((edu, index) => {
-      doc.fontSize(14).text(`Qualification ${index + 1}`);
-      doc.fontSize(11).text(`Degree: ${edu.qualification || ""}`);
-      doc.text(`Specialization: ${edu.specialization || ""}`);
-      doc.text(`Percentage: ${edu.percentage || ""}`);
-      doc.text(`Passing Year: ${edu.passingYear || ""}`);
+    if (eduArray.length === 0) {
+      drawKeyValueTable([{ label: "Details", value: "No qualification records" }]);
+    } else {
+      eduArray.forEach((edu, index) => {
+        ensureSpace(26);
+        doc.font("Helvetica-Bold").fontSize(12).text(`Education ${index + 1}`);
+        doc.moveDown(0.2);
+        const degree = edu.qualification || "";
+        const specialization = edu.specialization || edu.subbranch || "";
+        const percentage = edu.percentage || "";
+        const passingYear = edu.passingYear || edu.yearPassing || "";
+        drawKeyValueTable([
+          { label: "Degree", value: degree },
+          { label: "Specialization", value: specialization },
+          { label: "Percentage", value: String(percentage) },
+          { label: "Passing Year", value: String(passingYear) },
+          {
+            label: "Certificate",
+            value: attachmentValue(edu.certificateAttachment, "qualification"),
+          },
+        ]);
+      });
+    }
 
-      renderAttachmentBlock(
-        doc,
-        "Certificate:",
-        edu.certificateAttachment,
-        candidate,
-        "qualification"
-      );
-
-      doc.moveDown(0.5);
-    });
-
-    //
-    // ---------------- OFFER DETAILS ----------------
-    //
-    doc.addPage();
-    doc.fontSize(18).text("Offer Details", { underline: true });
-    doc.moveDown(0.3);
-
+    // ---------------- OFFER DETAILS (TABLE) ----------------
+    drawSectionHeader("Offer Details");
     const offer = candidate.offerDetails || {};
-    doc.fontSize(12).text(`Offer Date: ${offer.offerDate || ""}`);
-    doc.text(`Date of Joining: ${offer.dateOfJoining || ""}`);
-    doc.text(`Employee ID: ${offer.employeeId || ""}`);
-    if (offer.interviewRemarks)
-      doc.text(`Interview Remarks: ${offer.interviewRemarks}`);
+    drawKeyValueTable([
+      { label: "Offer Date", value: offer.offerDate || "" },
+      { label: "Date of Joining", value: offer.dateOfJoining || "" },
+      { label: "Employee ID", value: offer.employeeId || "" },
+      { label: "Interview Remarks", value: offer.interviewRemarks || "" },
+      {
+        label: "Offer Letter",
+        value: attachmentValue(offer.offerLetterAttachment, "offerDetails"),
+      },
+    ]);
 
-    renderAttachmentBlock(
-      doc,
-      "Offer Letter:",
-      offer.offerLetterAttachment,
-      candidate,
-      "offerDetails"
-    );
-
-    doc.moveDown(1);
-
-    //
-    // ---------------- BANK DETAILS ----------------
-    //
-    doc.fontSize(18).text("Bank Details", { underline: true });
-    doc.moveDown(0.3);
-
+    // ---------------- BANK DETAILS (TABLE) ----------------
+    drawSectionHeader("Bank Details");
     const bank = candidate.bankDetails || {};
     const accountNumber = bank.accountEncrypted
       ? decryptText(bank.accountEncrypted)
       : null;
     const ifsc = bank.ifscEncrypted ? decryptText(bank.ifscEncrypted) : null;
 
-    doc.fontSize(12).text(`Bank Name: ${bank.bankName || ""}`);
-    doc.text(`Branch: ${bank.branchName || ""}`);
-    doc.text(`Account Number: ${accountNumber || "Not Available"}`);
-    doc.text(`IFSC Code: ${ifsc || "Not Available"}`);
+    drawKeyValueTable([
+      { label: "Bank Name", value: bank.bankName || "" },
+      { label: "Branch", value: bank.branchName || "" },
+      { label: "Account Number", value: accountNumber || "Not Available" },
+      { label: "IFSC Code", value: ifsc || "Not Available" },
+      {
+        label: "Bank Proof",
+        value: attachmentValue(bank.bankAttachment, "bankDetails"),
+      },
+    ]);
 
-    renderAttachmentBlock(
-      doc,
-      "Bank Proof:",
-      bank.bankAttachment,
-      candidate,
-      "bankDetails"
-    );
-
-    doc.moveDown(1);
-
-    //
-    // ---------------- EMPLOYMENT DETAILS ----------------
-    //
-    doc.addPage();
-    doc.fontSize(18).text("Employment Details", { underline: true });
-    doc.moveDown(0.3);
-
+    // ---------------- EMPLOYMENT DETAILS (TABLES) ----------------
+    drawSectionHeader("Employment Details");
     const emp = candidate.employmentDetails || {};
-    doc.fontSize(12).text(
-      `Employment Type: ${emp.employmentType || emp.experienceType || ""}`
-    );
+    const empType = emp.employmentType || emp.experienceType || "";
 
-    if ((emp.employmentType || emp.experienceType) === "Fresher") {
-      doc.text(`Role Hired: ${emp.hiredRole || ""}`);
-      doc.text(`Offered CTC: ${emp.fresherCtc || ""}`);
-
-      renderAttachmentBlock(
-        doc,
-        "Offer Letter:",
-        emp.offerLetterAttachment,
-        candidate,
-        "employmentDetails"
-      );
+    if (empType === "Fresher") {
+      drawKeyValueTable([
+        { label: "Employment Type", value: empType },
+        { label: "Role Hired", value: emp.hiredRole || "" },
+        { label: "Offered CTC", value: emp.fresherCtc || "" },
+        {
+          label: "Offer Letter",
+          value: attachmentValue(emp.offerLetterAttachment, "employmentDetails"),
+        },
+      ]);
     } else {
-      const exp = emp.experiences?.[0];
-
+      const exp = Array.isArray(emp.experiences) ? emp.experiences[0] : undefined;
       if (exp) {
-        doc.text(`Company: ${exp.companyName || ""}`);
-        doc.text(`Duration: ${exp.durationFrom || ""} → ${exp.durationTo || ""}`);
-        doc.text(`Joined CTC: ${exp.joinedCtc || ""}`);
-        doc.text(`Offered CTC: ${exp.offeredCtc || ""}`);
-        doc.text(`Reason for Leaving: ${exp.reasonForLeaving || ""}`);
+        drawKeyValueTable([
+          { label: "Employment Type", value: empType || "Experience" },
+          { label: "Company", value: exp.companyName || "" },
+          { label: "Duration", value: `${exp.durationFrom || ""} → ${exp.durationTo || ""}` },
+          { label: "Joined CTC", value: exp.joinedCtc || "" },
+          { label: "Offered CTC", value: exp.offeredCtc || "" },
+          { label: "Reason for Leaving", value: exp.reasonForLeaving || "" },
+          {
+            label: "Offer Letter",
+            value: attachmentValue(exp.offerLetterAttachment, "employmentDetails"),
+          },
+        ]);
 
-        // Experience offer letter
-        renderAttachmentBlock(
-          doc,
-          "Offer Letter:",
-          exp.offerLetterAttachment,
-          candidate,
-          "employmentDetails"
-        );
+        const pays = Array.isArray(exp.payslipAttachments)
+          ? exp.payslipAttachments
+          : [];
 
-        // Payslips
-        if (exp.payslipAttachments?.length > 0) {
-          exp.payslipAttachments.forEach((p, i) => {
-            renderAttachmentBlock(
-              doc,
-              `Payslip ${i + 1}:`,
-              p,
-              candidate,
-              "employmentDetails"
-            );
+        if (pays.length > 0) {
+          pays.forEach((p, i) => {
+            drawKeyValueTable([
+              {
+                label: `Payslip ${i + 1}`,
+                value: attachmentValue(p, "employmentDetails"),
+              },
+            ]);
           });
         } else {
-          doc.text("Payslips: None");
+          drawKeyValueTable([{ label: "Payslips", value: "None" }]);
         }
+      } else {
+        drawKeyValueTable([{ label: "Employment Type", value: empType || "Experience" }]);
       }
     }
 
