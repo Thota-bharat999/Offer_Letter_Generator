@@ -100,6 +100,38 @@ exports.saveBasicInfo = async (req, res) => {
     if (attachments.pan) record.panAttachment = attachments.pan;
 
     await record.save();
+    // 🔹 Sync Basic Info into OnboardedCandidate Document
+await OnboardedCandidate.findOneAndUpdate(
+  { draftId },
+  {
+    $set: {
+      "basicInfo.salutation": salutation,
+      "basicInfo.firstName": firstName,
+      "basicInfo.lastName": lastName,
+      "basicInfo.fatherName": fatherName,
+      "basicInfo.email": email,
+      "basicInfo.countryCode": countryCode,
+      "basicInfo.phoneNumber": phoneNumber,
+      "basicInfo.gender": gender,
+
+      ...(aadharNumber && {
+        "basicInfo.aadharEncrypted": record.aadharEncrypted,
+      }),
+      ...(panNumber && {
+        "basicInfo.panEncrypted": record.panEncrypted,
+      }),
+
+      ...(attachments.aadhar && {
+        "basicInfo.aadharAttachment": record.aadharAttachment,
+      }),
+      ...(attachments.pan && {
+        "basicInfo.panAttachment": record.panAttachment,
+      }),
+    },
+  },
+  { upsert: true }
+);
+
 
     return res.status(200).json({
       success: true,
@@ -405,6 +437,43 @@ exports.saveEmployeeDetials=async(req,res)=>{
       record.experiences = [experienceData];
     }
     await record.save()
+    // 🔹 Sync Employment Details into OnboardedCandidate Document
+await OnboardedCandidate.findOneAndUpdate(
+  { draftId },
+  {
+    $set: {
+      "employmentDetails.employmentType": employmentType,
+
+      ...(employmentType === "Fresher"
+        ? {
+            "employmentDetails.fresherCtc": fresherCtc,
+            "employmentDetails.hiredRole": hiredRole,
+            "employmentDetails.generalRemarks":
+              employmentDetails.generalRemarks || "",
+            ...(attachmentList.length > 0 && {
+              "employmentDetails.offerLetterAttachment": attachmentList[0],
+            }),
+          }
+        : {
+            "employmentDetails.experiences": [
+              {
+                companyName,
+                durationFrom,
+                durationTo,
+                joinedCtc,
+                offeredCtc,
+                reasonForLeaving,
+                generalRemarks:
+                  employmentDetails.generalRemarks || "",
+                payslipAttachments: attachmentList,
+              },
+            ],
+          }),
+    },
+  },
+  { upsert: true }
+);
+
     return res.status(200).json({
       success: true,
       message: "Employment details saved successfully",
