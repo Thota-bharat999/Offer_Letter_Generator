@@ -10,7 +10,7 @@
     "postinstall": "puppeteer install"
   },
   "engines": {
-    "node": "18.x",
+   "node": "24.x",
     "npm": "10.x"
   },
   "keywords": [],
