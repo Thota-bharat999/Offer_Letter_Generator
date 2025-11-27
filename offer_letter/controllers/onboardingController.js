@@ -1155,27 +1155,34 @@ exports.downloadCandidatePDF = async (req, res) => {
     }
 
     // ---------------- BASIC INFORMATION (TABLE) ----------------
-    drawSectionHeader("Basic Information");
-    const b = candidate.basicInfo || {};
-    const aadharNum = b.aadharEncrypted
-      ? decryptText(b.aadharEncrypted)
-      : b.aadhar_number || "";
-    const panNum = b.panEncrypted
-      ? decryptText(b.panEncrypted)
-      : b.panNumber || b.pan_number || "";
+    // ---------------- BASIC INFORMATION (TABLE) ----------------
+drawSectionHeader("Basic Information");
 
-    drawKeyValueTable([
-      { label: "Salutation", value: b.salutation || "" },
-      { label: "Name", value: `${b.firstName || ""} ${b.lastName || ""}`.trim() },
-      { label: "Email", value: b.email || "" },
-      { label: "Phone", value: `${b.countryCode || ""} ${b.phoneNumber || ""}`.trim() },
-      { label: "Father Name", value: b.fatherName || "" },
-      { label: "Gender", value: b.gender || "" },
-      { label: "Aadhar Number", value: aadharNum || "" },
-      { label: "PAN Number", value: panNum || "" },
-      { label: "Aadhar Attachment", value: attachmentValue(b.aadharAttachment, "basicInfo") },
-      { label: "PAN Attachment", value: attachmentValue(b.panAttachment, "basicInfo") },
-    ]);
+const b = candidate.basicInfo || {};
+
+// Correctly map field names from DB
+const aadharNum = b.aadharEncrypted
+  ? decryptText(b.aadharEncrypted)
+  : b.aadharNumber || b.aadhar_number || "";
+
+const panNum = b.panEncrypted
+  ? decryptText(b.panEncrypted)
+  : b.panNumber || b.pan_number || "";
+
+drawKeyValueTable([
+  { label: "Salutation", value: b.salutation || "" },
+  { label: "Name", value: `${b.firstName || ""} ${b.lastName || ""}`.trim() },
+  { label: "Email", value: b.email || "" },
+  { label: "Phone", value: `${b.countryCode || ""} ${b.phoneNumber || ""}`.trim() },
+  { label: "Father Name", value: b.fatherName || "" },
+  { label: "Gender", value: b.gender || "" },
+  { label: "Aadhar Number", value: aadharNum || "Not Provided" },
+  { label: "PAN Number", value: panNum || "Not Provided" },
+  { label: "Aadhar Attachment", value: attachmentValue(b.aadharAttachment, "basicInfo") },
+  { label: "PAN Attachment", value: attachmentValue(b.panAttachment, "basicInfo") },
+]);
+
+
 
     // ---------------- QUALIFICATION DETAILS (TABLES) ----------------
     drawSectionHeader("Qualification Details");
@@ -1245,12 +1252,12 @@ exports.downloadCandidatePDF = async (req, res) => {
     drawSectionHeader("Employment Details");
     const emp = candidate.employmentDetails || {};
     const empType = emp.employmentType || emp.experienceType || "";
-
     if (empType === "Fresher") {
       drawKeyValueTable([
         { label: "Employment Type", value: empType },
         { label: "Role Hired", value: emp.hiredRole || "" },
         { label: "Offered CTC", value: emp.fresherCtc || "" },
+        { label: "General Remarks", value: emp.generalRemarks || "" },
         {
           label: "Offer Letter",
           value: attachmentValue(emp.offerLetterAttachment, "employmentDetails"),
@@ -1266,6 +1273,7 @@ exports.downloadCandidatePDF = async (req, res) => {
           { label: "Joined CTC", value: exp.joinedCtc || "" },
           { label: "Offered CTC", value: exp.offeredCtc || "" },
           { label: "Reason for Leaving", value: exp.reasonForLeaving || "" },
+          { label: "General Remarks", value: exp.generalRemarks || "" },
           {
             label: "Offer Letter",
             value: attachmentValue(exp.offerLetterAttachment, "employmentDetails"),
