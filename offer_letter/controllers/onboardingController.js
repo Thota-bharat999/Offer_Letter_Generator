@@ -1249,57 +1249,63 @@ drawKeyValueTable([
     ]);
 
     // ---------------- EMPLOYMENT DETAILS (TABLES) ----------------
-    drawSectionHeader("Employment Details");
-    const emp = candidate.employmentDetails || {};
-    const empType = emp.employmentType || emp.experienceType || "";
-    if (empType === "Fresher") {
-      drawKeyValueTable([
-        { label: "Employment Type", value: empType },
-        { label: "Role Hired", value: emp.hiredRole || "" },
-        { label: "Offered CTC", value: emp.fresherCtc || "" },
-        { label: "General Remarks", value: emp.generalRemarks || "" },
-        {
-          label: "Offer Letter",
-          value: attachmentValue(emp.offerLetterAttachment, "employmentDetails"),
-        },
-      ]);
-    } else {
-      const exp = Array.isArray(emp.experiences) ? emp.experiences[0] : undefined;
-      if (exp) {
+   // ---------------- EMPLOYMENT DETAILS (TABLES) ----------------
+drawSectionHeader("Employment Details");
+const emp = candidate.employmentDetails || {};
+const empType = emp.employmentType || emp.experienceType || "";
+
+if (empType === "Fresher") {
+  drawKeyValueTable([
+    { label: "Employment Type", value: empType },
+    { label: "Role Hired", value: emp.hiredRole || "" },
+    { label: "Offered CTC", value: emp.fresherCtc || "" },
+    { label: "General Remarks", value: emp.generalRemarks || "" },
+    {
+      label: "Offer Letter",
+      value: attachmentValue(emp.offerLetterAttachment, "employmentDetails"),
+    },
+  ]);
+} else {
+  const exp = Array.isArray(emp.experiences) ? emp.experiences[0] : undefined;
+
+  if (exp) {
+    drawKeyValueTable([
+      { label: "Employment Type", value: empType || "Experience" },
+      { label: "Company", value: exp.companyName || "" },
+      {
+        label: "Duration",
+        value: `${exp.durationFrom || ""} → ${exp.durationTo || ""}`,
+      },
+      { label: "Joined CTC", value: exp.joinedCtc || "" },
+      { label: "Offered CTC", value: exp.offeredCtc || "" },
+      { label: "Reason for Leaving", value: exp.reasonForLeaving || "" },
+      { label: "General Remarks", value: exp.generalRemarks || "" },
+      {
+        label: "Offer Letter",
+        value: attachmentValue(exp.offerLetterAttachment, "employmentDetails"),
+      },
+    ]);
+
+    const pays = Array.isArray(exp.payslipAttachments)
+      ? exp.payslipAttachments
+      : [];
+
+    if (pays.length > 0) {
+      pays.forEach((p, i) => {
         drawKeyValueTable([
-          { label: "Employment Type", value: empType || "Experience" },
-          { label: "Company", value: exp.companyName || "" },
-          { label: "Duration", value: `${exp.durationFrom || ""} → ${exp.durationTo || ""}` },
-          { label: "Joined CTC", value: exp.joinedCtc || "" },
-          { label: "Offered CTC", value: exp.offeredCtc || "" },
-          { label: "Reason for Leaving", value: exp.reasonForLeaving || "" },
-          { label: "General Remarks", value: exp.generalRemarks || "" },
           {
-            label: "Offer Letter",
-            value: attachmentValue(exp.offerLetterAttachment, "employmentDetails"),
+            label: `Payslip ${i + 1}`,
+            value: attachmentValue(p, "employmentDetails"),
           },
         ]);
-
-        const pays = Array.isArray(exp.payslipAttachments)
-          ? exp.payslipAttachments
-          : [];
-
-        if (pays.length > 0) {
-          pays.forEach((p, i) => {
-            drawKeyValueTable([
-              {
-                label: `Payslip ${i + 1}`,
-                value: attachmentValue(p, "employmentDetails"),
-              },
-            ]);
-          });
-        } else {
-          drawKeyValueTable([{ label: "Payslips", value: "None" }]);
-        }
-      } else {
-        drawKeyValueTable([{ label: "Employment Type", value: empType || "Experience" }]);
-      }
+      });
+    } else {
+      drawKeyValueTable([{ label: "Payslips", value: "None" }]);
     }
+  } else {
+    drawKeyValueTable([{ label: "Employment Type", value: empType || "Experience" }]);
+  }
+}
 
     // Finalize PDF
     doc.end();
